@@ -105,7 +105,7 @@ const courses = [
         isBookmarked: true
     },
     {
-        id: 2,
+        id: 9,
         title: "Python for Data Science & Machine Learning",
         provider: "DataMaster",
         instructor: "Dr. Michael Chen",
@@ -121,7 +121,7 @@ const courses = [
         isBookmarked: false
     },
     {
-        id: 3,
+        id: 8,
         title: "AWS Cloud Practitioner Certification",
         provider: "CloudPro",
         instructor: "James Wilson",

@@ -144,7 +144,7 @@ function DemoSidebar({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider defaultOpen={true} className="h-screen">
-      <Sidebar collapsible="offcanvas" className="border-r z-20">
+      <Sidebar collapsible="offcanvas" className="border-r z-200">
         <SidebarHeader className="py-4 border-b">
           <div className="flex items-center gap-3 px-2">
             <AppUI className="w-10 h-10 select-none" draggable={false} />
@@ -157,12 +157,12 @@ function DemoSidebar({ children }: { children: React.ReactNode }) {
         
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            {/* <SidebarGroupLabel>Navigation</SidebarGroupLabel> */}
             <SidebarMenu>
               {demoNavItems.map((item) => {
                 if (item.items) {
                   return (
-                    <SidebarMenuItem key={item.title}>
+                    <div key={item.title}>
                       <SidebarGroupLabel className="text-violet-500 font-semibold">{item.title}</SidebarGroupLabel>
                       {item.items.map((subItem) => {
                         const isActive = pathname === subItem.url;
@@ -177,7 +177,7 @@ function DemoSidebar({ children }: { children: React.ReactNode }) {
                           </SidebarMenuItem>
                         );
                       })}
-                    </SidebarMenuItem>
+                    </div>
                   );
                 }
                 const isActive = pathname === item.url;
@@ -239,7 +239,7 @@ function DemoSidebar({ children }: { children: React.ReactNode }) {
       </Sidebar>
       
       <SidebarInset className="flex flex-col flex-1 h-full overflow-auto">
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 z-[100] bg-background/80 backdrop-blur-md">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 z-50 bg-background/80 backdrop-blur-md">
           <SidebarTrigger />
           <div className="flex-1">
             <h1 className="text-lg font-semibold">

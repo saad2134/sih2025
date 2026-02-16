@@ -244,7 +244,7 @@ export default function AICompanion() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleSuggestionClick(action.label)}
-                      className="text-xs"
+                      className="text-xs gap-2"
                     >
                       <action.icon size={12} />
                       {action.label}
