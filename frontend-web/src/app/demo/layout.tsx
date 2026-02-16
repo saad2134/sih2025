@@ -57,7 +57,7 @@ const demoNavItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "Learn",
+    title: "Learn & Upskill",
     url: "",
     icon: BookOpen,
     items: [
@@ -72,21 +72,26 @@ const demoNavItems = [
         icon: BookOpen,
       },
       {
-        title: "Take a quick quiz",
+        title: "Quick Quiz",
         url: "/demo/quick-quiz",
         icon: HelpCircle,
       },
     ],
   },
   {
-    title: "Growth",
+    title: "Career & Growth",
     url: "",
     icon: Trophy,
     items: [
       {
-        title: "Career Map",
+        title: "My Career Map",
         url: "/demo/career_map",
         icon: MapPin,
+      },
+      {
+        title: "Market Insights",
+        url: "/demo/insights",
+        icon: Sparkles,
       },
       {
         title: "Achievements",
@@ -109,18 +114,6 @@ const demoNavItems = [
         title: "AI Companion",
         url: "/demo/ai-companion",
         icon: MessageSquare,
-      },
-    ],
-  },
-  {
-    title: "Insights",
-    url: "",
-    icon: Sparkles,
-    items: [
-      {
-        title: "Market Insights",
-        url: "/demo/insights",
-        icon: Sparkles,
       },
     ],
   },

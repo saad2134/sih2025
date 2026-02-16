@@ -294,7 +294,7 @@ export default function Dashboard() {
                                                 </div>
                                                 <div className="space-y-1">
                                                     <Progress value={skill.level} className="h-2" />
-                                                    <Progress value={skill.target} className="h-1 bg-muted" />
+                                                    
                                                 </div>
                                             </div>
                                         ))}

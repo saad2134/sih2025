@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   BookOpen, 
@@ -25,6 +25,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { siteConfig } from "@/config/site";
 
 interface CourseRecommendation {
   id: string;
@@ -311,45 +312,58 @@ const sampleCourses: CourseRecommendation[] = [
 const CourseRecommendationPage: React.FC = () => {
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
 
-  return (
-    <div className="p-4 sm:p-6 space-y-6">
-      <div className="bg-card rounded-2xl p-4 sm:p-8 border">
-        <div className="flex items-center gap-3 mb-2">
-          <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-card-foreground">Your Personalized Learning Path</h1>
-        </div>
-        <p className="text-muted-foreground text-sm sm:text-lg">
-          Curated based on your visual-practical learning style • Project-focused approach • Career goals in Tech
-        </p>
-      </div>
+  useEffect(() => {
+    document.title = `Recommendations ✦ ${siteConfig.name}`;
+  }, []);
 
-      <div className="bg-card rounded-xl border p-4 sm:p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-          <h2 className="text-lg sm:text-xl font-semibold text-card-foreground">Your Learning Profile</h2>
+  return (
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Recommendations</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">AI-powered course suggestions tailored to you</p>
+          </div>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
-            <div className="text-lg sm:text-2xl font-bold text-primary">Visual</div>
-            <div className="text-xs sm:text-sm text-muted-foreground">Primary Style</div>
+
+        <div className="bg-card rounded-2xl p-4 sm:p-8 border mb-6">
+          <div className="flex items-center gap-3 mb-2">
+            <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-card-foreground">Your Personalized Learning Path</h2>
           </div>
-          <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
-            <div className="text-lg sm:text-2xl font-bold text-primary">Hands-On</div>
-            <div className="text-xs sm:text-sm text-muted-foreground">Learning Mode</div>
+          <p className="text-muted-foreground text-sm sm:text-lg">
+            Curated based on your visual-practical learning style • Project-focused approach • Career goals in Tech
+          </p>
+        </div>
+
+        <div className="bg-card rounded-xl border p-4 sm:p-6 mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+            <h2 className="text-lg sm:text-xl font-semibold text-card-foreground">Your Learning Profile</h2>
           </div>
-          <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
-            <div className="text-lg sm:text-2xl font-bold text-primary">Fast</div>
-            <div className="text-xs sm:text-sm text-muted-foreground">Pace Preference</div>
-          </div>
-          <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
-            <div className="text-lg sm:text-2xl font-bold text-primary">2-3hrs</div>
-            <div className="text-xs sm:text-sm text-muted-foreground">Session Length</div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
+              <div className="text-lg sm:text-2xl font-bold text-primary">Visual</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Primary Style</div>
+            </div>
+            <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
+              <div className="text-lg sm:text-2xl font-bold text-primary">Hands-On</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Learning Mode</div>
+            </div>
+            <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
+              <div className="text-lg sm:text-2xl font-bold text-primary">Fast</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Pace Preference</div>
+            </div>
+            <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
+              <div className="text-lg sm:text-2xl font-bold text-primary">2-3hrs</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Session Length</div>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="space-y-6">
-        {sampleCourses.map((course) => (
+          {sampleCourses.map((course) => (
           <CourseCard 
             key={course.id} 
             course={course} 
@@ -383,8 +397,7 @@ const CourseCard: React.FC<{
 
       <div className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-6">
-          <div className="flex-shrink-0">
-          </div>
+          
           <div className="flex-1">
             <div className="flex flex-col sm:items-start justify-between mb-2 gap-2">
               <div>
