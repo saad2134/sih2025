@@ -521,19 +521,21 @@ const tabs = [
                                                     </div>
                                                     <Button variant="outline" size="sm">Public</Button>
                                                 </div>
-                                                <div className="flex items-center justify-between p-3 border rounded-lg">
-                                                    <div>
-                                                        <p className="font-medium text-sm">Show Learning Progress</p>
-                                                        <p className="text-xs text-muted-foreground">Allow others to see your progress</p>
-                                                    </div>
-                                                    <Button variant="outline" size="sm">On</Button>
-                                                </div>
+                                                
                                                 <div className="flex items-center justify-between p-3 border rounded-lg">
                                                     <div>
                                                         <p className="font-medium text-sm">Activity Status</p>
-                                                        <p className="text-xs text-muted-foreground">Show when you're online</p>
+                                                        <p className="text-xs text-muted-foreground">Show when you're online on your profile.</p>
                                                     </div>
-                                                    <Button variant="outline" size="sm">Friends</Button>
+                                                    <Button variant="outline" size="sm">On</Button>
+                                                </div>
+
+                                                <div className="flex items-center justify-between p-3 border rounded-lg">
+                                                    <div>
+                                                        <p className="font-medium text-sm">Allow Data Use for Platform Improvment</p>
+                                                        <p className="text-xs text-muted-foreground">Allow us to use your data to improve our platform.</p>
+                                                    </div>
+                                                    <Button variant="outline" size="sm">On</Button>
                                                 </div>
                                             </div>
                                         </div>
@@ -581,19 +583,13 @@ const tabs = [
                                                 Other Settings
                                             </h4>
                                             <div className="grid gap-3">
-                                                <div className="flex items-center justify-between p-3 border rounded-lg">
-                                                    <div>
-                                                        <p className="font-medium text-sm">Auto-Play Videos</p>
-                                                        <p className="text-xs text-muted-foreground">Automatically play course videos</p>
-                                                    </div>
-                                                    <Button variant="outline" size="sm">Off</Button>
-                                                </div>
+                                                
                                                 <div className="flex items-center justify-between p-3 border rounded-lg">
                                                     <div>
                                                         <p className="font-medium text-sm">Data Saver Mode</p>
                                                         <p className="text-xs text-muted-foreground">Reduce data usage</p>
                                                     </div>
-                                                    <Button variant="outline" size="sm">Off</Button>
+                                                    <Button variant="outline" size="sm">System</Button>
                                                 </div>
                                                 <div className="flex items-center justify-between p-3 border rounded-lg">
                                                     <div>
