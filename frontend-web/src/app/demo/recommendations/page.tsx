@@ -336,7 +336,7 @@ const CourseRecommendationPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="bg-card rounded-xl border p-4 sm:p-6">
+        <div className="bg-card rounded-xl border p-4 sm:p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
             <h2 className="text-lg sm:text-xl font-semibold text-card-foreground">Your Learning Profile</h2>

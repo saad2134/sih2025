@@ -273,77 +273,82 @@ export default function BrowseCourses() {
                         </Button>
                     </div>
 
-                    <div className="hidden sm:block mb-6 p-4 border rounded-lg">
-                        <div className="flex items-center justify-between mb-4">
+<div className="hidden sm:block mb-4 p-3 border rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
-                                <Filter size={18} />
-                                <span className="font-medium">Filters</span>
+                                <Filter size={16} />
+                                <span className="text-sm font-medium">Filters</span>
                             </div>
                             <Button variant="default" size="sm" onClick={resetFilters}>
                                 Reset
                             </Button>
                         </div>
-                        <div className="space-y-4">
+                        <div className="space-y-4 space-x-4">
                             <div>
-                                <label className="text-sm font-medium mb-2 block">Category</label>
-                                <div className="flex flex-wrap gap-2">
+                                <label className="text-xs font-medium mb-2 block">Category</label>
+                                <div className="flex flex-wrap gap-1.5">
                                     {categories.map((category) => (
                                         <Button
                                             key={category}
                                             variant={selectedCategory === category ? "default" : "outline"}
                                             size="sm"
                                             onClick={() => setSelectedCategory(category)}
-                                            className="rounded-full"
+                                            className="rounded-full text-xs h-7"
                                         >
                                             {category}
                                         </Button>
                                     ))}
                                 </div>
                             </div>
-                            <div>
-                                <label className="text-sm font-medium mb-2 block">Level</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {levels.map((level) => (
-                                        <Button
-                                            key={level}
-                                            variant={selectedLevel === level ? "secondary" : "ghost"}
-                                            size="sm"
-                                            onClick={() => setSelectedLevel(level)}
-                                        >
-                                            {level}
-                                        </Button>
-                                    ))}
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div>
+                                    <label className="text-xs font-medium mb-1.5 block">Level</label>
+                                    <div className="flex flex-wrap gap-1">
+                                        {levels.map((level) => (
+                                            <Button
+                                                key={level}
+                                                variant={selectedLevel === level ? "secondary" : "ghost"}
+                                                size="sm"
+                                                onClick={() => setSelectedLevel(level)}
+                                                className="text-xs h-7 px-2"
+                                            >
+                                                {level}
+                                            </Button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium mb-2 block">Duration</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {durations.map((duration) => (
-                                        <Button
-                                            key={duration}
-                                            variant={selectedDuration === duration ? "secondary" : "ghost"}
-                                            size="sm"
-                                            onClick={() => setSelectedDuration(duration)}
-                                        >
-                                            <Clock size={14} className="mr-1" />
-                                            {duration}
-                                        </Button>
-                                    ))}
+                                <div>
+                                    <label className="text-xs font-medium mb-1.5 block">Duration</label>
+                                    <div className="flex flex-wrap gap-1">
+                                        {durations.map((duration) => (
+                                            <Button
+                                                key={duration}
+                                                variant={selectedDuration === duration ? "secondary" : "ghost"}
+                                                size="sm"
+                                                onClick={() => setSelectedDuration(duration)}
+                                                className="text-xs h-7 px-2"
+                                            >
+                                                <Clock size={12} className="mr-1" />
+                                                {duration}
+                                            </Button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium mb-2 block">Price</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {priceTypes.map((type) => (
-                                        <Button
-                                            key={type}
-                                            variant={selectedPriceType === type ? "secondary" : "ghost"}
-                                            size="sm"
-                                            onClick={() => setSelectedPriceType(type)}
-                                        >
-                                            {type}
-                                        </Button>
-                                    ))}
+                                <div>
+                                    <label className="text-xs font-medium mb-1.5 block">Price</label>
+                                    <div className="flex flex-wrap gap-1">
+                                        {priceTypes.map((type) => (
+                                            <Button
+                                                key={type}
+                                                variant={selectedPriceType === type ? "secondary" : "ghost"}
+                                                size="sm"
+                                                onClick={() => setSelectedPriceType(type)}
+                                                className="text-xs h-7 px-2"
+                                            >
+                                                {type}
+                                            </Button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
