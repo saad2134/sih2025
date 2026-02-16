@@ -17,7 +17,8 @@ import {
   Moon,
   BookOpen,
   Target,
-  HelpCircle
+  HelpCircle,
+  FileUser
 } from "lucide-react";
 import AppUI from "@/components/logos/app_icon";
 import {
@@ -102,6 +103,11 @@ const demoNavItems = [
         title: "Leaderboard",
         url: "/demo/leaderboard",
         icon: BarChart3,
+      },
+      {
+        title: "Resume/CV Builder",
+        url: "/demo/resume-cv-builder",
+        icon: FileUser,
       },
     ],
   },
