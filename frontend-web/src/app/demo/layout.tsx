@@ -84,7 +84,7 @@ const demoNavItems = [
     icon: Trophy,
     items: [
       {
-        title: "Career Map",
+        title: "My Career Map",
         url: "/demo/career_map",
         icon: MapPin,
       },

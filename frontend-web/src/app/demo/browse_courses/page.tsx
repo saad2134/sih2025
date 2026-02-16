@@ -33,7 +33,6 @@ const categories = [
     "AI & Machine Learning",
     "Cybersecurity",
     "DevOps",
-    "Free Courses"
 ];
 
 const courses = [
@@ -49,7 +48,7 @@ const courses = [
         price: 0,
         originalPrice: 0,
         image: "/api/placeholder/400/200",
-        tags: ["Web Development", "Free Courses", "Programming"],
+        tags: ["Web Development", "Programming"],
         match: 98,
         completionRate: 94,
         isBookmarked: false
@@ -66,7 +65,7 @@ const courses = [
         price: 0,
         originalPrice: 0,
         image: "/api/placeholder/400/200",
-        tags: ["Free Courses", "Marketing", "Business"],
+        tags: ["Marketing", "Business"],
         match: 92,
         completionRate: 89,
         isBookmarked: true
@@ -233,6 +232,14 @@ export default function BrowseCourses() {
         );
     };
 
+    const resetFilters = () => {
+        setSearchQuery("");
+        setSelectedCategory("All");
+        setSelectedLevel("All Levels");
+        setSelectedDuration("Any Duration");
+        setSelectedPriceType("All");
+    };
+
     return (
         <div className="p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
@@ -266,18 +273,80 @@ export default function BrowseCourses() {
                         </Button>
                     </div>
 
-                    <div className="hidden sm:flex flex-wrap gap-2 mb-6">
-                        {categories.map((category) => (
-                            <Button
-                                key={category}
-                                variant={selectedCategory === category ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setSelectedCategory(category)}
-                                className="rounded-full"
-                            >
-                                {category}
+                    <div className="hidden sm:block mb-6 p-4 border rounded-lg">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <Filter size={18} />
+                                <span className="font-medium">Filters</span>
+                            </div>
+                            <Button variant="default" size="sm" onClick={resetFilters}>
+                                Reset
                             </Button>
-                        ))}
+                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-sm font-medium mb-2 block">Category</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {categories.map((category) => (
+                                        <Button
+                                            key={category}
+                                            variant={selectedCategory === category ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => setSelectedCategory(category)}
+                                            className="rounded-full"
+                                        >
+                                            {category}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium mb-2 block">Level</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {levels.map((level) => (
+                                        <Button
+                                            key={level}
+                                            variant={selectedLevel === level ? "secondary" : "ghost"}
+                                            size="sm"
+                                            onClick={() => setSelectedLevel(level)}
+                                        >
+                                            {level}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium mb-2 block">Duration</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {durations.map((duration) => (
+                                        <Button
+                                            key={duration}
+                                            variant={selectedDuration === duration ? "secondary" : "ghost"}
+                                            size="sm"
+                                            onClick={() => setSelectedDuration(duration)}
+                                        >
+                                            <Clock size={14} className="mr-1" />
+                                            {duration}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium mb-2 block">Price</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {priceTypes.map((type) => (
+                                        <Button
+                                            key={type}
+                                            variant={selectedPriceType === type ? "secondary" : "ghost"}
+                                            size="sm"
+                                            onClick={() => setSelectedPriceType(type)}
+                                        >
+                                            {type}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {showFilters && (
@@ -287,6 +356,15 @@ export default function BrowseCourses() {
                             exit={{ opacity: 0, height: 0 }}
                             className="sm:hidden mb-6 p-4 border rounded-lg space-y-4"
                         >
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Filter size={18} />
+                                    <span className="font-medium">Filters</span>
+                                </div>
+                                <Button variant="default" size="sm" onClick={resetFilters}>
+                                    Reset
+                                </Button>
+                            </div>
                             <div>
                                 <label className="text-sm font-medium mb-2 block">Category</label>
                                 <div className="flex flex-wrap gap-2">
@@ -355,45 +433,6 @@ export default function BrowseCourses() {
                         <p className="text-sm text-muted-foreground">
                             Showing <span className="font-medium text-foreground">{filteredCourses.length}</span> courses
                         </p>
-                        <div className="hidden sm:flex gap-2">
-                            {priceTypes.map((type) => (
-                                <Button
-                                    key={type}
-                                    variant={selectedPriceType === type ? "secondary" : "ghost"}
-                                    size="sm"
-                                    onClick={() => setSelectedPriceType(type)}
-                                >
-                                    {type}
-                                </Button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="hidden sm:flex flex-wrap gap-2 mb-4">
-                        {durations.map((duration) => (
-                            <Button
-                                key={duration}
-                                variant={selectedDuration === duration ? "secondary" : "ghost"}
-                                size="sm"
-                                onClick={() => setSelectedDuration(duration)}
-                            >
-                                <Clock size={14} className="mr-1" />
-                                {duration}
-                            </Button>
-                        ))}
-                    </div>
-
-                    <div className="hidden sm:flex flex-wrap gap-2 mb-4">
-                        {levels.map((level) => (
-                            <Button
-                                key={level}
-                                variant={selectedLevel === level ? "secondary" : "ghost"}
-                                size="sm"
-                                onClick={() => setSelectedLevel(level)}
-                            >
-                                {level}
-                            </Button>
-                        ))}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
