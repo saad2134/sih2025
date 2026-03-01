@@ -15,11 +15,9 @@
 
 ## 🔹 Context
 
-### 🏆 Prototype for SUDHEE CBIT Hackathon 2026
+### 🏆 Prototype for AMD Slingshot Hackathon 2026
 
-- **Problem Statement ID:** 1.12
-- **Problem Statement Title:** Personalized Course Curator Based on Learner’s Learning Style & Preferences
-- **Theme:** Intelligent Systems & AI Innovation
+- **Theme:** 2. AI in Education & Skilling
 - **Category:** Software
 
 
@@ -235,7 +233,7 @@ graph TB
 
 
 
-## 👥 Our SUDHEE CBIT Hackathon 2026 Team (DevBandits)
+## 👥 Our AMD Slingshot Hackathon 2026 Team (DevBandits)
 
 <div align="center">
 
@@ -244,8 +242,6 @@ graph TB
 |  1  | **Abdur Rahman Qasim**    | 🎯 Team Lead                 | [🔗 Abdur-rahman-01](https://github.com/Abdur-rahman-01) |
 |  2  | **Fareed Ahmed Owais**    | 🔎 Research Engineer    | [🔗 FareedAhmedOwais](https://github.com/FareedAhmedOwais) |
 |  3  | **Mohammed Saad Uddin**   | 🚀 Full-stack + AI/ML Developer     | [🔗 saad2134](https://github.com/saad2134) |
-|  4  | **Mohammed Abdul Rahman** | 🖼️ Front-end Developer             | [🔗 Abdul-Rahman26](https://github.com/Abdul-Rahman26) |
-
 
 </div>
 
@@ -305,12 +301,12 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ---
 
 ## ✍️ Endnote
-<p align="center">Developed with 💖 for the SUDHEE CBIT Hackathon 2026, with heartfelt thanks to CBIT for the opportunity to build and innovate.</p>
+<p align="center">Developed with 💖 for the AMD Slingshot Hackathon 2026, with heartfelt thanks for the opportunity to build and innovate.</p>
 
 ---
 
 ## 🏷 Tags  
 
-`#WebApp` `#SmartEducation` `#AIinEducation` `#PersonalizedLearning` `#SkillPathways` `#CareerGuidance` `#NSQFIntegration` `#VocationalEducation` `#AIPathGenerator` `#DigitalLearning` `#AdaptiveLearning` `#GamifiedLearning` `#TokenEconomy` `#AIMatching` `#SkillNavigator` `#FutureSkills` `#EdTechIndia` `#SkillForecasting` `#CareerIntelligence` `#MultilingualAI` `#SUDHEE2026` `#CBITHackathonSUDHEE2026` `#PS1.12`
+`#WebApp` `#SmartEducation` `#AIinEducation` `#PersonalizedLearning` `#SkillPathways` `#CareerGuidance` `#NSQFIntegration` `#VocationalEducation` `#AIPathGenerator` `#DigitalLearning` `#AdaptiveLearning` `#GamifiedLearning` `#TokenEconomy` `#AIMatching` `#SkillNavigator` `#FutureSkills` `#EdTechIndia` `#SkillForecasting` `#CareerIntelligence` `#MultilingualAI` `#AMDSlingshot2026` 
 
 
