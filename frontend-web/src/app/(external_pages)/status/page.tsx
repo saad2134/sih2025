@@ -8,6 +8,11 @@ import { siteConfig } from "@/config/site";
 import Navbar from "@/components/sections/navbar/default";
 import Footer from "@/components/sections/footer/default";
 
+export const metadata = {
+  title: `Status ✦ ${siteConfig.name}`,
+  description: "Monitor the current status of the platform services.",
+};
+
 interface ServiceStatus {
   name: string;
   url: string;
