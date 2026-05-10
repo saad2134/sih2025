@@ -28,6 +28,23 @@ docker run -d \
   ghcr.io/saad2134/shiksha-disha/b2-ai-engine:latest
 ```
 
+### Development (Hot Reload)
+
+#### Dev Profile (Auto-Reload)
+```bash
+cd backend_2-ai_engine_service
+docker-compose --profile dev up -d
+```
+
+#### Manual Restart
+```bash
+# Rebuild (for dependency changes)
+docker-compose up -d --build
+
+# Or just restart for code-only changes
+docker-compose restart
+```
+
 ### 3. Verify
 
 ```bash

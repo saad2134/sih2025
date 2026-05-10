@@ -25,6 +25,23 @@ docker run -d \
   ghcr.io/saad2134/shiksha-disha/b3-ai-companion:latest
 ```
 
+### Development (Hot Reload)
+
+#### Dev Profile (Auto-Reload)
+```bash
+cd backend_3-ai_companion_service
+docker-compose --profile dev up -d
+```
+
+#### Manual Restart
+```bash
+# Rebuild (for dependency changes)
+docker-compose up -d --build
+
+# Or just restart for code-only changes
+docker-compose restart
+```
+
 ### 3. Verify
 
 ```bash

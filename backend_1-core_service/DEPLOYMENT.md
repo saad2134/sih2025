@@ -29,6 +29,24 @@ cd backend_1-core_service
 docker-compose up -d --build
 ```
 
+### Hot Reload Development
+
+#### Dev Profile (Auto-Reload)
+```bash
+docker-compose --profile dev up -d
+```
+
+#### Manual Restart
+Code changes are mounted via volumes. After code changes:
+
+```bash
+# Rebuild (for dependency changes)
+docker-compose up -d --build
+
+# Or just restart (for code-only changes)
+docker-compose restart
+```
+
 ### Run Standalone
 
 ```bash

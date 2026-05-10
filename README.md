@@ -138,19 +138,36 @@ npm run dev
 
 See [DEPLOYMENT_FULL.md](DEPLOYMENT_FULL.md) for complete deployment instructions.
 
+**Production mode:**
 ```bash
-# Core API
 cd backend_1-core_service
 docker-compose up -d
-
-# AI Engine
 cd ../backend_2-ai_engine_service
 docker-compose up -d
-
-# AI Companion
-cd ..//backend_3-ai_companion_service
+cd ../backend_3-ai_companion_service
 docker-compose up -d
 ```
+
+**Development mode** (with auto-reload on code changes):
+```bash
+cd backend_1-core_service
+docker-compose --profile dev up -d
+cd ../backend_2-ai_engine_service
+docker-compose --profile dev up -d
+cd ../backend_3-ai_companion_service
+docker-compose --profile dev up -d
+```
+
+#### Hot Reload Development
+
+Code changes are now mounted into containers via volumes. After making code changes:
+
+```bash
+# Rebuild and restart the service
+docker-compose up -d --build
+```
+
+The `--build` flag rebuilds the image to pick up any dependency changes, while volumes mount your local code for live updates.
 
 ## 🏗️ Architecture
 
