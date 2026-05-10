@@ -1,7 +1,11 @@
 import httpx
 import json
+import logging
 from typing import List, Dict, Optional
 from .config import settings
+
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiService:
@@ -39,8 +43,9 @@ class GeminiService:
                 response = await client.post(url, json=payload)
                 data = response.json()
                 return self._parse_response(data)
-            except Exception as e:
-                return {"error": str(e), "success": False}
+            except Exception:
+                logger.exception("Error while generating content from Gemini API")
+                return {"error": "Failed to generate content", "success": False}
 
     def _parse_response(self, data: Dict) -> Dict:
         try:
@@ -51,8 +56,9 @@ class GeminiService:
                 if parts:
                     return {"text": parts[0].get("text", ""), "success": True}
             return {"text": "", "success": False, "error": "No response from Gemini"}
-        except Exception as e:
-            return {"error": str(e), "success": False}
+        except Exception:
+            logger.exception("Error while parsing Gemini API response")
+            return {"error": "Failed to parse Gemini response", "success": False}
 
     async def chat(
         self, message: str, history: List[Dict] = None, context: Optional[Dict] = None
@@ -95,8 +101,9 @@ Provide helpful, accurate, and encouraging responses. Keep responses concise and
                 response = await client.post(url, json=payload)
                 data = response.json()
                 return self._parse_response(data)
-            except Exception as e:
-                return {"error": str(e), "success": False, "text": ""}
+            except Exception:
+                logger.exception("Error while processing chat request with Gemini API")
+                return {"error": "Failed to process chat request", "success": False, "text": ""}
 
     async def generate_career_guidance(
         self,

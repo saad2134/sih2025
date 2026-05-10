@@ -1,6 +1,9 @@
 import httpx
+import logging
 from typing import List, Dict, Optional
 from .config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class SerpService:
@@ -32,8 +35,9 @@ class SerpService:
                 response = await client.get(self.base_url, params=params)
                 data = response.json()
                 return self._parse_results(data)
-            except Exception as e:
-                return [{"error": str(e)}]
+            except Exception:
+                logger.exception("Failed to fetch course search results from SerpAPI")
+                return [{"error": "Unable to fetch course results at this time."}]
 
     def _parse_results(self, data: Dict) -> List[Dict]:
         results = []
