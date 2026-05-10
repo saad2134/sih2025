@@ -3,7 +3,7 @@ error.log
 
 # Environment files
 .env
-*.env
+.env.local
 
 # Python
 __pycache__/
@@ -23,3 +23,8 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+__pycache__
+error.log
+.env
+.env.local
+frontend-web/.env.local

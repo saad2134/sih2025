@@ -18,12 +18,9 @@ import {
     BookOpen,
     ChevronRight,
     Play,
-    CheckCircle,
     Bookmark,
     BookmarkCheck,
-    ArrowUpDown,
-    ArrowLeft,
-    ArrowRight
+    ArrowUpDown
 } from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { siteConfig } from "@/config/site";
@@ -39,7 +36,7 @@ const categories = [
     "DevOps",
 ];
 
-const courses = [
+const allCourses = [
     {
         id: 1,
         title: "Introduction to Programming",
@@ -54,8 +51,7 @@ const courses = [
         image: "/api/placeholder/400/200",
         tags: ["Web Development", "Programming"],
         match: 98,
-        completionRate: 94,
-        isBookmarked: false
+        completionRate: 94
     },
     {
         id: 2,
@@ -71,8 +67,7 @@ const courses = [
         image: "/api/placeholder/400/200",
         tags: ["Marketing", "Business"],
         match: 92,
-        completionRate: 89,
-        isBookmarked: true
+        completionRate: 89
     },
     {
         id: 3,
@@ -88,8 +83,7 @@ const courses = [
         image: "/api/placeholder/400/200",
         tags: ["Data Science", "Free Courses", "Analytics"],
         match: 90,
-        completionRate: 87,
-        isBookmarked: false
+        completionRate: 87
     },
     {
         id: 4,
@@ -104,8 +98,7 @@ const courses = [
         originalPrice: 9999,
         image: "/api/placeholder/400/200",
         tags: ["Web Development", "JavaScript", "React"],
-        match: 95,
-        isBookmarked: true
+        match: 95
     },
     {
         id: 9,
@@ -120,8 +113,7 @@ const courses = [
         originalPrice: 15000,
         image: "/api/placeholder/400/200",
         tags: ["Python", "Data Science", "ML"],
-        match: 88,
-        isBookmarked: false
+        match: 88
     },
     {
         id: 8,
@@ -136,73 +128,23 @@ const courses = [
         originalPrice: 7999,
         image: "/api/placeholder/400/200",
         tags: ["AWS", "Cloud", "Certification"],
-        match: 82,
-        isBookmarked: true
+        match: 82
     },
-    {
-        id: 5,
-        title: "iOS App Development with Swift",
-        provider: "Apple Developer Academy",
-        instructor: "Emily Davis",
-        rating: 4.6,
-        students: 3200,
-        duration: "10 weeks",
-        level: "Intermediate",
-        price: 5999,
-        originalPrice: 12000,
-        image: "/api/placeholder/400/200",
-        tags: ["iOS", "Swift", "Mobile"],
-        match: 75,
-        isBookmarked: false
-    },
-    {
-        id: 6,
-        title: "Introduction to Cybersecurity",
-        provider: "SecureNet",
-        instructor: "Alex Thompson",
-        rating: 4.5,
-        students: 4100,
-        duration: "6 weeks",
-        level: "Beginner",
-        price: 2999,
-        originalPrice: 5999,
-        image: "/api/placeholder/400/200",
-        tags: ["Security", "Networking", "Beginner"],
-        match: 71,
-        isBookmarked: false
-    },
-    {
-        id: 7,
-        title: "DevOps Engineering with Kubernetes",
-        provider: "DevOps Academy",
-        instructor: "Robert Martinez",
-        rating: 4.8,
-        students: 2800,
-        duration: "14 weeks",
-        level: "Advanced",
-        price: 8999,
-        originalPrice: 18000,
-        image: "/api/placeholder/400/200",
-        tags: ["DevOps", "Kubernetes", "Docker"],
-        match: 68,
-        isBookmarked: false
-    }
 ];
 
 const levels = ["All Levels", "Beginner", "Intermediate", "Advanced"];
 const durations = ["Any Duration", "Under 4 weeks", "4-8 weeks", "8-12 weeks", "12+ weeks"];
 const priceTypes = ["All", "Free", "Paid"];
 
-export default function BrowseCourses() {
+export default function SavedCourses() {
     const [searchQuery, setSearchQuery] = React.useState("");
     const [selectedCategory, setSelectedCategory] = React.useState("All");
     const [selectedLevel, setSelectedLevel] = React.useState("All Levels");
     const [selectedDuration, setSelectedDuration] = React.useState("Any Duration");
     const [selectedPriceType, setSelectedPriceType] = React.useState("All");
-    const [bookmarkedCourses, setBookmarkedCourses] = React.useState<number[]>([1, 3]);
     const [showFilters, setShowFilters] = React.useState(false);
     const [currentPage, setCurrentPage] = React.useState(1);
-    const coursesPerPage = 12;
+    const coursesPerPage = 9;
     const [sortBy, setSortBy] = React.useState("popular");
 
     const sortOptions = [
@@ -215,15 +157,15 @@ export default function BrowseCourses() {
     ];
 
     useEffect(() => {
-        document.title = `Browse Courses ✦ ${siteConfig.name}`;
+        document.title = `Saved Courses ✦ ${siteConfig.name}`;
     }, []);
 
-    const filteredCourses = courses.filter(course => {
+    const filteredCourses = allCourses.filter(course => {
         const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             course.provider.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesCategory = selectedCategory === "All" || course.tags.includes(selectedCategory);
         const matchesLevel = selectedLevel === "All Levels" || course.level === selectedLevel;
-
+        
         let matchesDuration = true;
         if (selectedDuration !== "Any Duration") {
             const weeks = parseInt(course.duration.split(" ")[0]);
@@ -233,7 +175,7 @@ export default function BrowseCourses() {
             else if (selectedDuration === "12+ weeks") matchesDuration = weeks > 12;
         }
 
-        const matchesPriceType = selectedPriceType === "All" ||
+        const matchesPriceType = selectedPriceType === "All" || 
             (selectedPriceType === "Free" && course.price === 0) ||
             (selectedPriceType === "Paid" && course.price > 0);
 
@@ -259,14 +201,6 @@ export default function BrowseCourses() {
         setCurrentPage(1);
     }, [selectedCategory, selectedLevel, selectedDuration, selectedPriceType, searchQuery, sortBy]);
 
-    const toggleBookmark = (courseId: number) => {
-        setBookmarkedCourses(prev =>
-            prev.includes(courseId)
-                ? prev.filter(id => id !== courseId)
-                : [...prev, courseId]
-        );
-    };
-
     const resetFilters = () => {
         setSearchQuery("");
         setSelectedCategory("All");
@@ -283,10 +217,10 @@ export default function BrowseCourses() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <div className="flex flex-col lg:flex-row gap-y-3 gap-x-6">
+                    <div className="flex flex-col lg:flex-row gap-6">
                         <div className="w-full lg:w-1/5 lg:sticky lg:top-20 lg:h-fit space-y-3">
-                            <Button
-                                variant="outline"
+                            <Button 
+                                variant="outline" 
                                 className="lg:hidden w-full flex items-center justify-between"
                                 onClick={() => setShowFilters(!showFilters)}
                             >
@@ -297,10 +231,9 @@ export default function BrowseCourses() {
                                 {showFilters ? <ChevronRight className="rotate-90" size={16} /> : <ChevronRight size={16} />}
                             </Button>
 
-                            <div className={`${showFilters ? 'block' : 'hidden '} lg:block space-y-3`}>
-
-                                <div className="border rounded-lg p-3 ">
-                                    <div className="flex items-center gap-2 mb-2">
+                            <div className={`${showFilters ? 'block' : 'hidden'} lg:block space-y-3`}>
+                                <div className="border rounded-lg p-3">
+                                    <div className="flex items-center gap-2 mb-2 ">
                                         <ArrowUpDown size={14} />
                                         <span className="text-sm font-semibold">Sort</span>
                                     </div>
@@ -323,11 +256,11 @@ export default function BrowseCourses() {
                                             <Filter size={14} />
                                             <span className="text-sm font-semibold">Filters</span>
                                         </div>
-                                        <Button variant="ghost" size="sm" className="h-6 text-xs border" onClick={resetFilters}>
+                                        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={resetFilters}>
                                             Reset
                                         </Button>
                                     </div>
-
+                                    
                                     <div className="space-y-3">
                                         <div>
                                             <label className="text-xs font-medium mb-1.5 block">Category</label>
@@ -345,7 +278,7 @@ export default function BrowseCourses() {
                                                 ))}
                                             </div>
                                         </div>
-
+                                        
                                         <div>
                                             <label className="text-xs font-medium mb-1.5 block">Level</label>
                                             <div className="flex flex-wrap gap-1.5">
@@ -362,7 +295,7 @@ export default function BrowseCourses() {
                                                 ))}
                                             </div>
                                         </div>
-
+                                        
                                         <div>
                                             <label className="text-xs font-medium mb-1.5 block">Duration</label>
                                             <div className="flex flex-wrap gap-1.5">
@@ -379,7 +312,7 @@ export default function BrowseCourses() {
                                                 ))}
                                             </div>
                                         </div>
-
+                                        
                                         <div>
                                             <label className="text-xs font-medium mb-1.5 block">Price</label>
                                             <div className="flex flex-wrap gap-1.5">
@@ -405,21 +338,21 @@ export default function BrowseCourses() {
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                                 <Input
-                                    placeholder="Search courses, skills, or providers..."
+                                    placeholder="Search saved courses..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="pl-10"
                                 />
                             </div>
 
-<div className="flex items-center justify-between mb-4">
-                        <p className="text-sm text-muted-foreground">
-                            Showing <span className="font-medium text-foreground">{(currentPage - 1) * coursesPerPage + 1}-{Math.min(currentPage * coursesPerPage, filteredCourses.length)}</span> of <span className="font-medium text-foreground">{filteredCourses.length}</span> courses
-                        </p>
-                    </div>
+                            <div className="flex items-center justify-between mb-4">
+                                <p className="text-sm text-muted-foreground">
+                                    Showing <span className="font-medium text-foreground">{(currentPage - 1) * coursesPerPage + 1}-{Math.min(currentPage * coursesPerPage, filteredCourses.length)}</span> of <span className="font-medium text-foreground">{filteredCourses.length}</span> saved courses
+                                </p>
+                            </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                        {paginatedCourses.map((course, index) => (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                                {paginatedCourses.map((course, index) => (
                                     <motion.div
                                         key={course.id}
                                         initial={{ opacity: 0, y: 20 }}
@@ -440,13 +373,8 @@ export default function BrowseCourses() {
                                                     variant="ghost"
                                                     size="icon"
                                                     className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-background/80 hover:bg-background h-8 w-8"
-                                                    onClick={() => toggleBookmark(course.id)}
                                                 >
-                                                    {bookmarkedCourses.includes(course.id) ? (
-                                                        <BookmarkCheck className="w-4 h-4 sm:w-5 sm:h-5 text-violet-500" />
-                                                    ) : (
-                                                        <Bookmark className="w-4 h-4 sm:w-5 sm:h-5" />
-                                                    )}
+                                                    <BookmarkCheck className="w-4 h-4 sm:w-5 sm:h-5 text-violet-500" />
                                                 </Button>
                                                 <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 flex gap-1 flex-wrap max-w-[80%]">
                                                     {course.tags.slice(0, 2).map((tag) => (
@@ -489,9 +417,9 @@ export default function BrowseCourses() {
                                                     {course.price === 0 ? (
                                                         <>
                                                             <span className="text-sm sm:text-lg font-bold text-green-600">Free</span>
-                                                            {(course as any).completionRate && (
+                                                            {course.completionRate && (
                                                                 <Badge className="bg-violet-500 text-xs">
-                                                                    {(course as any).completionRate}% Completion
+                                                                    {course.completionRate}% Completion
                                                                 </Badge>
                                                             )}
                                                         </>
@@ -517,8 +445,8 @@ export default function BrowseCourses() {
 
                             {filteredCourses.length === 0 && (
                                 <div className="text-center py-12">
-                                    <BookOpen className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                                    <h3 className="text-lg font-semibold mb-2">No courses found</h3>
+                                    <Bookmark className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                                    <h3 className="text-lg font-semibold mb-2">No saved courses found</h3>
                                     <p className="text-muted-foreground mb-4">Try adjusting your filters or search query</p>
                                     <Button variant="outline" onClick={() => {
                                         setSearchQuery("");
