@@ -138,19 +138,101 @@ npm run dev
 
 See [DEPLOYMENT_FULL.md](DEPLOYMENT_FULL.md) for complete deployment instructions.
 
+#### Option 1: Docker Compose (Recommended)
+**Production mode:**
 ```bash
-# Core API
 cd backend_1-core_service
 docker-compose up -d
-
-# AI Engine
 cd ../backend_2-ai_engine_service
 docker-compose up -d
-
-# AI Companion
-cd ..//backend_3-ai_companion_service
+cd ../backend_3-ai_companion_service
 docker-compose up -d
 ```
+
+**Development mode** (with auto-reload on code changes):
+```bash
+cd backend_1-core_service
+docker-compose --profile dev up -d
+cd ../backend_2-ai_engine_service
+docker-compose --profile dev up -d
+cd ../backend_3-ai_companion_service
+docker-compose --profile dev up -d
+```
+
+#### Option 2: Docker Run (Standalone)
+
+Requires PostgreSQL, Redis already running locally.
+
+**Core API (port 8000):**
+```bash
+cd backend_1-core_service
+docker build -t shiksha-core .
+docker run -d -p 8000:8000 --name shiksha-core \
+  -e DATABASE_URL=postgresql://postgres:postgres@localhost:5432/shikshadisha \
+  -e REDIS_URL=redis://localhost:6379/0 \
+  shiksha-core
+```
+
+**AI Engine (port 9000):**
+```bash
+cd backend_2-ai_engine_service
+docker build -t shiksha-ai-engine .
+docker run -d -p 9000:9000 --name shiksha-ai-engine \
+  -e REDIS_URL=redis://localhost:6379/0 \
+  shiksha-ai-engine
+```
+
+**AI Companion (port 9001):**
+```bash
+cd backend_3-ai_companion_service
+docker build -t shiksha-companion .
+docker run -d -p 9001:9001 --name shiksha-companion \
+  -e REDIS_URL=redis://localhost:6379/0 \
+  shiksha-companion
+```
+
+#### Option 3: Local Development (No Docker)
+
+Requires PostgreSQL 15+ and Redis 7+ installed locally.
+
+**Core API (port 8000):**
+```bash
+cd backend_1-core_service
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Linux/Mac
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+**AI Engine (port 9000):**
+```bash
+cd backend_2-ai_engine_service
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+**AI Companion (port 9001):**
+```bash
+cd backend_3-ai_companion_service
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+#### Hot Reload Development
+
+Code changes are now mounted into containers via volumes. After making code changes:
+
+```bash
+# Rebuild and restart the service
+docker-compose up -d --build
+```
+
+The `--build` flag rebuilds the image to pick up any dependency changes, while volumes mount your local code for live updates.
 
 ## 🏗️ Architecture
 

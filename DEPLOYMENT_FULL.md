@@ -149,7 +149,7 @@ docker run -d -p 9000:9000 shiksha-ai-engine
 
 **Deploy:**
 ```bash
-cd /backend_3-ai_companion_service
+cd backend_3-ai_companion_service
 
 # With Docker Compose
 docker-compose up -d --build
@@ -235,15 +235,38 @@ docker logs shiksha-ai-companion
 ```bash
 cd backend_1-core_service && docker-compose up -d --build
 cd ../backend_2-ai_engine_service && docker-compose up -d --build
-cd ..//backend_3-ai_companion_service && docker-compose up -d --build
+cd ../backend_3-ai_companion_service && docker-compose up -d --build
 ```
 
 ### Stop All Services
 ```bash
 cd backend_1-core_service && docker-compose down
 cd ../backend_2-ai_engine_service && docker-compose down
-cd ..//backend_3-ai_companion_service && docker-compose down
+cd ../backend_3-ai_companion_service && docker-compose down
 ```
+
+---
+
+## Development (Hot Reload)
+
+### Option 1: Dev Profile (Auto-Reload)
+```bash
+# Start with --profile dev to enable auto-reload
+docker-compose --profile dev up -d
+```
+
+### Option 2: Manual Restart
+Code changes are mounted into containers via volumes. After code changes:
+
+```bash
+# Rebuild and restart (for dependency changes)
+docker-compose up -d --build
+
+# Or just restart (for code-only changes)
+docker-compose restart
+```
+
+The volumes mount your local code into the container for live updates.
 
 ---
 

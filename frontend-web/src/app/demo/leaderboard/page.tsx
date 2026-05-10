@@ -92,14 +92,7 @@ export default function Leaderboard() {
   return (
     <div className="p-4 sm:p-6 pb-24">
       <div className="max-w-5xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
-              <Trophy className="text-amber-500" size={24} />
-              Leaderboard
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">See how you rank against other learners</p>
-          </div>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         </div>
 
         <motion.div

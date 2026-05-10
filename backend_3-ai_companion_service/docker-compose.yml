@@ -12,6 +12,11 @@ services:
     depends_on:
       - redis
     restart: unless-stopped
+    volumes:
+      - .:/app
+    profiles:
+      - dev
+    command: uvicorn app.main:app --host 0.0.0.0 --port 9001 --reload
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9001/health"]
       interval: 30s

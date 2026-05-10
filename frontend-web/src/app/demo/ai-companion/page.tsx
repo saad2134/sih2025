@@ -293,23 +293,13 @@ export default function AICompanion() {
 
   return (
     <div className="p-4 sm:p-6 pb-24">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
-              <Sparkles className="text-violet-500" size={24} />
-              AI Learning Companion
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Your personal AI guide for career and learning</p>
-          </div>
-        </div>
-
+      <div className="w-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Card style={{ minHeight: `${chatHeight}px` }} className="flex flex-col overflow-hidden border-violet-200 dark:border-violet-800">
+          <Card style={{ minHeight: `${chatHeight}px` }} className="flex flex-col overflow-hidden border-violet-200 dark:border-violet-800 w-full max-w-none">
             <CardHeader className="p-4 border-b bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -452,7 +442,7 @@ export default function AICompanion() {
 
             <div className="p-4 border-t space-y-3">
               {messages.length <= 1 && (
-                <div className="flex flex-wrap gap-2 justify-center">
+                <div className="flex flex-wrap gap-2 justify-start">
                   {quickActions.map((action, index) => (
                     <Button
                       key={index}
@@ -498,39 +488,6 @@ export default function AICompanion() {
                 </Button>
               </div>
             </div>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="mt-6"
-        >
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">What I can help you with</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="text-center p-3 bg-muted rounded-lg">
-                  <Target className="mx-auto text-blue-500 mb-2" size={20} />
-                  <p className="text-xs font-medium">Progress Tracking</p>
-                </div>
-                <div className="text-center p-3 bg-muted rounded-lg">
-                  <BookOpen className="mx-auto text-green-500 mb-2" size={20} />
-                  <p className="text-xs font-medium">Course Suggestions</p>
-                </div>
-                <div className="text-center p-3 bg-muted rounded-lg">
-                  <TrendingUp className="mx-auto text-orange-500 mb-2" size={20} />
-                  <p className="text-xs font-medium">Career Guidance</p>
-                </div>
-                <div className="text-center p-3 bg-muted rounded-lg">
-                  <Calendar className="mx-auto text-violet-500 mb-2" size={20} />
-                  <p className="text-xs font-medium">Study Planning</p>
-                </div>
-              </div>
-            </CardContent>
           </Card>
         </motion.div>
       </div>

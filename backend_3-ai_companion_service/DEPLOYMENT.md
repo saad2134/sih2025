@@ -25,10 +25,47 @@ docker run -d \
   ghcr.io/saad2134/shiksha-disha/b3-ai-companion:latest
 ```
 
+### Development (Hot Reload)
+
+#### Dev Profile (Auto-Reload)
+```bash
+cd backend_3-ai_companion_service
+docker-compose --profile dev up -d
+```
+
+#### Manual Restart
+```bash
+# Rebuild (for dependency changes)
+docker-compose up -d --build
+
+# Or just restart for code-only changes
+docker-compose restart
+```
+
 ### 3. Verify
 
 ```bash
 curl http://localhost:9001/health
+```
+
+### Local Development (No Docker)
+
+Requires Redis 7+ running locally.
+
+```bash
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Linux/Mac
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables
+set REDIS_URL=redis://localhost:6379/0
+
+# Run with auto-reload
+uvicorn app.main:app --reload
 ```
 
 ---

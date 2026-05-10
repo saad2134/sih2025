@@ -11,10 +11,14 @@ services:
       - EMBEDS_PATH=./models/course_embeds.npy
       - META_PATH=./models/course_meta.pkl
     volumes:
+      - .:/app
       - ./data:/app/data
       - ./models:/app/models
     depends_on:
       - redis
+    profiles:
+      - dev
+    command: uvicorn app.main:app --host 0.0.0.0 --port 9000 --reload
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
       interval: 30s
