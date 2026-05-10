@@ -88,14 +88,7 @@ export default function MarketInsights() {
   return (
     <div className="p-4 sm:p-6 pb-24">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
-              <BarChart3 className="text-green-500" size={24} />
-              Market Insights
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Career trends, demand forecasts, and job market data</p>
-          </div>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         </div>
 
         <motion.div

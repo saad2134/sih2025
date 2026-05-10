@@ -19,7 +19,8 @@ import {
   Target,
   HelpCircle,
   FileUser,
-  Settings
+  Settings,
+  Bookmark
 } from "lucide-react";
 import AppUI from "@/components/logos/app_icon";
 import {
@@ -65,16 +66,22 @@ const demoNavItems = [
     icon: BookOpen,
     items: [
       {
-        title: "Recommendations",
-        url: "/demo/recommendations",
+        title: "Suggested Courses",
+        url: "/demo/suggested-courses",
         icon: Target,
-        description: "AI-powered course recommendations",
+        description: "AI-powered course suggestions for you",
       },
       {
         title: "Browse Courses",
         url: "/demo/browse_courses",
         icon: BookOpen,
         description: "Explore NSQF-aligned courses",
+      },
+      {
+        title: "Saved Courses",
+        url: "/demo/saved-courses",
+        icon: Bookmark,
+        description: "Your bookmarked courses",
       },
       {
         title: "Quick Quiz",
@@ -113,19 +120,20 @@ const demoNavItems = [
         icon: BarChart3,
         description: "Top learners and rankings",
       },
+      
+    ],
+  },
+  {
+    title: "Tools",
+    url: "",
+    icon: MessageSquare,
+    items: [
       {
         title: "Resume/CV Builder",
         url: "/demo/resume-cv-builder",
         icon: FileUser,
         description: "Create professional resumes",
       },
-    ],
-  },
-  {
-    title: "Assistant",
-    url: "",
-    icon: MessageSquare,
-    items: [
       {
         title: "AI Companion",
         url: "/demo/ai-companion",

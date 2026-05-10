@@ -139,11 +139,7 @@ const tabs = [
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                 >
-<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-                        <div>
-                            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">My Profile</h1>
-                            <p className="text-muted-foreground">Manage your account and view your progress</p>
-                        </div>
+<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
                             <DialogTrigger asChild>
                                 <Button variant="outline">

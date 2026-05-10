@@ -19,12 +19,17 @@ import {
   Briefcase,
   GraduationCap,
   Timer,
-  CheckCircle2
+  CheckCircle2,
+  Search,
+  Filter,
+  ArrowUpDown
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { siteConfig } from "@/config/site";
 
 interface CourseRecommendation {
@@ -309,68 +314,362 @@ const sampleCourses: CourseRecommendation[] = [
   }
 ];
 
+const sortOptions = [
+  { value: "match", label: "Best Match" },
+  { value: "rating", label: "Highest Rated" },
+  { value: "salary-high", label: "Highest Salary" },
+  { value: "duration", label: "Shortest Duration" },
+  { value: "popular", label: "Most Popular" },
+];
+
+const levels = ["All", "Beginner", "Intermediate", "Advanced"];
+const paces = ["All", "Fast", "Moderate", "Relaxed"];
+const durations = ["All", "Under 10 hours", "10-25 hours", "25-50 hours", "50+ hours"];
+const priceTypes = ["All", "Free", "Budget", "Premium"];
+const platforms = ["All", "Udemy", "Coursera", "edX", "LinkedIn Learning"];
+
 const CourseRecommendationPage: React.FC = () => {
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("match");
+  const [selectedLevel, setSelectedLevel] = useState("All");
+  const [selectedPace, setSelectedPace] = useState("All");
+  const [selectedDuration, setSelectedDuration] = useState("All");
+  const [selectedPrice, setSelectedPrice] = useState("All");
+  const [selectedPlatform, setSelectedPlatform] = useState("All");
+  const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const coursesPerPage = 6;
 
   useEffect(() => {
     document.title = `Recommendations ✦ ${siteConfig.name}`;
   }, []);
 
+  const filteredCourses = sampleCourses.filter(course => {
+    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.platform.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesLevel = selectedLevel === "All" || course.difficulty === selectedLevel;
+    const matchesPace = selectedPace === "All" || course.pace === selectedPace;
+    
+    let matchesDuration = true;
+    if (selectedDuration !== "All") {
+      const hours = course.personalizedHours;
+      if (selectedDuration === "Under 10 hours") matchesDuration = hours < 10;
+      else if (selectedDuration === "10-25 hours") matchesDuration = hours >= 10 && hours <= 25;
+      else if (selectedDuration === "25-50 hours") matchesDuration = hours > 25 && hours <= 50;
+      else if (selectedDuration === "50+ hours") matchesDuration = hours > 50;
+    }
+
+    const matchesPrice = selectedPrice === "All" || 
+      (selectedPrice === "Free" && course.studentFriendly.affordability === "Free") ||
+      (selectedPrice === "Budget" && course.studentFriendly.affordability === "Budget") ||
+      (selectedPrice === "Premium" && course.studentFriendly.affordability === "Premium");
+
+    const matchesPlatform = selectedPlatform === "All" || course.platform.toLowerCase().includes(selectedPlatform.toLowerCase());
+
+    return matchesSearch && matchesLevel && matchesPace && matchesDuration && matchesPrice && matchesPlatform;
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case "match": return b.matchScore - a.matchScore;
+      case "salary-high": return b.avgSalary.entry - a.avgSalary.entry;
+      case "duration": return a.personalizedHours - b.personalizedHours;
+      case "popular": return b.jobDemand.openings - a.jobDemand.openings;
+      default: return 0;
+    }
+  });
+
+  const totalPages = Math.ceil(filteredCourses.length / coursesPerPage);
+  const paginatedCourses = filteredCourses.slice(
+    (currentPage - 1) * coursesPerPage,
+    currentPage * coursesPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedLevel, selectedPace, selectedDuration, selectedPrice, selectedPlatform, searchQuery, sortBy]);
+
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedLevel("All");
+    setSelectedPace("All");
+    setSelectedDuration("All");
+    setSelectedPrice("All");
+    setSelectedPlatform("All");
+    setSortBy("match");
+  };
+
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Recommendations</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">AI-powered course suggestions tailored to you</p>
-          </div>
-        </div>
+    <div className="p-4 sm:p-6 lg:p-8 w-full">
+      <div className="w-full">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="flex flex-col lg:flex-row gap-y-3 gap-x-6">
+            <div className="w-full lg:w-1/5 lg:sticky lg:top-20 lg:h-fit space-y-3">
+              <div className="bg-card rounded-2xl p-4 border lg:hidden">
+                <div className="flex items-center gap-3 mb-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-bold text-card-foreground">Your Personalized Learning Path</h2>
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  Curated based on your visual-practical learning style
+                </p>
+              </div>
 
-        <div className="bg-card rounded-2xl p-4 sm:p-8 border mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-card-foreground">Your Personalized Learning Path</h2>
-          </div>
-          <p className="text-muted-foreground text-sm sm:text-lg">
-            Curated based on your visual-practical learning style • Project-focused approach • Career goals in Tech
-          </p>
-        </div>
+              <div className="bg-card rounded-xl border p-4 lg:hidden">
+                <div className="flex items-center gap-2 mb-3">
+                  <Brain className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-semibold text-card-foreground">Your Learning Profile</h2>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-center p-2 bg-muted rounded-lg">
+                    <div className="text-sm font-bold text-primary">Visual</div>
+                    <div className="text-[10px] text-muted-foreground">Primary Style</div>
+                  </div>
+                  <div className="text-center p-2 bg-muted rounded-lg">
+                    <div className="text-sm font-bold text-primary">Hands-On</div>
+                    <div className="text-[10px] text-muted-foreground">Learning Mode</div>
+                  </div>
+                  <div className="text-center p-2 bg-muted rounded-lg">
+                    <div className="text-sm font-bold text-primary">Fast</div>
+                    <div className="text-[10px] text-muted-foreground">Pace Preference</div>
+                  </div>
+                  <div className="text-center p-2 bg-muted rounded-lg">
+                    <div className="text-sm font-bold text-primary">2-3hrs</div>
+                    <div className="text-[10px] text-muted-foreground">Session Length</div>
+                  </div>
+                </div>
+              </div>
 
-        <div className="bg-card rounded-xl border p-4 sm:p-6 mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-            <h2 className="text-lg sm:text-xl font-semibold text-card-foreground">Your Learning Profile</h2>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
-              <div className="text-lg sm:text-2xl font-bold text-primary">Visual</div>
-              <div className="text-xs sm:text-sm text-muted-foreground">Primary Style</div>
-            </div>
-            <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
-              <div className="text-lg sm:text-2xl font-bold text-primary">Hands-On</div>
-              <div className="text-xs sm:text-sm text-muted-foreground">Learning Mode</div>
-            </div>
-            <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
-              <div className="text-lg sm:text-2xl font-bold text-primary">Fast</div>
-              <div className="text-xs sm:text-sm text-muted-foreground">Pace Preference</div>
-            </div>
-            <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
-              <div className="text-lg sm:text-2xl font-bold text-primary">2-3hrs</div>
-              <div className="text-xs sm:text-sm text-muted-foreground">Session Length</div>
-            </div>
-          </div>
-        </div>
-      </div>
+              <div className="hidden lg:block bg-card rounded-2xl p-4 border">
+                <div className="flex items-center gap-3 mb-2">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                  <h2 className="text-lg font-bold text-card-foreground">Your Personalized Learning Path</h2>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <div className="text-md font-bold text-primary">Visual</div>
+                    <div className="text-xs text-muted-foreground">Primary Style</div>
+                  </div>
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <div className="text-md font-bold text-primary">Hands-On</div>
+                    <div className="text-xs text-muted-foreground">Learning Mode</div>
+                  </div>
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <div className="text-md font-bold text-primary">Fast</div>
+                    <div className="text-xs text-muted-foreground">Pace Preference</div>
+                  </div>
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <div className="text-md font-bold text-primary">2-3hrs</div>
+                    <div className="text-xs text-muted-foreground">Session Length</div>
+                  </div>
+                </div>
+              </div>
 
-      <div className="space-y-6">
-          {sampleCourses.map((course) => (
-          <CourseCard 
-            key={course.id} 
-            course={course} 
-            isExpanded={selectedCourse === course.id}
-            onToggle={() => setSelectedCourse(selectedCourse === course.id ? null : course.id)}
-          />
-        ))}
+              <Button
+                variant="outline"
+                className="lg:hidden w-full flex items-center justify-between"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <div className="flex items-center gap-2">
+                  <Filter size={14} />
+                  <span className="text-sm">Sort & Filter</span>
+                </div>
+                {showFilters ? <ChevronRight className="rotate-90" size={16} /> : <ChevronRight size={16} />}
+              </Button>
+
+              <div className={`${showFilters ? 'block' : 'hidden '} lg:block space-y-3`}>
+                <div className="border rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ArrowUpDown size={14} />
+                    <span className="text-sm font-semibold">Sort</span>
+                  </div>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full text-xs border rounded-md px-2 py-1.5 bg-background"
+                  >
+                    {sortOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="border rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Filter size={14} />
+                      <span className="text-sm font-semibold">Filters</span>
+                    </div>
+                    <Button variant="ghost" size="sm" className="h-6 text-xs border" onClick={resetFilters}>
+                      Reset
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-medium mb-1.5 block">Level</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {levels.map((level) => (
+                          <Button
+                            key={level}
+                            variant={selectedLevel === level ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setSelectedLevel(level)}
+                            className="rounded-full text-xs h-6 px-2"
+                          >
+                            {level}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium mb-1.5 block">Pace</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {paces.map((pace) => (
+                          <Button
+                            key={pace}
+                            variant={selectedPace === pace ? "secondary" : "ghost"}
+                            size="sm"
+                            onClick={() => setSelectedPace(pace)}
+                            className="text-xs h-6"
+                          >
+                            {pace}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium mb-1.5 block">Duration</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {durations.map((duration) => (
+                          <Button
+                            key={duration}
+                            variant={selectedDuration === duration ? "secondary" : "ghost"}
+                            size="sm"
+                            onClick={() => setSelectedDuration(duration)}
+                            className="text-xs h-6"
+                          >
+                            {duration}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium mb-1.5 block">Price</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {priceTypes.map((price) => (
+                          <Button
+                            key={price}
+                            variant={selectedPrice === price ? "secondary" : "ghost"}
+                            size="sm"
+                            onClick={() => setSelectedPrice(price)}
+                            className="text-xs h-6"
+                          >
+                            {price}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium mb-1.5 block">Platform</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {platforms.map((platform) => (
+                          <Button
+                            key={platform}
+                            variant={selectedPlatform === platform ? "secondary" : "ghost"}
+                            size="sm"
+                            onClick={() => setSelectedPlatform(platform)}
+                            className="text-xs h-6"
+                          >
+                            {platform}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                <Input
+                  placeholder="Search courses..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Showing <span className="font-medium text-foreground">{(currentPage - 1) * coursesPerPage + 1}-{Math.min(currentPage * coursesPerPage, filteredCourses.length)}</span> of <span className="font-medium text-foreground">{filteredCourses.length}</span> recommendations
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                {paginatedCourses.map((course) => (
+                  <CourseCard 
+                    key={course.id} 
+                    course={course} 
+                    isExpanded={selectedCourse === course.id}
+                    onToggle={() => setSelectedCourse(selectedCourse === course.id ? null : course.id)}
+                  />
+                ))}
+              </div>
+
+              {filteredCourses.length === 0 && (
+                <div className="text-center py-12">
+                  <BookOpen className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No courses found</h3>
+                  <p className="text-muted-foreground mb-4">Try adjusting your filters</p>
+                  <Button variant="outline" onClick={resetFilters}>
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+
+              {totalPages > 1 && (
+                <Pagination className="mt-8">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink 
+                          onClick={() => setCurrentPage(page)}
+                          isActive={currentPage === page}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

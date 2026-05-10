@@ -346,7 +346,7 @@ const AlertBox: React.FC = () => {
   return (
     <div className="bg-muted border rounded-lg p-3 mb-3">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="font-medium">Get started today with a free account to access an advanced builder, save & share resumes.</span>
+        <span className="font-medium">Get started today with a free account to autofill from profile, access an advanced builder, save & share resumes.</span>
         <Button variant="outline" size="sm" className="ml-auto h-7 text-xs" onClick={() => router.push('/auth')}>
           Get Started
         </Button>
@@ -893,10 +893,6 @@ const ResumeCVBuilderPage: React.FC = () => {
       <div className="h-screen flex flex-col pb-8">
         <div className="p-4 pb-2">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-2">
-              <h1 className="text-xl font-bold">Resume/CV Builder</h1>
-              
-            </div>
             <AlertBox />
           </div>
         </div>
