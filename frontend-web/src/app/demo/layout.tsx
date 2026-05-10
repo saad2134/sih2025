@@ -57,6 +57,7 @@ const demoNavItems = [
     title: "Dashboard",
     url: "/demo/dashboard",
     icon: LayoutDashboard,
+    description: "Your personalized learning dashboard",
   },
   {
     title: "Learn & Upskill",
@@ -67,16 +68,19 @@ const demoNavItems = [
         title: "Recommendations",
         url: "/demo/recommendations",
         icon: Target,
+        description: "AI-powered course recommendations",
       },
       {
         title: "Browse Courses",
         url: "/demo/browse_courses",
         icon: BookOpen,
+        description: "Explore NSQF-aligned courses",
       },
       {
         title: "Quick Quiz",
         url: "/demo/quick-quiz",
         icon: HelpCircle,
+        description: "Test your knowledge",
       },
     ],
   },
@@ -89,26 +93,31 @@ const demoNavItems = [
         title: "My Career Map",
         url: "/demo/career_map",
         icon: MapPin,
+        description: "Visualize your career journey",
       },
       {
         title: "Market Insights",
         url: "/demo/insights",
         icon: Sparkles,
+        description: "Labor market trends and forecasts",
       },
       {
         title: "Achievements",
         url: "/demo/achievements",
         icon: Trophy,
+        description: "Your badges and milestones",
       },
       {
         title: "Leaderboard",
         url: "/demo/leaderboard",
         icon: BarChart3,
+        description: "Top learners and rankings",
       },
       {
         title: "Resume/CV Builder",
         url: "/demo/resume-cv-builder",
         icon: FileUser,
+        description: "Create professional resumes",
       },
     ],
   },
@@ -121,6 +130,7 @@ const demoNavItems = [
         title: "AI Companion",
         url: "/demo/ai-companion",
         icon: MessageSquare,
+        description: "Your personal career assistant",
       },
     ],
   },
@@ -168,9 +178,9 @@ function DemoSidebar({ children }: { children: React.ReactNode }) {
                       {item.items.map((subItem) => {
                         const isActive = pathname === subItem.url;
                         return (
-                          <SidebarMenuItem key={subItem.title}>
-                            <SidebarMenuButton asChild isActive={isActive}>
-                              <Link href={subItem.url} className="flex items-center gap-3 pl-4">
+                          <SidebarMenuItem key={subItem.title} className="py-0.5">
+                            <SidebarMenuButton asChild isActive={isActive} >
+                              <Link href={subItem.url} className="flex items-center gap-3 ">
                                 <subItem.icon className={isActive ? "text-violet-500" : ""} />
                                 <span>{subItem.title}</span>
                               </Link>
@@ -183,9 +193,9 @@ function DemoSidebar({ children }: { children: React.ReactNode }) {
                 }
                 const isActive = pathname === item.url;
                 return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive}>
-                      <Link href={item.url} className="flex items-center gap-3">
+                  <SidebarMenuItem key={item.title} >
+                    <SidebarMenuButton asChild isActive={isActive} >
+                      <Link href={item.url} className="flex items-center gap-3 ">
                         <item.icon className={isActive ? "text-violet-500" : ""} />
                         <span>{item.title}</span>
                       </Link>
@@ -260,12 +270,23 @@ function DemoSidebar({ children }: { children: React.ReactNode }) {
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 z-50 bg-background/80 backdrop-blur-md">
           <SidebarTrigger />
           <div className="flex-1">
-            <h1 className="text-lg font-semibold">
-              {demoNavItems.find(item => item.url === pathname)?.title ||
-                demoNavItems.find(item => item.items?.some(subItem => subItem.url === pathname))?.title ||
-                demoNavItems.flatMap(item => item.items || []).find(subItem => subItem.url === pathname)?.title ||
-                "Dashboard"}
-            </h1>
+            {(() => {
+              const directMatch = demoNavItems.find(item => item.url === pathname);
+              const subItemMatch = demoNavItems.flatMap(item => item.items || []).find(subItem => subItem.url === pathname);
+              const currentItem = directMatch || subItemMatch;
+              return (
+                <div>
+                  <h1 className="text-lg font-semibold">
+                    {currentItem?.title || "Dashboard"}
+                  </h1>
+                  {currentItem && 'description' in currentItem && (
+                    <p className="text-xs text-muted-foreground line-clamp-1">
+                      {currentItem.description}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
           </div>
           <div className="flex items-center gap-2">
             <Sheet>
