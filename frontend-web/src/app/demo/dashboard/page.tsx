@@ -99,27 +99,27 @@ export default function Dashboard() {
         const hour = new Date().getHours();
         if (hour < 6) return { 
             bg: "from-violet-900 to-indigo-900", 
-            icon: <Moon className="h-32 w-32 text-violet-300/50 animate-pulse" />,
+            icon: <Moon className="h-64 w-64 text-violet-300/50 animate-pulse" />,
             accent: "text-violet-300"
         };
         if (hour < 12) return { 
             bg: "from-violet-600 to-indigo-600", 
-            icon: <Sunrise className="h-32 w-32 text-violet-200/50 animate-bounce" />,
+            icon: <Sunrise className="h-64 w-64 text-violet-200/50 animate-bounce" />,
             accent: "text-violet-200"
         };
         if (hour < 17) return { 
             bg: "from-primary to-indigo-600", 
-            icon: <Sun className="h-32 w-32 text-white/30 animate-spin-slow" />,
+            icon: <Sun className="h-64 w-64 text-white/30 animate-spin-slow" />,
             accent: "text-violet-100"
         };
         if (hour < 20) return { 
             bg: "from-indigo-600 to-violet-700", 
-            icon: <Sunset className="h-32 w-32 text-violet-300/50 animate-pulse" />,
+            icon: <Sunset className="h-64 w-64 text-violet-300/50 animate-pulse" />,
             accent: "text-violet-300"
         };
         return { 
             bg: "from-violet-900 to-indigo-900", 
-            icon: <Moon className="h-32 w-32 text-violet-300/50 animate-pulse" />,
+            icon: <Moon className="h-64 w-64 text-violet-300/50 animate-pulse" />,
             accent: "text-violet-300"
         };
     };

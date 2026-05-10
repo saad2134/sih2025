@@ -1,14 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
 import { 
   MapPin, 
   Target, 
@@ -18,7 +16,11 @@ import {
   CheckCircle2,
   Clock,
   Star,
-  ArrowRight
+  ArrowRight,
+  Edit3,
+  RotateCcw,
+  Calendar,
+  AlertCircle
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 
@@ -34,9 +36,33 @@ function useIsMobile() {
   return isMobile;
 }
 
+interface MilestoneDetails {
+  skills: string[];
+  resources: string[];
+  nextSteps: string;
+  provider?: string;
+  level?: string;
+  salary?: string;
+  companies?: string[];
+}
+
+interface Milestone {
+  id: number;
+  title: string;
+  status: string;
+  type: string;
+  description: string;
+  duration: string;
+  progress: number;
+  icon: React.ComponentType<{ className?: string; size?: number }>;
+  color: string;
+  bgColor: string;
+  details: MilestoneDetails;
+}
+
 export default function CareerMap() {
   const isMobile = useIsMobile();
-  const [selectedMilestone, setSelectedMilestone] = React.useState<any>(null);
+  const [selectedMilestone, setSelectedMilestone] = React.useState<Milestone | null>(null);
 
   const careerPath = {
     goal: "Software Developer",
@@ -178,157 +204,163 @@ export default function CareerMap() {
     }
   };
 
-  useEffect(() => {
-          document.title = `My Career Map ✦ ${siteConfig.name}`;
-      }, []);
+  React.useEffect(() => {
+    document.title = `My Career Map ✦ ${siteConfig.name}`;
+  }, []);
+
+  const handleMilestoneSelect = (milestone: Milestone) => {
+    setSelectedMilestone(milestone);
+  };
+
+  const handleCloseSheet = () => {
+    setSelectedMilestone(null);
+  };
 
   return (
-    <div className="p-4 sm:p-6 pb-24">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-8"
-        >
-          <Card className="bg-primary/5 border-primary/20">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-start sm:items-center gap-3 sm:gap-4">
-                  <div className="p-2 sm:p-3 bg-primary/10 rounded-lg shrink-0">
-                    <Target className="text-primary" size={22} />
-                  </div>
-                  <div className="min-w-0">
-                    <h2 className="text-lg sm:text-xl font-semibold">Your Path to {careerPath.goal}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Estimated duration: {careerPath.duration} • Level: {careerPath.level}
-                    </p>
-                  </div>
+    <div className="p-4 sm:p-6 pb-24 w-full">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-8"
+      >
+        <Card className="bg-primary/5 border-primary/20">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 bg-primary/10 rounded-lg shrink-0">
+                  <Target className="text-primary" size={22} />
                 </div>
-                <Badge variant="secondary" className="text-base sm:text-lg px-3 sm:px-4 py-1.5 sm:py-2 w-fit">
-                  {careerPath.match}% Path Match
-                </Badge>
+                <div className="min-w-0">
+                  <h2 className="text-lg sm:text-xl font-semibold">Your Path to {careerPath.goal}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Estimated duration: {careerPath.duration} • Level: {careerPath.level}
+                  </p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              <Badge variant="secondary" className="text-base sm:text-lg px-3 sm:px-4 py-1.5 sm:py-2 w-fit">
+                {careerPath.match}% Path Match
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3 order-1">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="text-primary" size={20} />
-                    Your Learning Journey
-                  </CardTitle>
-                  <CardDescription>
-                    Follow this step-by-step path to achieve your career goals
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-8">
-                    {milestones.map((milestone, index) => {
-                      const Icon = milestone.icon;
-                      return (
-                        <motion.div
-                          key={milestone.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.5, delay: 0.1 * index }}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3 order-1">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="text-primary" size={20} />
+                  Your Learning Journey
+                </CardTitle>
+                <CardDescription>
+                  Follow this step-by-step path to achieve your career goals
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-8">
+                  {milestones.map((milestone, index) => {
+                    const Icon = milestone.icon;
+                    return (
+                      <motion.div
+                        key={milestone.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.1 * index }}
+                      >
+                        <div 
+                          className={`flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-6 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                            selectedMilestone?.id === milestone.id 
+                              ? 'ring-2 ring-primary border-primary bg-primary/5' 
+                              : 'border-border'
+                          }`}
+                          onClick={() => handleMilestoneSelect(milestone)}
                         >
-                          <div 
-                            className={`flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-6 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                              selectedMilestone?.id === milestone.id ? 'ring-2 ring-primary' : ''
-                            }`}
-                            onClick={() => setSelectedMilestone(milestone)}
-                          >
-                            <div className="flex flex-row sm:flex-col items-center gap-4 sm:gap-0">
-                              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border-2 shrink-0 ${getStatusColor(milestone.status)}`}>
-                                <Icon size={18} className="sm:w-5 sm:h-5" />
-                              </div>
-                              {index < milestones.length - 1 && (
-                                <div className={`hidden sm:block flex-1 w-0.5 mt-2 ${
-                                  milestone.status === "completed" ? 'bg-green-500' : 
-                                  milestone.status === "current" ? 'bg-blue-500' : 'bg-gray-300'
-                                }`} style={{ height: '80px' }} />
-                              )}
+                          <div className="flex flex-row sm:flex-col items-center gap-4 sm:gap-0">
+                            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border-2 shrink-0 ${getStatusColor(milestone.status)}`}>
+                              <Icon size={18} className="sm:w-5 sm:h-5" />
                             </div>
+                            {index < milestones.length - 1 && (
+                              <div className={`hidden sm:block flex-1 w-0.5 mt-2 ${
+                                milestone.status === "completed" ? 'bg-green-500' : 
+                                milestone.status === "current" ? 'bg-blue-500' : 'bg-gray-300'
+                              }`} style={{ height: '80px' }} />
+                            )}
+                          </div>
 
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
-                                <div className="min-w-0">
-                                  <h3 className="text-base sm:text-lg font-semibold flex flex-wrap items-center gap-2">
-                                    {milestone.title}
-                                    <Badge 
-                                      variant={
-                                        milestone.status === "completed" ? "default" :
-                                        milestone.status === "current" ? "secondary" : "outline"
-                                      }
-                                    >
-                                      {getStatusText(milestone.status)}
-                                    </Badge>
-                                  </h3>
-                                  <p className="text-muted-foreground mt-1">{milestone.description}</p>
-                                </div>
-                                <div className="text-left sm:text-right shrink-0">
-                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Clock size={14} />
-                                    <span>{milestone.duration}</span>
-                                  </div>
-                                  {milestone.progress > 0 && (
-                                    <div className="w-32 mt-2">
-                                      <Progress value={milestone.progress} className="h-2" />
-                                      <span className="text-xs text-muted-foreground">{milestone.progress}%</span>
-                                    </div>
-                                  )}
-                                </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
+                              <div className="min-w-0">
+                                <h3 className="text-base sm:text-lg font-semibold flex flex-wrap items-center gap-2">
+                                  {milestone.title}
+                                  <Badge 
+                                    variant={
+                                      milestone.status === "completed" ? "default" :
+                                      milestone.status === "current" ? "secondary" : "outline"
+                                    }
+                                  >
+                                    {getStatusText(milestone.status)}
+                                  </Badge>
+                                </h3>
+                                <p className="text-muted-foreground mt-1">{milestone.description}</p>
                               </div>
-
-                              <div className="flex flex-wrap gap-2">
-                                {milestone.details.skills.slice(0, 3).map((skill, skillIndex) => (
-                                  <Badge key={skillIndex} variant="outline" className="text-xs">
-                                    {skill}
-                                  </Badge>
-                                ))}
-                                {milestone.details.skills.length > 3 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{milestone.details.skills.length - 3} more
-                                  </Badge>
+                              <div className="text-left sm:text-right shrink-0">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Clock size={14} />
+                                  <span>{milestone.duration}</span>
+                                </div>
+                                {milestone.progress > 0 && (
+                                  <div className="w-32 mt-2">
+                                    <Progress value={milestone.progress} className="h-2" />
+                                    <span className="text-xs text-muted-foreground">{milestone.progress}%</span>
+                                  </div>
                                 )}
                               </div>
+                            </div>
 
-                              {milestone.status === "current" && (
-                                <Button className="mt-4 flex items-center gap-2">
-                                  Continue Learning
-                                  <ArrowRight size={16} />
-                                </Button>
-                              )}
-                              {milestone.status === "upcoming" && (
-                                <Button variant="outline" className="mt-4">
-                                  Preview Content
-                                </Button>
+                            <div className="flex flex-wrap gap-2">
+                              {milestone.details.skills.slice(0, 3).map((skill, skillIndex) => (
+                                <Badge key={skillIndex} variant="outline" className="text-xs">
+                                  {skill}
+                                </Badge>
+                              ))}
+                              {milestone.details.skills.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{milestone.details.skills.length - 3} more
+                                </Badge>
                               )}
                             </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
 
-          <div className="space-y-4 lg:space-y-6 min-w-0 lg:sticky lg:top-24 lg:self-start order-2 lg:order-none">
-            <div className="hidden lg:block">
+                            {milestone.status === "current" && (
+                              <Button className="mt-4 flex items-center gap-2">
+                                Continue Learning
+                                <ArrowRight size={16} />
+                              </Button>
+                            )}
+                            {milestone.status === "upcoming" && (
+                              <Button variant="outline" className="mt-4">
+                                Preview Content
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        <div className="space-y-4 lg:space-y-6 min-w-0 lg:sticky lg:top-24 lg:self-start order-2 lg:order-none">
+          <div className="hidden lg:block">
             {selectedMilestone ? (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
@@ -365,9 +397,9 @@ export default function CareerMap() {
                       <p className="text-sm text-muted-foreground">{selectedMilestone.duration}</p>
                     </div>
                     <div>
-                      <h4 className="font-medium mb-2">Skills You'll Learn</h4>
+                      <h4 className="font-medium mb-2">Skills You&apos;ll Learn</h4>
                       <div className="flex flex-wrap gap-1">
-                        {selectedMilestone.details.skills.map((skill: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined, index: React.Key | null | undefined) => (
+                        {selectedMilestone.details.skills.map((skill: string, index: number) => (
                           <Badge key={index} variant="secondary" className="text-xs">
                             {skill}
                           </Badge>
@@ -377,7 +409,7 @@ export default function CareerMap() {
                     <div>
                       <h4 className="font-medium mb-2">Resources</h4>
                       <ul className="text-sm text-muted-foreground space-y-1">
-                        {selectedMilestone.details.resources.map((resource: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined, index: React.Key | null | undefined) => (
+                        {selectedMilestone.details.resources.map((resource: string, index: number) => (
                           <li key={index}>• {resource}</li>
                         ))}
                       </ul>
@@ -399,6 +431,31 @@ export default function CareerMap() {
                         <p className="text-sm text-muted-foreground">{selectedMilestone.details.salary}</p>
                       </div>
                     )}
+                    
+                    <div className="border-t pt-4 mt-4">
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                        <Edit3 className="w-4 h-4" />
+                        Make Changes
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button variant="outline" size="sm" className="text-xs">
+                          <Calendar className="w-3 h-3 mr-1" />
+                          Reschedule
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-xs">
+                          <RotateCcw className="w-3 h-3 mr-1" />
+                          Reset Progress
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-xs">
+                          <AlertCircle className="w-3 h-3 mr-1" />
+                          Mark Complete
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-xs">
+                          <Edit3 className="w-3 h-3 mr-1" />
+                          Edit Details
+                        </Button>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -458,33 +515,22 @@ export default function CareerMap() {
             </motion.div>
           </div>
         </div>
-      </div>
 
-      <Sheet
-        open={!!selectedMilestone && isMobile}
-        onOpenChange={(open) => !open && setSelectedMilestone(null)}
-      >
-        <SheetContent side="bottom" className="h-[85dvh] overflow-y-auto rounded-t-2xl">
-          <SheetHeader className="pr-12">
-            <SheetTitle className={`flex items-center gap-2 ${!selectedMilestone ? "sr-only" : ""}`}>
-              {selectedMilestone ? (
-                <>
+        {isMobile && selectedMilestone && (
+          <Sheet open={true} onOpenChange={handleCloseSheet}>
+            <SheetContent side="bottom" className="h-[85dvh] overflow-y-auto rounded-t-2xl">
+              <SheetHeader className="pr-12">
+                <SheetTitle className="flex items-center gap-2">
                   {React.createElement(selectedMilestone.icon, {
                     className: selectedMilestone.color,
                     size: 22,
                   })}
                   {selectedMilestone.title}
-                </>
-              ) : (
-                "Milestone details"
-              )}
-            </SheetTitle>
-          </SheetHeader>
-          {selectedMilestone && (
-            <>
-              <SheetDescription className="text-left">
-                {selectedMilestone.description}
-              </SheetDescription>
+                </SheetTitle>
+                <SheetDescription className="text-left">
+                  {selectedMilestone.description}
+                </SheetDescription>
+              </SheetHeader>
               <div className="space-y-4 mt-6 pb-8">
                 <div>
                   <h4 className="font-medium mb-2">Status</h4>
@@ -539,11 +585,35 @@ export default function CareerMap() {
                     <p className="text-sm text-muted-foreground">{selectedMilestone.details.salary}</p>
                   </div>
                 )}
+                
+                <div className="border-t pt-4 mt-4">
+                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                    <Edit3 className="w-4 h-4" />
+                    Make Changes
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" size="sm" className="text-xs">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      Reschedule
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      <RotateCcw className="w-3 h-3 mr-1" />
+                      Reset Progress
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      <AlertCircle className="w-3 h-3 mr-1" />
+                      Mark Complete
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      <Edit3 className="w-3 h-3 mr-1" />
+                      Edit Details
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+            </SheetContent>
+          </Sheet>
+        )}
     </div>
   );
 }

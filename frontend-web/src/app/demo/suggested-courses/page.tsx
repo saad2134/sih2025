@@ -4,31 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   BookOpen, 
-  DollarSign, 
   TrendingUp, 
-  Clock, 
-  BarChart3, 
   Sparkles, 
-  Brain,
   Target,
-  Zap,
-  Award,
   AlertCircle,
-  ChevronRight,
   Star,
-  Briefcase,
-  GraduationCap,
-  Timer,
-  CheckCircle2,
   Search,
   Filter,
-  ArrowUpDown
+  ArrowUpDown,
+  ChevronRight,
+  Bookmark,
+  BookmarkCheck,
+  Play
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { siteConfig } from "@/config/site";
 
@@ -340,6 +332,15 @@ const CourseRecommendationPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const coursesPerPage = 6;
+  const [bookmarkedCourses, setBookmarkedCourses] = useState<string[]>(['1']);
+
+  const toggleBookmark = (courseId: string) => {
+    setBookmarkedCourses(prev =>
+      prev.includes(courseId)
+        ? prev.filter(id => id !== courseId)
+        : [...prev, courseId]
+    );
+  };
 
   useEffect(() => {
     document.title = `Recommendations ✦ ${siteConfig.name}`;
@@ -408,62 +409,32 @@ const CourseRecommendationPage: React.FC = () => {
         >
           <div className="flex flex-col lg:flex-row gap-y-3 gap-x-6">
             <div className="w-full lg:w-1/5 lg:sticky lg:top-20 lg:h-fit space-y-3">
-              <div className="bg-card rounded-2xl p-4 border lg:hidden">
-                <div className="flex items-center gap-3 mb-2">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  <h2 className="text-lg font-bold text-card-foreground">Your Personalized Learning Path</h2>
-                </div>
-                <p className="text-muted-foreground text-xs">
-                  Curated based on your visual-practical learning style
-                </p>
-              </div>
-
-              <div className="bg-card rounded-xl border p-4 lg:hidden">
-                <div className="flex items-center gap-2 mb-3">
-                  <Brain className="w-4 h-4 text-primary" />
-                  <h2 className="text-sm font-semibold text-card-foreground">Your Learning Profile</h2>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-center p-2 bg-muted rounded-lg">
-                    <div className="text-sm font-bold text-primary">Visual</div>
-                    <div className="text-[10px] text-muted-foreground">Primary Style</div>
-                  </div>
-                  <div className="text-center p-2 bg-muted rounded-lg">
-                    <div className="text-sm font-bold text-primary">Hands-On</div>
-                    <div className="text-[10px] text-muted-foreground">Learning Mode</div>
-                  </div>
-                  <div className="text-center p-2 bg-muted rounded-lg">
-                    <div className="text-sm font-bold text-primary">Fast</div>
-                    <div className="text-[10px] text-muted-foreground">Pace Preference</div>
-                  </div>
-                  <div className="text-center p-2 bg-muted rounded-lg">
-                    <div className="text-sm font-bold text-primary">2-3hrs</div>
-                    <div className="text-[10px] text-muted-foreground">Session Length</div>
+              <div className="bg-card rounded-xl p-3 border">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                  <div>
+                    <h2 className="text-sm sm:text-base font-bold text-card-foreground">Your Personalized Learning Path</h2>
+                    <p className="text-muted-foreground text-[10px] sm:text-xs hidden sm:block">
+                      Curated based on your visual-practical learning style
+                    </p>
                   </div>
                 </div>
-              </div>
-
-              <div className="hidden lg:block bg-card rounded-2xl p-4 border">
-                <div className="flex items-center gap-3 mb-2">
-                  <Sparkles className="w-6 h-6 text-primary" />
-                  <h2 className="text-lg font-bold text-card-foreground">Your Personalized Learning Path</h2>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center p-3 bg-muted rounded-lg">
-                    <div className="text-md font-bold text-primary">Visual</div>
-                    <div className="text-xs text-muted-foreground">Primary Style</div>
+                <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+                  <div className="text-center p-1.5 sm:p-2 bg-muted rounded-lg">
+                    <div className="text-xs sm:text-sm font-bold text-primary">Visual</div>
+                    <div className="text-[9px] sm:text-[10px] text-muted-foreground">Primary Style</div>
                   </div>
-                  <div className="text-center p-3 bg-muted rounded-lg">
-                    <div className="text-md font-bold text-primary">Hands-On</div>
-                    <div className="text-xs text-muted-foreground">Learning Mode</div>
+                  <div className="text-center p-1.5 sm:p-2 bg-muted rounded-lg">
+                    <div className="text-xs sm:text-sm font-bold text-primary">Hands-On</div>
+                    <div className="text-[9px] sm:text-[10px] text-muted-foreground">Learning Mode</div>
                   </div>
-                  <div className="text-center p-3 bg-muted rounded-lg">
-                    <div className="text-md font-bold text-primary">Fast</div>
-                    <div className="text-xs text-muted-foreground">Pace Preference</div>
+                  <div className="text-center p-1.5 sm:p-2 bg-muted rounded-lg">
+                    <div className="text-xs sm:text-sm font-bold text-primary">Fast</div>
+                    <div className="text-[9px] sm:text-[10px] text-muted-foreground">Pace Preference</div>
                   </div>
-                  <div className="text-center p-3 bg-muted rounded-lg">
-                    <div className="text-md font-bold text-primary">2-3hrs</div>
-                    <div className="text-xs text-muted-foreground">Session Length</div>
+                  <div className="text-center p-1.5 sm:p-2 bg-muted rounded-lg">
+                    <div className="text-xs sm:text-sm font-bold text-primary">2-3hrs</div>
+                    <div className="text-[9px] sm:text-[10px] text-muted-foreground">Session Length</div>
                   </div>
                 </div>
               </div>
@@ -617,13 +588,15 @@ const CourseRecommendationPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {paginatedCourses.map((course) => (
                   <CourseCard 
                     key={course.id} 
                     course={course} 
                     isExpanded={selectedCourse === course.id}
                     onToggle={() => setSelectedCourse(selectedCourse === course.id ? null : course.id)}
+                    isBookmarked={bookmarkedCourses.includes(course.id)}
+                    onToggleBookmark={() => toggleBookmark(course.id)}
                   />
                 ))}
               </div>
@@ -679,146 +652,112 @@ const CourseCard: React.FC<{
   course: CourseRecommendation;
   isExpanded: boolean;
   onToggle: () => void;
-}> = ({ course, isExpanded, onToggle }) => {
+  isBookmarked: boolean;
+  onToggleBookmark: () => void;
+}> = ({ course, isExpanded, onToggle, isBookmarked, onToggleBookmark }) => {
   return (
-    <div className="bg-card rounded-2xl shadow-xl overflow-hidden border">
-      <div className="bg-gradient-to-r from-[#3C0061] to-[#5a1a8a] px-3 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
-        <div className="flex items-center gap-2">
-          <Star className="w-4 h-4 sm:w-5 sm:h-5 text-white fill-white" />
-          <span className="font-bold text-white text-sm sm:text-lg">{course.matchScore}% Match Score</span>
-          <span className="text-white/80 text-xs sm:text-sm hidden sm:inline">- Perfect for your learning style!</span>
+    <Card className="h-full flex flex-col hover:shadow-lg transition-shadow w-full overflow-hidden">
+      <div className="relative h-28 sm:h-32 bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 rounded-t-lg overflow-hidden">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Play className="w-8 h-8 sm:w-12 sm:h-12 text-violet-500/50" />
         </div>
-        <div className="flex items-center gap-2 bg-white/20 backdrop-blur px-2 sm:px-3 py-1 rounded-full">
-          <TrendingUp className="w-3 h-4 text-white" />
-          <span className="text-xs sm:text-sm font-semibold text-white">{course.jobDemand.trend} Demand</span>
+        <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex items-center gap-1.5 bg-white/90 backdrop-blur px-2 sm:px-3 py-1 rounded-full">
+          <Star className="w-3 h-3 sm:w-4 sm:h-4 text-violet-600 fill-violet-600" />
+          <span className="text-xs sm:text-sm font-bold text-violet-700">{course.matchScore}% Match</span>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-background/80 hover:bg-background h-8 w-8"
+          onClick={onToggleBookmark}
+        >
+          {isBookmarked ? (
+            <BookmarkCheck className="w-4 h-4 sm:w-5 sm:h-5 text-violet-500" />
+          ) : (
+            <Bookmark className="w-4 h-4 sm:w-5 sm:h-5" />
+          )}
+        </Button>
+        <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 flex items-center gap-1.5 bg-white/90 backdrop-blur px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
+          <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
+          <span className="text-xs sm:text-sm font-semibold text-green-700">{course.jobDemand.trend}</span>
         </div>
       </div>
 
-      <div className="p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-6">
-          
-          <div className="flex-1">
-            <div className="flex flex-col sm:items-start justify-between mb-2 gap-2">
-              <div>
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 text-card-foreground">{course.title}</h3>
-                <div className="flex flex-wrap items-center gap-1 sm:gap-3 text-muted-foreground text-xs sm:text-sm">
-                  <span className="flex items-center gap-1">
-                    <GraduationCap className="w-3 h-3 sm:w-4 sm:h-4" />
-                    {course.instructor}
-                  </span>
-                  <span className="hidden sm:inline">•</span>
-                  <span>{course.platform}</span>
-                  <span className="hidden sm:inline">•</span>
-                  <span className="flex items-center gap-1">
-                    <Award className="w-3 h-3 sm:w-4 sm:h-4" />
-                    {course.difficulty}
-                  </span>
-                </div>
-              </div>
-            </div>
+      <CardHeader className="pb-1 sm:pb-2 px-3 sm:px-4">
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="text-sm sm:text-base line-clamp-2">{course.title}</CardTitle>
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+          <span className="truncate">{course.instructor}</span>
+          <span className="hidden sm:inline">•</span>
+          <span>{course.platform}</span>
+          <Badge variant="outline" className="text-[10px] sm:text-xs py-0 h-5 sm:h-6 ml-1">{course.difficulty}</Badge>
+        </div>
+      </CardHeader>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-4">
-              <div className="bg-muted/50 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400" />
-                  <span className="text-xs sm:text-sm text-muted-foreground">Avg Salary</span>
-                </div>
-                <div className="text-xl sm:text-2xl font-bold text-card-foreground">${(course.avgSalary.entry / 1000).toFixed(0)}k-${(course.avgSalary.senior / 1000).toFixed(0)}k</div>
-                <div className="text-xs text-muted-foreground">Entry to Senior</div>
-              </div>
-
-              <div className="bg-muted/50 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
-                  <span className="text-xs sm:text-sm text-muted-foreground">Job Openings</span>
-                </div>
-                <div className="text-xl sm:text-2xl font-bold text-card-foreground">{(course.jobDemand.openings / 1000).toFixed(1)}k+</div>
-                <div className="text-xs text-muted-foreground line-clamp-1">{course.jobDemand.demandMultiplier}</div>
-              </div>
-
-              <div className="bg-muted/50 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <Timer className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400" />
-                  <span className="text-xs sm:text-sm text-muted-foreground">Time to Complete</span>
-                </div>
-                <div className="text-xl sm:text-2xl font-bold text-card-foreground">{course.personalizedHours}hrs</div>
-                <div className="text-xs text-muted-foreground">Based on your pace</div>
-              </div>
-            </div>
+      <CardContent className="flex-1 space-y-2 sm:space-y-3 px-3 sm:px-4 pb-2">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3 sm:mb-4">
+          <div className="bg-muted/50 rounded-lg p-2 sm:p-3 text-center">
+            <div className="text-[10px] sm:text-xs text-muted-foreground">Avg Salary</div>
+            <div className="text-sm sm:text-base font-bold text-card-foreground">${(course.avgSalary.entry / 1000).toFixed(0)}k-${(course.avgSalary.senior / 1000).toFixed(0)}k</div>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-2 sm:p-3 text-center">
+            <div className="text-[10px] sm:text-xs text-muted-foreground">Job Openings</div>
+            <div className="text-sm sm:text-base font-bold text-card-foreground">{(course.jobDemand.openings / 1000).toFixed(1)}k+</div>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-2 sm:p-3 text-center">
+            <div className="text-[10px] sm:text-xs text-muted-foreground">Duration</div>
+            <div className="text-sm sm:text-base font-bold text-card-foreground">{course.personalizedHours}hrs</div>
           </div>
         </div>
 
-        <div className="bg-muted/50 rounded-lg p-3 sm:p-4 mb-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Target className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-            <span className="font-semibold text-card-foreground text-sm sm:text-base">Learning Style Compatibility</span>
+        <div className="bg-muted/50 rounded-lg p-2 sm:p-3 mb-3 sm:mb-4">
+          <div className="flex items-center gap-2 mb-2 sm:mb-3">
+            <Target className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
+            <span className="text-xs sm:text-sm font-semibold text-card-foreground">Learning Style Compatibility</span>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             {Object.entries(course.learningStyleFit).map(([style, score]) => (
               <div key={style}>
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs sm:text-sm font-bold capitalize text-gray-700 dark:text-gray-300">{style}</span>
-                  <span className="text-xs sm:text-sm font-bold text-card-foreground">{score}%</span>
+                  <span className="text-[10px] sm:text-xs font-medium capitalize text-gray-700 dark:text-gray-300">{style}</span>
+                  <span className="text-[10px] sm:text-xs font-bold text-card-foreground">{score}%</span>
                 </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div 
-                    className="h-2 rounded-full bg-violet-500"
-                    style={{ width: `${score}%` }}
-                  />
+                <div className="w-full bg-muted rounded-full h-1.5 sm:h-2">
+                  <div className="h-1.5 sm:h-2 rounded-full bg-violet-500" style={{ width: `${score}%` }} />
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="bg-muted/50 rounded-lg p-3 sm:p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              <span className="font-semibold text-card-foreground text-sm sm:text-base">Content Breakdown</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
+          <div className="bg-muted/50 rounded-lg p-2 sm:p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
+              <span className="text-xs sm:text-sm font-semibold text-card-foreground">Content Mix</span>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
               {Object.entries(course.contentMix).map(([type, percentage]) => (
                 <div key={type} className="flex items-center justify-between">
-                  <span className="text-xs sm:text-sm capitalize text-muted-foreground">{type}</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-16 sm:w-24 bg-muted rounded-full h-2">
-                      <div 
-                        className="bg-primary h-2 rounded-full"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                    <span className="text-xs sm:text-sm font-semibold text-card-foreground w-8 sm:w-10 text-right">{percentage}%</span>
-                  </div>
+                  <span className="text-[10px] sm:text-xs capitalize text-muted-foreground">{type}</span>
+                  <span className="text-[10px] sm:text-xs font-semibold text-card-foreground">{percentage}%</span>
                 </div>
               ))}
             </div>
           </div>
 
           {course.technicalBreakdown && (
-            <div className="bg-muted/50 rounded-lg p-3 sm:p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                <span className="font-semibold text-card-foreground text-sm sm:text-base">Technical Requirements</span>
+            <div className="bg-muted/50 rounded-lg p-2 sm:p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
+                <span className="text-xs sm:text-sm font-semibold text-card-foreground">Technical</span>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {Object.entries(course.technicalBreakdown).map(([type, percentage]) => (
                   <div key={type} className="flex items-center justify-between">
-                    <span className="text-xs sm:text-sm capitalize text-muted-foreground">
-                      {type}
-                      {type === 'math' && percentage > 50 && ' ⚠️'}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 sm:w-24 bg-muted rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full ${
-                            type === 'math' && percentage > 50 ? 'bg-orange-500' : 'bg-primary'
-                          }`}
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                      <span className="text-xs sm:text-sm font-semibold text-card-foreground w-8 sm:w-10 text-right">{percentage}%</span>
-                    </div>
+                    <span className="text-[10px] sm:text-xs capitalize text-muted-foreground">{type}</span>
+                    <span className="text-[10px] sm:text-xs font-semibold text-card-foreground">{percentage}%</span>
                   </div>
                 ))}
               </div>
@@ -826,11 +765,11 @@ const CourseCard: React.FC<{
           )}
         </div>
 
-        <div className="space-y-2 mb-4">
-          {course.insights.map((insight, index) => (
+        <div className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
+          {course.insights.slice(0, 2).map((insight, index) => (
             <div 
               key={index}
-              className={`flex items-start gap-2 p-2 sm:p-3 rounded-lg ${
+              className={`flex items-start gap-2 p-1.5 sm:p-2 rounded-lg text-[10px] sm:text-xs ${
                 insight.type === 'warning' 
                   ? 'bg-orange-100 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800' 
                   : insight.type === 'highlight'
@@ -839,77 +778,72 @@ const CourseCard: React.FC<{
               }`}
             >
               {insight.type === 'warning' ? (
-                <AlertCircle className="w-4 h-4 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-3 h-3 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
               ) : insight.type === 'highlight' ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+                <Star className="w-3 h-3 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
               ) : (
-                <Zap className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                <Sparkles className="w-3 h-3 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
               )}
-              <span className="text-xs sm:text-sm text-card-foreground">{insight.message}</span>
+              <span className="text-card-foreground line-clamp-2">{insight.message}</span>
             </div>
           ))}
         </div>
 
         {isExpanded && (
-          <div className="space-y-4 pt-4 border-t border-border">
+          <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 border-t border-border">
             <div>
-              <h4 className="font-semibold mb-2 flex items-center gap-2 text-card-foreground text-sm sm:text-base">
-                <Sparkles className="w-4 h-4 text-primary" />
+              <h4 className="text-xs sm:text-sm font-semibold mb-2 flex items-center gap-2">
+                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
                 Skills You'll Gain
               </h4>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {course.skillsGained.map((skill, index) => (
-                  <span 
-                    key={index}
-                    className="bg-primary/10 text-primary px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm"
-                  >
-                    {skill}
-                  </span>
+                  <Badge key={index} variant="secondary" className="text-[10px] sm:text-xs py-0 sm:py-1">{skill}</Badge>
                 ))}
               </div>
             </div>
 
             <div>
-              <h4 className="font-semibold mb-2 flex items-center gap-2 text-card-foreground text-sm sm:text-base">
-                <BookOpen className="w-4 h-4 text-primary" />
+              <h4 className="text-xs sm:text-sm font-semibold mb-2 flex items-center gap-2">
+                <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
                 Portfolio Projects
               </h4>
               <ul className="space-y-1">
                 {course.projectOutcomes.map((project, index) => (
-                  <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-card-foreground">
-                    <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <li key={index} className="flex items-start gap-2 text-[10px] sm:text-xs text-card-foreground">
+                    <Star className="w-2 h-2 sm:w-3 sm:h-3 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                     {project}
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="bg-muted/50 rounded-lg p-3">
-                <div className="text-sm text-muted-foreground mb-1">Cost</div>
-                <div className="font-semibold text-card-foreground">{course.studentFriendly.affordability}</div>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              <div className="bg-muted/50 rounded-lg p-2 sm:p-3 text-center">
+                <div className="text-[10px] sm:text-xs text-muted-foreground">Cost</div>
+                <div className="text-xs sm:text-sm font-semibold text-card-foreground">{course.studentFriendly.affordability}</div>
               </div>
-              <div className="bg-muted/50 rounded-lg p-3">
-                <div className="text-sm text-muted-foreground mb-1">Schedule</div>
-                <div className="font-semibold text-card-foreground">{course.studentFriendly.schedule}</div>
+              <div className="bg-muted/50 rounded-lg p-2 sm:p-3 text-center">
+                <div className="text-[10px] sm:text-xs text-muted-foreground">Schedule</div>
+                <div className="text-xs sm:text-sm font-semibold text-card-foreground">{course.studentFriendly.schedule}</div>
               </div>
-              <div className="bg-muted/50 rounded-lg p-3">
-                <div className="text-sm text-muted-foreground mb-1">Support</div>
-                <div className="font-semibold text-card-foreground">{course.studentFriendly.supportQuality}/10</div>
+              <div className="bg-muted/50 rounded-lg p-2 sm:p-3 text-center">
+                <div className="text-[10px] sm:text-xs text-muted-foreground">Support</div>
+                <div className="text-xs sm:text-sm font-semibold text-card-foreground">{course.studentFriendly.supportQuality}/10</div>
               </div>
             </div>
 
             {course.prerequisites.length > 0 && (
               <div>
-                <h4 className="font-semibold mb-2 flex items-center gap-2 text-card-foreground text-sm sm:text-base">
-                  <AlertCircle className="w-4 h-4 text-orange-500" />
+                <h4 className="text-xs sm:text-sm font-semibold mb-2 flex items-center gap-2">
+                  <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500" />
                   Prerequisites
                 </h4>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {course.prerequisites.map((prereq, index) => (
                     <span 
                       key={index}
-                      className="bg-orange-100 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm"
+                      className="bg-orange-100 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs"
                     >
                       {prereq}
                     </span>
@@ -918,14 +852,14 @@ const CourseCard: React.FC<{
               </div>
             )}
 
-            <div className="bg-muted/50 rounded-lg p-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs sm:text-sm text-muted-foreground">Student Completion Rate</span>
-                <span className="font-bold text-card-foreground">{course.completionRate}%</span>
+            <div className="bg-muted/50 rounded-lg p-2 sm:p-3">
+              <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                <span className="text-[10px] sm:text-xs text-muted-foreground">Student Completion Rate</span>
+                <span className="text-xs sm:text-sm font-bold text-card-foreground">{course.completionRate}%</span>
               </div>
-              <div className="w-full bg-muted rounded-full h-2">
+              <div className="w-full bg-muted rounded-full h-1.5 sm:h-2">
                 <div 
-                  className="bg-emerald-500 h-2 rounded-full"
+                  className="bg-emerald-500 h-1.5 sm:h-2 rounded-full"
                   style={{ width: `${course.completionRate}%` }}
                 />
               </div>
@@ -933,21 +867,18 @@ const CourseCard: React.FC<{
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3 mt-6">
-          <button className="flex-1 bg-primary text-primary-foreground py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base">
-            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-3 sm:mt-4">
+          <Button className="flex-1 h-9 sm:h-10 text-xs sm:text-sm">
+            <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
             Start Learning
-          </button>
-          <button 
-            onClick={onToggle}
-            className="bg-secondary text-secondary-foreground py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-secondary/80 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
-          >
+          </Button>
+          <Button variant="outline" onClick={onToggle} className="h-9 sm:h-10 text-xs sm:text-sm px-3 sm:px-4">
             {isExpanded ? 'Show Less' : 'View Details'}
-            <ChevronRight className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-          </button>
+            <ChevronRight className={`w-3 h-3 sm:w-4 sm:h-4 ml-1.5 sm:mr-2 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+          </Button>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

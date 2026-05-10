@@ -20,7 +20,8 @@ import {
   HelpCircle,
   FileUser,
   Settings,
-  Bookmark
+  Bookmark,
+  History
 } from "lucide-react";
 import AppUI from "@/components/logos/app_icon";
 import {
@@ -88,6 +89,12 @@ const demoNavItems = [
         url: "/demo/quick-quiz",
         icon: HelpCircle,
         description: "Test your knowledge",
+      },
+      {
+        title: "Quiz History",
+        url: "/demo/quiz-history",
+        icon: History,
+        description: "View your quiz results and progress",
       },
     ],
   },
