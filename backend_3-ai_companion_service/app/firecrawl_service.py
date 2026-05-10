@@ -1,6 +1,9 @@
 import httpx
+import logging
 from typing import List, Dict, Optional
 from .config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class FirecrawlService:
@@ -23,8 +26,9 @@ class FirecrawlService:
                 )
                 data = response.json()
                 return self._parse_scrape_result(data)
-            except Exception as e:
-                return {"error": str(e), "success": False}
+            except Exception:
+                logger.exception("Firecrawl scrape failed for url=%s", url)
+                return {"error": "Unable to scrape URL at this time", "success": False}
 
     def _parse_scrape_result(self, data: Dict) -> Dict:
         if data.get("success") and data.get("data"):
@@ -55,8 +59,9 @@ class FirecrawlService:
                 )
                 data = response.json()
                 return self._parse_crawl_results(data)
-            except Exception as e:
-                return [{"error": str(e)}]
+            except Exception:
+                logger.exception("Firecrawl crawl failed for url=%s limit=%s", url, limit)
+                return [{"error": "Unable to crawl URL at this time", "success": False}]
 
     def _parse_crawl_results(self, data: Dict) -> List[Dict]:
         results = []
