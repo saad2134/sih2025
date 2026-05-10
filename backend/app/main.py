@@ -115,16 +115,18 @@ async def health_check():
         async with async_session_maker() as session:
             await session.execute("SELECT 1")
         db_status = "connected"
-    except Exception as e:
-        db_status = f"error: {str(e)}"
+    except Exception:
+        log.error("Database health check failed", exc_info=True)
+        db_status = "error"
     try:
         from app.db.redis import get_redis
 
         r = await get_redis()
         await r.ping()
         redis_status = "connected"
-    except Exception as e:
-        redis_status = f"error: {str(e)}"
+    except Exception:
+        log.error("Redis health check failed", exc_info=True)
+        redis_status = "error"
     return {
         "status": "healthy"
         if db_status == "connected" and redis_status == "connected"
