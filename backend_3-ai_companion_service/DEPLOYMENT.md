@@ -48,6 +48,26 @@ docker-compose restart
 curl http://localhost:9001/health
 ```
 
+### Local Development (No Docker)
+
+Requires Redis 7+ running locally.
+
+```bash
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Linux/Mac
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables
+set REDIS_URL=redis://localhost:6379/0
+
+# Run with auto-reload
+uvicorn app.main:app --reload
+```
+
 ---
 
 ## Auto-Update with Watchtower

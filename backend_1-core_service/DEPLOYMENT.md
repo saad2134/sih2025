@@ -60,6 +60,27 @@ docker run -d -p 8000:8000 \
   shiksha-core
 ```
 
+### Local Development (No Docker)
+
+Requires PostgreSQL 15+ and Redis 7+ running locally.
+
+```bash
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Linux/Mac
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables
+set DATABASE_URL=postgresql://postgres:postgres@localhost:5432/shikshadisha
+set REDIS_URL=redis://localhost:6379/0
+
+# Run with auto-reload
+uvicorn app.main:app --reload
+```
+
 ---
 
 ## Services
