@@ -9,6 +9,11 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379/0
       - EMBEDDING_MODEL=all-MiniLM-L6-v2
+      - SERP_API_KEY=${SERP_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
+    env_file:
+      - .env
     depends_on:
       - redis
     restart: unless-stopped

@@ -77,13 +77,9 @@ export default function OnboardingForm() {
             if (!formData.pacePreference) newErrors.pacePreference = "Please select your pace preference";
         } else if (s === 4) {
             if (!formData.timeCommitment) newErrors.timeCommitment = "Please select time commitment";
-            if (!formData.timeline) newErrors.timeline = "Please select target timeline";
             if (!formData.duration) newErrors.duration = "Please select preferred duration";
             if (!formData.budgetRange) newErrors.budgetRange = "Please select budget range";
             if (!formData.motivations?.length) newErrors.motivations = "Select at least one motivation";
-            if (!formData.hasResources) newErrors.hasResources = "Please select resource availability";
-            if (!formData.reminders) newErrors.reminders = "Please select reminder preference";
-            if (!formData.gamification) newErrors.gamification = "Please select gamification preference";
         }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
