@@ -82,6 +82,13 @@ export default function OnboardingForm() {
             if (!formData.internetSituation?.length) newErrors.internetSituation = "Please select your internet situation";
             if (!formData.learningStyle) newErrors.learningStyle = "Please select your learning preference";
             if (!formData.collaborativeLearning) newErrors.collaborativeLearning = "Please select collaborative learning preference";
+        } else if (s === 4) {
+            if (!formData.timeCommitment) newErrors.timeCommitment = "Please select time commitment";
+            if (!formData.timeline) newErrors.timeline = "Please select target timeline";
+            if (!formData.motivations?.length) newErrors.motivations = "Select at least one motivation";
+            if (!formData.hasResources) newErrors.hasResources = "Please select resource availability";
+            if (!formData.reminders) newErrors.reminders = "Please select reminder preference";
+            if (!formData.gamification) newErrors.gamification = "Please select gamification preference";
         }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
