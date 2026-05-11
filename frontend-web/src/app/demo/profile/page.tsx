@@ -154,10 +154,6 @@ export default function Profile() {
         setSkillsOpen(false);
     };
 
-    const handleSaveInterests = () => {
-        setInterestsOpen(false);
-    };
-
     const handleRemoveAvatar = () => {
         setAvatarPreview(null);
     };
@@ -222,9 +218,9 @@ export default function Profile() {
                                                 <div className="grid gap-4 py-4">
                                                     <div className="flex flex-col items-center gap-3">
                                                         <div className="relative">
-                                                            <div className="w-24 h-24 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-3xl font-bold text-violet-600 overflow-hidden border-2 border-dashed border-muted-foreground/30 hover:border-violet-400 transition-colors">
+                                                            <div className="w-24 h-24 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-3xl font-bold text-violet-600">
                                                                 {avatarPreview ? (
-                                                                    <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
+                                                                    <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover rounded-full" />
                                                                 ) : (
                                                                     userProfile.avatar
                                                                 )}
@@ -341,7 +337,7 @@ export default function Profile() {
                                             </div>
                                         </div>
 
-                                        </CardContent>
+                                    </CardContent>
                                 </Card>
                             </motion.div>
 
@@ -371,7 +367,7 @@ export default function Profile() {
                                             </p>
                                         </div>
                                         <Button
-                                            className={`w-full font-semibold transition-all duration-300 ${!isPaidUser ? 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 hover:scale-105 hover:shadow-xl hover:shadow-violet-500/40 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/60 border-0 ring-2 ring-violet-500/50 animate-pulse' : ''}`}
+                                            className={`w-full font-semibold transition-all duration-300 ${!isPaidUser ? 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700' : ''}`}
                                             variant={isPaidUser ? "outline" : "default"}
                                             onClick={() => router.push("/demo/billing")}
                                         >
@@ -486,8 +482,7 @@ export default function Profile() {
                             </motion.div>
                         </div>
 
-<div className="lg:col-span-2 space-y-6 ">
-
+                        <div className="lg:col-span-2 space-y-6">
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -715,38 +710,38 @@ export default function Profile() {
                                                 </DialogFooter>
                                             </DialogContent>
                                         </Dialog>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="flex items-center gap-2 text-lg">
-                                            <Target className="w-5 h-5 text-violet-500" />
-                                            Career Goal
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-1 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Domain</span>
-                                            <span className="text-right">{userProfile.careerGoal}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Targeted Roles</span>
-                                            <span className="text-right">{userProfile.targetRoles}</span>
-                                        </div>
-                                    </CardContent>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="flex items-center gap-2 text-lg">
-                                            <Star className="w-5 h-5 text-pink-500" />
-                                            Interests
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="flex flex-wrap gap-2">
-                                            {userProfile.interests.map((interest) => (
-                                                <Badge key={interest} variant="secondary">
-                                                    {interest}
-                                                </Badge>
-                                            ))}
-                                        </div>
-                                    </CardContent>
-                                </div>
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="flex items-center gap-2 text-lg">
+                                                <Target className="w-5 h-5 text-violet-500" />
+                                                Career Goal
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-1 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Domain</span>
+                                                <span className="text-right">{userProfile.careerGoal}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Targeted Roles</span>
+                                                <span className="text-right">{userProfile.targetRoles}</span>
+                                            </div>
+                                        </CardContent>
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="flex items-center gap-2 text-lg">
+                                                <Star className="w-5 h-5 text-pink-500" />
+                                                Interests
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="flex flex-wrap gap-2">
+                                                {userProfile.interests.map((interest) => (
+                                                    <Badge key={interest} variant="secondary">
+                                                        {interest}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        </CardContent>
+                                    </div>
                                 </Card>
                             </motion.div>
 
@@ -783,7 +778,6 @@ export default function Profile() {
                                         </div>
                                     </CardContent>
                                 </Card>
-
                             </motion.div>
 
                             <motion.div
