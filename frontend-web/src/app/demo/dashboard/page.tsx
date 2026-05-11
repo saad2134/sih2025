@@ -138,7 +138,7 @@ export default function Dashboard() {
 
     return (
         <div className="p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
+            <div className=" mx-auto">
                 <div className={`bg-gradient-to-r ${greetingConfig.bg} p-6 sm:p-8 rounded-2xl text-primary-foreground shadow-xl flex flex-col justify-between relative overflow-hidden mb-8 w-full`}>
                         <div className="relative z-10">
                             <div className="flex items-center gap-2 mb-1">
