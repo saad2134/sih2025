@@ -13,34 +13,42 @@ import { signOut } from "next-auth/react";
 import { authService } from "@/lib/auth";
 import { apiService, UserProfile } from "@/lib/api";
 import { LearnerProfile } from "@/lib/api";
+import { ChevronLeft, LogOut, Target, MapPin, Star, CheckCircle2, BookOpen, Award, Briefcase, Clock, ArrowRight, Loader2 } from "lucide-react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
-const [userData, setUserData] = useState<UserProfile | null>(null);
-const [learnerProfile, setLearnerProfile] = useState<LearnerProfile | null>(null);
-const [loading, setLoading] = useState(true);
+export default function CareerMapPage() {
+  const router = useRouter();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  
+  const [userData, setUserData] = useState<UserProfile | null>(null);
+  const [learnerProfile, setLearnerProfile] = useState<LearnerProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedMilestone, setSelectedMilestone] = useState<any>(null);
+  const [userStats, setUserStats] = useState<any>(null);
 
-    const loadData = async () => {
-      try {
-        const [meResponse, profileResponse] = await Promise.all([
-          apiService.getMe(),
-          apiService.getLearnerProfile()
-        ]);
-        
-        if (meResponse.success && meResponse.data) {
-          setUserData(meResponse.data);
-        }
-        if (profileResponse.success && profileResponse.data) {
-          setLearnerProfile(profileResponse.data);
-        }
-      } catch (err) {
-        console.error('Failed to load career map data:', err);
-      } finally {
-        setLoading(false);
+  const loadData = async () => {
+    try {
+      const [meResponse, profileResponse] = await Promise.all([
+        apiService.getMe(),
+        apiService.getLearnerProfile()
+      ]);
+      
+      if (meResponse.success && meResponse.data) {
+        setUserData(meResponse.data);
       }
-    };
-    
+      if (profileResponse.success && profileResponse.data) {
+        setLearnerProfile(profileResponse.data);
+      }
+    } catch (err) {
+      console.error('Failed to load career map data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   useEffect(() => {
-    fetchData();
-  }, [router]);
+    loadData();
+  }, []);
 
   const handleLogout = async () => {
     authService.logout();
@@ -51,6 +59,10 @@ const [loading, setLoading] = useState(true);
     router.push("/student/dashboard");
   };
 
+  const userProgress = userStats?.progress || 0;
+  const userInterests = userData?.interests || [];
+  const userSkills = userData?.skills || [];
+
   const careerPath = {
     goal: userData?.career_goal || userData?.target_roles || userData?.interests?.[0] || "Your Career Path",
     duration: userStats?.weeks_remaining ? `${userStats.weeks_remaining} weeks` : "12 weeks",
@@ -58,10 +70,6 @@ const [loading, setLoading] = useState(true);
     match: 92
   };
 
-  const userProgress = userStats?.progress || 0;
-  const userInterests = userData?.interests || [];
-  const userSkills = userData?.skills || [];
-  
   const milestones = [
     {
       id: 1,
@@ -77,7 +85,8 @@ const [loading, setLoading] = useState(true);
       details: {
         skills: userSkills.slice(0, 3),
         interests: userInterests.slice(0, 2),
-        nextSteps: userProgress >= 10 ? "Begin foundational courses" : "Complete your profile"
+        nextSteps: userProgress >= 10 ? "Begin foundational courses" : "Complete your profile",
+        resources: ["Profile assessment", "Goal setting worksheet"]
       }
     },
     {
@@ -94,7 +103,9 @@ const [loading, setLoading] = useState(true);
       details: {
         skills: userSkills.slice(0, 4),
         nextSteps: userProgress >= 30 ? "Move to advanced topics" : "Complete module 1",
-        level: "Beginner"
+        level: "Beginner",
+        resources: ["Video lectures", "Coding exercises", "Quizzes"],
+        provider: "Shiksha Disha"
       }
     },
     {
@@ -111,7 +122,9 @@ const [loading, setLoading] = useState(true);
       details: {
         skills: userSkills,
         nextSteps: userProgress >= 50 ? "Apply for internship" : "Prepare for certification exam",
-        level: "Intermediate"
+        level: "Intermediate",
+        resources: ["Practice tests", "Study guide", "Exam prep"],
+        provider: "Industry Partner"
       }
     },
     {
@@ -128,7 +141,9 @@ const [loading, setLoading] = useState(true);
       details: {
         skills: userSkills,
         nextSteps: userProgress >= 70 ? "Prepare for job placement" : "Complete certification first",
-        level: "Intermediate to Advanced"
+        level: "Intermediate to Advanced",
+        resources: ["Project briefs", "Mentor support", "Portfolio building"],
+        provider: "Partner Companies"
       }
     },
     {
@@ -145,7 +160,9 @@ const [loading, setLoading] = useState(true);
       details: {
         goal: userData?.career_goal || userData?.target_roles || "Your target role",
         nextSteps: userProgress >= 90 ? "You are job ready!" : "Complete practical application",
-        salary: "Based on market rates"
+        salary: "Based on market rates",
+        resources: ["Job board access", "Resume review", "Interview prep"],
+        provider: "Career Services"
       }
     }
   ];
@@ -178,10 +195,6 @@ const [loading, setLoading] = useState(true);
       default: return "Not Started";
     }
   };
-
-  useEffect(() => {
-          document.title = `My Career Map ✦ ${siteConfig.name}`;
-      }, []);
 
   return (
     <div className="min-h-screen bg-background px-4 sm:px-6 pt-24 sm:pt-28 pb-24">
@@ -353,109 +366,109 @@ const [loading, setLoading] = useState(true);
           <div className="space-y-4 lg:space-y-6 min-w-0 lg:sticky lg:top-24 lg:self-start order-2 lg:order-none">
             {/* Selected Milestone Details - desktop only; mobile uses Sheet below */}
             <div className="hidden lg:block">
-            {selectedMilestone ? (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      {React.createElement(selectedMilestone.icon, { 
-                        className: selectedMilestone.color,
-                        size: 20 
-                      })}
-                      {selectedMilestone.title}
-                    </CardTitle>
-                    <CardDescription>
-                      {selectedMilestone.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Status */}
-                    <div>
-                      <h4 className="font-medium mb-2">Status</h4>
-                      <Badge 
-                        variant={
-                          selectedMilestone.status === "completed" ? "default" :
-                          selectedMilestone.status === "current" ? "secondary" : "outline"
-                        }
-                      >
-                        {getStatusText(selectedMilestone.status)}
-                      </Badge>
-                    </div>
-
-                    {/* Duration */}
-                    <div>
-                      <h4 className="font-medium mb-2">Duration</h4>
-                      <p className="text-sm text-muted-foreground">{selectedMilestone.duration}</p>
-                    </div>
-
-                    {/* Skills */}
-                    <div>
-                      <h4 className="font-medium mb-2">Skills You'll Learn</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {selectedMilestone.details.skills.map((skill: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined, index: React.Key | null | undefined) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
-                            {skill}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Resources */}
-                    <div>
-                      <h4 className="font-medium mb-2">Resources</h4>
-                      <ul className="text-sm text-muted-foreground space-y-1">
-                        {selectedMilestone.details.resources.map((resource: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined, index: React.Key | null | undefined) => (
-                          <li key={index}>• {resource}</li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Next Steps */}
-                    <div>
-                      <h4 className="font-medium mb-2">Next Steps</h4>
-                      <p className="text-sm text-muted-foreground">{selectedMilestone.details.nextSteps}</p>
-                    </div>
-
-                    {/* Provider/Level if available */}
-                    {selectedMilestone.details.provider && (
+              {selectedMilestone ? (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        {React.createElement(selectedMilestone.icon, { 
+                          className: selectedMilestone.color,
+                          size: 20 
+                        })}
+                        {selectedMilestone.title}
+                      </CardTitle>
+                      <CardDescription>
+                        {selectedMilestone.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Status */}
                       <div>
-                        <h4 className="font-medium mb-2">Provider</h4>
-                        <p className="text-sm text-muted-foreground">{selectedMilestone.details.provider}</p>
-                        <p className="text-xs text-muted-foreground">Level: {selectedMilestone.details.level}</p>
+                        <h4 className="font-medium mb-2">Status</h4>
+                        <Badge 
+                          variant={
+                            selectedMilestone.status === "completed" ? "default" :
+                            selectedMilestone.status === "current" ? "secondary" : "outline"
+                          }
+                        >
+                          {getStatusText(selectedMilestone.status)}
+                        </Badge>
                       </div>
-                    )}
 
-                    {/* Salary info for job milestone */}
-                    {selectedMilestone.details.salary && (
+                      {/* Duration */}
                       <div>
-                        <h4 className="font-medium mb-2">Expected Salary</h4>
-                        <p className="text-sm text-muted-foreground">{selectedMilestone.details.salary}</p>
+                        <h4 className="font-medium mb-2">Duration</h4>
+                        <p className="text-sm text-muted-foreground">{selectedMilestone.duration}</p>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <Star className="mx-auto text-muted-foreground mb-4" size={32} />
-                    <h3 className="font-medium mb-2">Select a Milestone</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Click on any milestone in your journey to see detailed information and next steps.
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
+
+                      {/* Skills */}
+                      <div>
+                        <h4 className="font-medium mb-2">Skills You'll Learn</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {selectedMilestone.details.skills.map((skill: string, index: number) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {skill}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Resources */}
+                      <div>
+                        <h4 className="font-medium mb-2">Resources</h4>
+                        <ul className="text-sm text-muted-foreground space-y-1">
+                          {(selectedMilestone.details.resources || []).map((resource: string, index: number) => (
+                            <li key={index}>• {resource}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* Next Steps */}
+                      <div>
+                        <h4 className="font-medium mb-2">Next Steps</h4>
+                        <p className="text-sm text-muted-foreground">{selectedMilestone.details.nextSteps}</p>
+                      </div>
+
+                      {/* Provider/Level if available */}
+                      {selectedMilestone.details.provider && (
+                        <div>
+                          <h4 className="font-medium mb-2">Provider</h4>
+                          <p className="text-sm text-muted-foreground">{selectedMilestone.details.provider}</p>
+                          <p className="text-xs text-muted-foreground">Level: {selectedMilestone.details.level}</p>
+                        </div>
+                      )}
+
+                      {/* Salary info for job milestone */}
+                      {selectedMilestone.details.salary && (
+                        <div>
+                          <h4 className="font-medium mb-2">Expected Salary</h4>
+                          <p className="text-sm text-muted-foreground">{selectedMilestone.details.salary}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <Star className="mx-auto text-muted-foreground mb-4" size={32} />
+                      <h3 className="font-medium mb-2">Select a Milestone</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Click on any milestone in your journey to see detailed information and next steps.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
             </div>
 
             {/* Journey Summary - visible on all screens */}
@@ -544,7 +557,7 @@ const [loading, setLoading] = useState(true);
                   <p className="text-sm text-muted-foreground">{selectedMilestone.duration}</p>
                 </div>
                 <div>
-                  <h4 className="font-medium mb-2">Skills You&apos;ll Learn</h4>
+                  <h4 className="font-medium mb-2">Skills You'll Learn</h4>
                   <div className="flex flex-wrap gap-1">
                     {selectedMilestone.details.skills.map((skill: string, index: number) => (
                       <Badge key={index} variant="secondary" className="text-xs">
@@ -556,7 +569,7 @@ const [loading, setLoading] = useState(true);
                 <div>
                   <h4 className="font-medium mb-2">Resources</h4>
                   <ul className="text-sm text-muted-foreground space-y-1">
-                    {selectedMilestone.details.resources.map((resource: string, index: number) => (
+                    {(selectedMilestone.details.resources || []).map((resource: string, index: number) => (
                       <li key={index}>• {resource}</li>
                     ))}
                   </ul>
