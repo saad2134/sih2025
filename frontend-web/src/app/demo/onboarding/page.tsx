@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, User, BookOpen, Target, Settings, Clock, Star, Send, LogOut, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, User, BookOpen, Target, Settings, Clock, Star, Send, LogOut, Play, Wand2, RotateCcw } from "lucide-react";
 import { siteConfig } from "@/config/site";
 
 
@@ -122,6 +122,52 @@ export default function OnboardingForm() {
         router.push("/");
     };
 
+    const fillDemoData = () => {
+        setFormData({
+            fullName: "Raj Sharma",
+            contact: "raj.sharma@example.com",
+            education: "bachelor",
+            fieldOfStudy: "Computer Science",
+            comfortableSubjects: ["Programming in Python", "Data Structures", "Web Development"],
+            proficiency_Computer_basics: "4",
+            proficiency_Internet_navigation: "5",
+            proficiency_Mathematics: "4",
+            proficiency_English_communication: "3",
+            proficiency_Programming_fundamentals: "4",
+            skills: ["Python", "JavaScript", "HTML/CSS", "Problem solving"],
+            backgroundExperience: ["completedCourse", "builtWebApp"],
+            interests: ["Web Development", "AI/ML", "Data Science"],
+            learningGoals: ["Getting a job/internship", "Building projects"],
+            targetRoles: "Software Development, Data Science, AI/ML",
+            domainStack: ["frontendReact", "aiML"],
+            learningTypes: ["videos", "projects"],
+            learningStyles: ["visual"],
+            pacePreference: "moderate",
+            learningStyle: "selfPaced",
+            timeCommitment: "2-5hrs",
+            duration: "2-6months",
+            budgetRange: "500-2000",
+            motivations: ["Certificates", "Skill advancement", "Career growth"],
+        });
+    };
+
+    const clearForm = () => {
+        setFormData({
+            comfortableSubjects: [],
+            skills: [],
+            interests: [],
+            learningGoals: [],
+            learningTypes: [],
+            learningStyles: [],
+            motivations: [],
+            familiarWith: [],
+            domainStack: [],
+            backgroundExperience: [],
+        });
+        setStep(0);
+        setErrors({});
+    };
+
     const progress = (step / (steps.length - 1)) * 100;
 
     useEffect(() => {
@@ -129,34 +175,54 @@ export default function OnboardingForm() {
           }, []);
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4 sm:p-6 pt-24 sm:pt-28 pb-20 relative">
-            <div className="absolute top-4 right-4 flex flex-wrap items-center justify-end gap-2">
-                <Button
-                    variant="default"
-                    onClick={() => router.push("/demo/dashboard")}
-                    className="flex items-center justify-center gap-2 text-sm sm:text-base"
-                >
-                    <Play size={16} className="shrink-0" />
-                    <span className="truncate">Try Demo Dashboard</span>
-                </Button>
-                <Button
-                    variant="outline"
-                    onClick={handleLogout}
-                    className="flex items-center justify-center gap-2 text-sm sm:text-base"
-                >
-                    <LogOut size={16} />
-                    Go to Landing Page
-                </Button>
-            </div>
+        <div className="min-h-screen flex items-center justify-center bg-background p-4 ">
 
             <div className="w-full max-w-4xl p-4 sm:p-6 md:p-8 bg-card rounded-lg shadow-sm border overflow-x-hidden">
 
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-foreground text-center">
                     Welcome to Your Learning Journey
                 </h1>
-                <p className="text-muted-foreground text-center mb-6 sm:mb-8 text-sm sm:text-base">
+                <p className="text-muted-foreground text-center text-sm sm:text-base">
                     Help us personalize your experience by answering a few questions
                 </p>
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-4 mb-6">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={fillDemoData}
+                        className="flex items-center gap-1.5 text-xs"
+                    >
+                        <Wand2 size={14} />
+                        <span className="truncate">Fill Demo Data</span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={clearForm}
+                        className="flex items-center gap-1.5 text-xs"
+                    >
+                        <RotateCcw size={14} />
+                        <span className="truncate">Clear</span>
+                    </Button>
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => router.push("/demo/dashboard")}
+                        className="flex items-center gap-1.5 text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md font-medium shadow-lg animate-pulse"
+                    >
+                        <Play size={14} className="shrink-0" />
+                        <span className="truncate">Try Demo Dashboard</span>
+                    </motion.button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleLogout}
+                        className="flex items-center gap-1.5 text-xs"
+                    >
+                        <LogOut size={14} />
+                        <span className="truncate">Go to Landing</span>
+                    </Button>
+                </div>
 
                 <div className="mb-8">
                     <div className="flex justify-between items-center mb-2">

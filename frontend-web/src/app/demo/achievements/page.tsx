@@ -243,7 +243,7 @@ export default function Achievements() {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <Card className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white border-0">
+          <Card className="bg-gradient-to-r from-primary to-violet-600 dark:to-indigo-500 text-white border-0">
             <CardContent className="p-4 sm:p-6">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div className="flex items-center gap-4 sm:gap-6">
@@ -272,7 +272,11 @@ export default function Achievements() {
                     <span className="text-white/80">Progress to Level {userStats.level + 1}</span>
                     <span className="font-medium">{userStats.currentLevelProgress}%</span>
                   </div>
-                  <Progress value={userStats.currentLevelProgress} className="h-3 bg-white/20" />
+                  <Progress 
+                    value={userStats.currentLevelProgress} 
+                    className="h-3 bg-white/20" 
+                    indicatorClassName="bg-white" 
+                  />
                   <p className="text-xs text-white/60">{userStats.nextLevelPoints - userStats.totalPoints} points to next level</p>
                 </div>
               </div>
@@ -356,7 +360,7 @@ export default function Achievements() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {achievements.map((achievement, index) => {
                       const Icon = achievement.icon;
                       const progress = (achievement.progress / achievement.maxProgress) * 100;

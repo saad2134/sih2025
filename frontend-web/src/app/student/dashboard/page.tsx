@@ -10,93 +10,39 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { authService } from "@/lib/auth";
-import { apiService, Course, UserProfile, UserStats } from "@/lib/api";
-import {
-    LogOut,
-    BookOpen,
-    Target,
-    TrendingUp,
-    Clock,
-    MapPin,
-    Star,
-    ChevronRight,
-    Users,
-    Award,
-    Briefcase,
-    Calendar,
-    Loader2,
-    Flame
-} from "lucide-react";
-import { siteConfig } from "@/config/site";
+import { apiService, Course, UserProfile } from "@/lib/api";
+import { LearnerProfile } from "@/lib/api";
 
-export default function Dashboard() {
-    const router = useRouter();
-    const [userData, setUserData] = useState<UserProfile | null>(null);
-    const [userStats, setUserStats] = useState<UserStats | null>(null);
-    const [recommendations, setRecommendations] = useState<Course[]>([]);
-    const [loading, setLoading] = useState(true);
+const [userData, setUserData] = useState<UserProfile | null>(null);
+const [learnerProfile, setLearnerProfile] = useState<LearnerProfile | null>(null);
+const [recommendations, setRecommendations] = useState<any[]>([]);
+const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const handleLogout = async () => {
-        authService.logout();
-        await signOut({ callbackUrl: "/" });
-    };
+    const loadData = async () => {
+        try {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                setError('User not logged in');
+                setLoading(false);
+                return;
+            }
 
-    const educationToNSQF: Record<string, number> = {
-        'highSchool': 4,
-        'diploma': 5,
-        'bachelor': 5,
-        'master': 6,
-        'phd': 7,
-        'other': 4
-    };
+            const [meResponse, recsResponse] = await Promise.all([
+                apiService.getMe(),
+                apiService.getRecommendations(20, 0)
+            ]);
 
-    const getPreferredNSQFLevel = (profile: UserProfile | null): number => {
-        if (profile?.preferred_nsqf_level) return profile.preferred_nsqf_level;
-        if (profile?.education && educationToNSQF[profile.education]) {
-            return educationToNSQF[profile.education];
-        }
-        return 4;
-    };
+            if (meResponse.success && meResponse.data) {
+                setUserData(meResponse.data);
+            }
 
-    useEffect(() => {
-        document.title = `Dashboard ✦ ${siteConfig.name}`;
-        
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                const userId = localStorage.getItem('user_id');
-                if (!userId) {
-                    setError('User not logged in');
-                    setLoading(false);
-                    return;
-                }
-
-                const userIdNum = parseInt(userId);
-                
-                const [profile, stats] = await Promise.all([
-                    apiService.getUserProfile(userIdNum),
-                    apiService.getUserStats(userIdNum)
-                ]);
-
-                setUserData(profile);
-                setUserStats(stats);
-
-                if (profile) {
-                    const courses = await apiService.getRecommendedCourses({
-                        skills: profile.skills || [],
-                        interests: profile.interests || [],
-                        career_goal: profile.career_goal || profile.interests?.[0] || '',
-                        experience_years: 0,
-                        preferred_nsqf_level: getPreferredNSQFLevel(profile),
-                        preferred_language: profile.language || 'en',
-                        region: profile.region || ''
-                    });
-                    setRecommendations(courses);
-                }
-            } catch (err) {
-                console.error('Failed to load dashboard data:', err);
-                setError('Failed to load data');
+            if (recsResponse.success && recsResponse.data?.items) {
+                setRecommendations(recsResponse.data.items);
+            }
+        } catch (err) {
+            console.error('Failed to load dashboard data:', err);
+            setError('Failed to load data');
             } finally {
                 setLoading(false);
             }

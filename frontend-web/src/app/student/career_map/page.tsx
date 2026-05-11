@@ -11,61 +11,26 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { authService } from "@/lib/auth";
-import { apiService, UserProfile, UserStats } from "@/lib/api";
-import { 
-  LogOut,
-  ChevronLeft, 
-  MapPin, 
-  Target, 
-  BookOpen, 
-  Briefcase, 
-  Award, 
-  CheckCircle2,
-  Clock,
-  Users,
-  Star,
-  ArrowRight,
-  Loader2
-} from "lucide-react";
-import { siteConfig } from "@/config/site";
+import { apiService, UserProfile } from "@/lib/api";
+import { LearnerProfile } from "@/lib/api";
 
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 1023px)");
-    setIsMobile(mq.matches);
-    const handler = () => setIsMobile(mq.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  return isMobile;
-}
+const [userData, setUserData] = useState<UserProfile | null>(null);
+const [learnerProfile, setLearnerProfile] = useState<LearnerProfile | null>(null);
+const [loading, setLoading] = useState(true);
 
-export default function CareerMap() {
-  const router = useRouter();
-  const isMobile = useIsMobile();
-  const [selectedMilestone, setSelectedMilestone] = useState<any>(null);
-  const [userData, setUserData] = useState<UserProfile | null>(null);
-  const [userStats, setUserStats] = useState<UserStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       try {
-        const userId = localStorage.getItem('user_id');
-        if (!userId) {
-          router.push('/auth');
-          return;
-        }
-        
-        const userIdNum = parseInt(userId);
-        const [profile, stats] = await Promise.all([
-          apiService.getUserProfile(userIdNum),
-          apiService.getUserStats(userIdNum)
+        const [meResponse, profileResponse] = await Promise.all([
+          apiService.getMe(),
+          apiService.getLearnerProfile()
         ]);
         
-        setUserData(profile);
-        setUserStats(stats);
+        if (meResponse.success && meResponse.data) {
+          setUserData(meResponse.data);
+        }
+        if (profileResponse.success && profileResponse.data) {
+          setLearnerProfile(profileResponse.data);
+        }
       } catch (err) {
         console.error('Failed to load career map data:', err);
       } finally {

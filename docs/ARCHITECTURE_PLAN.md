@@ -266,7 +266,7 @@ RATE_LIMIT_PER_MINUTE=60
 - [x] Implement rate limiting and middleware
 - [x] Create NSQF seed script
 - [x] Write docker-compose for monolith
-- [ ] Update frontend API URL to single backend
+- [x] Update frontend API URL to single backend
 - [ ] Complete Celery task implementations
 - [ ] Write more unit/integration tests
 - [ ] Add Alembic migration runner

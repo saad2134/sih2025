@@ -1,33 +1,34 @@
 "use client";
 import React from 'react';
-import { Check, Sparkles, Zap, Users, TrendingUp, Shield, Award, Rocket } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { Check, Sparkles, Zap, Users, TrendingUp, Shield, Award, Rocket, Crown } from 'lucide-react';
 
 const freemiumFeatures = [
-  'AI-powered course recommendations',
-  'Basic learning style assessment',
-  'Access to 10,000+ courses across platforms',
-  'Job market salary insights',
-  'Course quality ratings & reviews',
-  'Learning path suggestions',
+  'Access to 50+ free courses',
+  'Basic progress tracking',
   'Community forum access',
-  'Mobile app access'
+  'Email support',
+  '1 certificate per month',
+];
+
+const proFeatures = [
+  'Access to all courses',
+  'Advanced progress tracking',
+  'AI-powered recommendations',
+  'Priority email support',
+  'Unlimited certificates',
+  'Resume builder access',
+  'Career insights dashboard',
 ];
 
 const premiumFeatures = [
-  'Everything in Freemium, plus:',
-  'Advanced AI personalization engine',
-  'Unlimited personalized learning paths',
-  'Career trajectory simulator',
-  'Skill gap analysis & roadmaps',
-  'Progress tracking across all platforms',
-  'Weekly accountability emails',
-  'Course comparison tools',
-  'Downloadable learning reports (PDF)',
-  'Priority support (24-hour response)',
-  '1-on-1 learning path consultation ($199 value)',
-  'Study schedule optimizer',
-  'Certificate of completion tracking',
-  'Ad-free experience'
+  'Everything in Pro',
+  '1-on-1 mentoring sessions',
+  'Job placement assistance',
+  'Personalized career roadmap',
+  'Industry expert workshops',
+  'Resume review by experts',
+  'Interview preparation',
 ];
 
 interface PricingCardsProps {
@@ -36,135 +37,102 @@ interface PricingCardsProps {
 }
 
 export const PricingCards: React.FC<PricingCardsProps> = ({ className = "", compact = false }) => {
+  const plans = [
+    {
+      name: "Freemium",
+      price: "Free",
+      period: "",
+      description: "Perfect for getting started",
+      icon: Zap,
+      features: freemiumFeatures,
+      notIncluded: [
+        "AI-powered recommendations",
+        "Advanced analytics",
+        "Priority support",
+        "Unlimited certificates",
+        "Resume builder access",
+      ],
+      cta: "Get Started Free",
+      popular: false,
+    },
+    {
+      name: "Pro",
+      price: "₹499",
+      period: "/month",
+      description: "Best for serious learners",
+      icon: Crown,
+      features: proFeatures,
+      notIncluded: [
+        "1-on-1 mentoring",
+        "Job placement assistance",
+      ],
+      cta: "Upgrade Now",
+      popular: true,
+    },
+    {
+      name: "Premium",
+      price: "₹999",
+      period: "/month",
+      description: "For career transformation",
+      icon: Rocket,
+      features: premiumFeatures,
+      notIncluded: [],
+      cta: "Go Premium",
+      popular: false,
+    },
+  ];
+
   return (
     <div className={className}>
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-stretch">
-        {/* Freemium Card */}
-        <div className="flex-1 bg-card text-card-foreground rounded-2xl border border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-lg">
-          <div className={compact ? "p-5 lg:p-6" : "p-6 lg:p-8"}>
-            {/* Card Header */}
-            <div className="mb-5">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-muted rounded-xl flex items-center justify-center">
-                  <Users className="w-5 h-5 lg:w-6 lg:h-6 text-muted-foreground" />
+      <div className={`grid grid-cols-1 ${compact ? '' : 'md:grid-cols-3'} gap-6`}>
+        {plans.map((plan, index) => {
+          const Icon = plan.icon;
+          return (
+            <div
+              key={plan.name}
+              className={`flex flex-col ${plan.popular ? 'border-2 border-violet-500 rounded-2xl relative' : 'border rounded-xl'} overflow-visible hover:shadow-lg transition-all duration-300 ${plan.popular ? 'bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30' : ''}`}
+            >
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                  <Badge className="bg-violet-500 shadow-lg">Most Popular</Badge>
                 </div>
-                <h2 className="text-2xl lg:text-3xl font-bold">Freemium</h2>
-              </div>
-              
-              <div className="mb-5">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl lg:text-5xl font-bold">$0</span>
-                  <span className="text-muted-foreground text-lg">/forever</span>
-                </div>
-                <p className="text-muted-foreground mt-2 text-sm lg:text-base">Perfect for exploring and getting started</p>
-              </div>
-
-              <button className="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold py-3 lg:py-4 px-5 lg:px-6 rounded-xl transition-all duration-200 border border-border hover:border-primary/30">
-                Get Started Free
-              </button>
-
-              <p className="text-center text-muted-foreground text-xs lg:text-sm mt-3">
-                Free Forever
-              </p>
-            </div>
-
-            {/* Features List */}
-            <div className="space-y-3 lg:space-y-4">
-              <div className="flex items-center gap-2 mb-4 lg:mb-6">
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent"></div>
-                <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Features</span>
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent"></div>
-              </div>
-              
-              {freemiumFeatures.map((feature, index) => (
-                <div key={index} className="flex items-start gap-3 group">
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-muted flex items-center justify-center mt-0.5 group-hover:bg-muted/80 transition-colors">
-                    <Check className="w-3 h-3 text-muted-foreground" />
+              )}
+              <div className={`flex flex-col flex-1 ${compact ? "p-4 pt-6" : "p-6 pt-8"}`}>
+                <div className="text-center mb-4">
+                  <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center mb-3 ${plan.popular ? 'bg-violet-100 dark:bg-violet-900/30' : 'bg-muted'}`}>
+                    <Icon className={`w-5 h-5 ${plan.popular ? 'text-violet-500' : 'text-muted-foreground'}`} />
                   </div>
-                  <span className="text-sm lg:text-base leading-relaxed">{feature}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Premium Card */}
-        <div className="flex-1 bg-gradient-to-br from-primary/10 via-card to-card rounded-2xl border-2 border-primary/30 overflow-hidden relative hover:shadow-xl hover:border-primary/50 transition-all duration-300">
-          {/* Popular Badge */}
-          <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 text-xs font-bold px-4 lg:px-6 py-1.5 lg:py-2 rounded-bl-xl lg:rounded-bl-2xl flex items-center gap-1">
-            <Award className="w-3 h-3" />
-            MOST POPULAR
-          </div>
-
-          <div className={compact ? "p-5 lg:p-6" : "p-6 lg:p-8"}>
-            {/* Card Header */}
-            <div className="mb-5">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-primary/20 rounded-xl flex items-center justify-center">
-                  <Rocket className="w-5 h-5 lg:w-6 lg:h-6 text-primary" />
-                </div>
-                <h2 className="text-2xl lg:text-3xl font-bold">Premium</h2>
-              </div>
-              
-              <div className="mb-5">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl lg:text-5xl font-bold">$15</span>
-                  <span className="text-primary text-lg">/month</span>
-                </div>
-                <p className="text-primary/80 mt-2 text-sm lg:text-base">For serious learners ready to transform their career</p>
-              </div>
-
-              <button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 lg:py-4 px-5 lg:px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
-                <Zap className="w-4 h-4 lg:w-5 lg:h-5" />
-                Start Premium Trial
-              </button>
-              
-              <p className="text-center text-muted-foreground text-xs lg:text-sm mt-3">
-                14-day free trial • Cancel anytime
-              </p>
-            </div>
-
-            {/* Features List */}
-            <div className="space-y-3 lg:space-y-4">
-              <div className="flex items-center gap-2 mb-4 lg:mb-6">
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
-                <span className="text-xs text-primary/80 uppercase tracking-wider font-semibold">Everything Included</span>
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
-              </div>
-              
-              {premiumFeatures.map((feature, index) => (
-                <div key={index} className="flex items-start gap-3 group">
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center mt-0.5 group-hover:bg-primary/30 transition-colors">
-                    <Check className="w-3 h-3 text-primary" />
+                  <h2 className="text-xl font-bold">{plan.name}</h2>
+                  <p className="text-muted-foreground text-sm">{plan.description}</p>
+                  <div className="mt-3">
+                    <span className="text-3xl font-bold">{plan.price}</span>
+                    {plan.period && <span className="text-muted-foreground text-sm">{plan.period}</span>}
                   </div>
-                  <span className={`text-sm lg:text-base leading-relaxed ${index === 0 ? 'font-semibold' : ''}`}>
-                    {feature}
-                  </span>
                 </div>
-              ))}
-            </div>
 
-            {/* Value Highlight */}
-            <div className="mt-6 lg:mt-8 p-4 bg-primary/5 border border-primary/20 rounded-xl">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold text-primary">Premium Value</span>
+                <ul className="space-y-2 mb-4">
+                  {plan.features.map((feature, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                  {plan.notIncluded.map((feature, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <span className="w-4 h-4 shrink-0 mt-0.5 text-center">×</span>
+                      <span className="line-through">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button className={`mt-auto w-full font-semibold py-2 rounded-lg transition-all duration-300 ${plan.popular ? 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 hover:scale-105 hover:shadow-xl hover:shadow-violet-500/40 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/60 border-0 ring-2 ring-violet-500/50' : 'bg-secondary hover:bg-secondary/80 border'}`}>
+                  {plan.cta}
+                </button>
               </div>
-              <p className="text-xs lg:text-sm text-muted-foreground">
-                Includes 1 free coaching session worth $199 + unlimited access to all premium features
-              </p>
             </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
-
-      <p className="mt-4 text-xs text-center text-muted-foreground">
-        Not satisfied? Check our{' '}
-        <a href="/refunds" className="text-primary hover:text-primary/80 underline underline-offset-2">
-          Refunds Policy
-        </a>
-        {' '}for information on cancellations and refunds.
-      </p>
     </div>
   );
 };

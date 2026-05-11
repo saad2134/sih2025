@@ -159,7 +159,38 @@ export default function OnboardingForm() {
                 };
                 
                 const { apiService } = await import('@/lib/api');
-                await apiService.saveOnboarding(parseInt(userId), onboardingData);
+                
+                const quizResponse = await apiService.getOnboardingQuiz();
+                if (!quizResponse.success || !quizResponse.data) {
+                    throw new Error('Failed to load quiz');
+                }
+                
+                const varkAnswers = quizResponse.data.questions.map(q => ({
+                    question_id: q.id,
+                    option_id: q.options[0].id
+                }));
+                
+                const submitData = {
+                    vark_answers: varkAnswers,
+                    topic: formData.interests?.[0] || formData.otherInterest || 'general',
+                    goal: formData.learningGoals?.[0] || 'curiosity',
+                    hours_per_week: parseInt(formData.timeCommitment) || 5,
+                    math_comfort: parseInt(formData.mathIntensity) || 3,
+                    style_preferences: formData.learningTypes || [],
+                    prior_knowledge: formData.skills?.[0] || 'none',
+                    career_target: formData.targetRoles || undefined,
+                    language: 'en'
+                };
+                
+                const result = await apiService.submitOnboarding(submitData);
+                if (!result.success) {
+                    throw new Error(result.error?.message || 'Failed to submit onboarding');
+                }
+                
+                if (result.data?.job_id) {
+                    localStorage.setItem('onboarding_job_id', result.data.job_id);
+                    localStorage.setItem('onboarding_profile_id', result.data.profile_id);
+                }
             }
             
             localStorage.setItem('onboarding_completed', 'true');

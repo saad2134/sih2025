@@ -97,34 +97,28 @@ export default function MarketInsights() {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <Card className="bg-gradient-to-r from-green-600 to-emerald-600 text-white border-0">
+          <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
             <CardContent className="p-4 sm:p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 sm:p-4 bg-white/20 rounded-full">
-                    <Target size={32} className="sm:w-10 sm:h-10" />
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+                  <div className="p-2 sm:p-3 bg-green-100 dark:bg-green-900/30 rounded-lg shrink-0">
+                    <Target className="text-green-600 dark:text-green-400" size={22} />
                   </div>
-                  <div>
-                    <p className="text-white/80 text-sm">Your Career Path Fit</p>
-                    <h2 className="text-2xl sm:text-3xl font-bold">{yourPathFit.currentRole}</h2>
-                    <div className="flex items-center gap-3 mt-1 text-sm text-white/80">
-                      <span className="flex items-center gap-1">
-                        <TrendingUp size={14} />
-                        {yourPathFit.demandForecast}
-                      </span>
-                      <span>•</span>
-                      <span>{yourPathFit.growthRate}</span>
-                    </div>
+                  <div className="min-w-0">
+                    <h2 className="text-lg sm:text-xl font-semibold">Your Path to {yourPathFit.currentRole}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {yourPathFit.demandForecast} • {yourPathFit.growthRate}
+                    </p>
                   </div>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="text-center p-4 bg-white/10 rounded-lg min-w-[120px]">
-                    <p className="text-3xl font-bold">{yourPathFit.matchScore}%</p>
-                    <p className="text-xs text-white/70">Path Match Score</p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="text-center p-3 bg-white dark:bg-black/20 rounded-lg min-w-[100px] border border-green-200 dark:border-green-800">
+                    <p className="text-2xl font-bold text-green-700 dark:text-green-300">{yourPathFit.matchScore}%</p>
+                    <p className="text-xs text-muted-foreground">Path Match</p>
                   </div>
-                  <div className="text-center p-4 bg-white/10 rounded-lg min-w-[120px]">
-                    <p className="text-3xl font-bold">{yourPathFit.demandForecast === "High Demand" ? "9.2" : "8.5"}</p>
-                    <p className="text-xs text-white/70">Job Availability Score</p>
+                  <div className="text-center p-3 bg-white dark:bg-black/20 rounded-lg min-w-[100px] border border-green-200 dark:border-green-800">
+                    <p className="text-2xl font-bold text-green-700 dark:text-green-300">{yourPathFit.demandForecast === "High Demand" ? "9.2" : "8.5"}</p>
+                    <p className="text-xs text-muted-foreground">Job Availability</p>
                   </div>
                 </div>
               </div>

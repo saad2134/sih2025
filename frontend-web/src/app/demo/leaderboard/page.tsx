@@ -101,7 +101,7 @@ export default function Leaderboard() {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <Card className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
+          <Card className="bg-gradient-to-r from-primary to-violet-600 dark:to-indigo-500 text-white border-0">
             <CardContent className="p-4 sm:p-6">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                 <div className="flex items-center gap-4">
@@ -180,28 +180,35 @@ export default function Leaderboard() {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           {timeframe !== "allTime" && (
-            <Card className="mb-6">
-              <CardHeader className="pb-3">
+            <Card className="mb-6 overflow-hidden">
+              <div className="bg-gradient-to-r from-amber-500/10 to-yellow-500/10 dark:from-amber-500/5 dark:to-yellow-500/5 p-4 border-b">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Crown className="text-amber-500" size={20} />
                   Top 3 This {timeframe === "weekly" ? "Week" : "Month"}
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-center items-end gap-4">
+              </div>
+              <CardContent className="p-6">
+                <div className="flex justify-center items-end gap-6">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                     className="text-center"
                   >
-                    <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-2xl font-bold mx-auto mb-2 ring-4 ring-slate-300 dark:ring-slate-600">
-                      {leaders[1].avatar}
+                    <div className="relative">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center text-xl font-bold mx-auto mb-2 ring-4 ring-slate-300 dark:ring-slate-500 shadow-lg">
+                        {leaders[1].avatar}
+                      </div>
+                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-slate-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">2</div>
                     </div>
-                    <p className="font-semibold text-sm truncate max-w-[80px]">{leaders[1].name.split(" ")[0]}</p>
-                    <p className="text-xs text-muted-foreground">{leaders[1].points.toLocaleString()} pts</p>
-                    <div className="mt-2 w-12 h-16 bg-slate-300 dark:bg-slate-600 rounded-t-lg mx-auto flex items-end justify-center pb-1">
-                      <Medal className="text-slate-400 -mt-6 bg-white dark:bg-slate-800 rounded-full p-0.5" size={24} />
+                    <p className="font-semibold text-sm mt-2">{leaders[1].name}</p>
+                    <p className="text-sm font-bold text-primary">{leaders[1].points.toLocaleString()} pts</p>
+                    <div className="flex items-center justify-center gap-3 mt-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1"><Flame size={12} className="text-orange-500" />{leaders[1].streak}</span>
+                      <span className="flex items-center gap-1"><BookOpen size={12} />{leaders[1].courses}</span>
+                    </div>
+                    <div className="mt-3 w-16 h-20 bg-gradient-to-t from-slate-300 to-slate-200 dark:from-slate-600 dark:to-slate-500 rounded-t-xl mx-auto flex items-end justify-center pb-2 shadow-md">
+                      <Medal className="text-slate-400 -mt-5 bg-white dark:bg-slate-800 rounded-full p-0.5 shadow-sm" size={20} />
                     </div>
                   </motion.div>
 
@@ -211,13 +218,20 @@ export default function Leaderboard() {
                     transition={{ delay: 0.1 }}
                     className="text-center"
                   >
-                    <div className="w-20 h-20 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center text-3xl font-bold mx-auto mb-2 ring-4 ring-yellow-400">
-                      {leaders[0].avatar}
+                    <div className="relative">
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-300 to-amber-400 flex items-center justify-center text-2xl font-bold mx-auto mb-2 ring-4 ring-yellow-400 shadow-lg shadow-yellow-500/20">
+                        {leaders[0].avatar}
+                      </div>
+                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">1</div>
                     </div>
-                    <p className="font-semibold text-sm truncate max-w-[80px]">{leaders[0].name.split(" ")[0]}</p>
-                    <p className="text-xs text-muted-foreground">{leaders[0].points.toLocaleString()} pts</p>
-                    <div className="mt-2 w-14 h-20 bg-yellow-400 rounded-t-lg mx-auto flex items-end justify-center pb-1">
-                      <Crown className="text-white -mt-6 bg-yellow-500 rounded-full p-0.5" size={28} />
+                    <p className="font-bold text-base mt-2 text-amber-600 dark:text-amber-400">{leaders[0].name}</p>
+                    <p className="text-sm font-bold text-primary">{leaders[0].points.toLocaleString()} pts</p>
+                    <div className="flex items-center justify-center gap-3 mt-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1"><Flame size={12} className="text-orange-500" />{leaders[0].streak}</span>
+                      <span className="flex items-center gap-1"><BookOpen size={12} />{leaders[0].courses}</span>
+                    </div>
+                    <div className="mt-3 w-20 h-24 bg-gradient-to-t from-yellow-400 to-amber-300 rounded-t-xl mx-auto flex items-end justify-center pb-2 shadow-lg shadow-yellow-500/20">
+                      <Crown className="text-white -mt-6 bg-yellow-500 rounded-full p-1 shadow-sm" size={24} />
                     </div>
                   </motion.div>
 
@@ -227,15 +241,25 @@ export default function Leaderboard() {
                     transition={{ delay: 0.3 }}
                     className="text-center"
                   >
-                    <div className="w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-xl font-bold mx-auto mb-2 ring-4 ring-amber-300 dark:ring-amber-600">
-                      {leaders[2].avatar}
+                    <div className="relative">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-300 to-orange-400 dark:from-amber-600 dark:to-orange-600 flex items-center justify-center text-xl font-bold mx-auto mb-2 ring-4 ring-amber-300 dark:ring-amber-500 shadow-lg">
+                        {leaders[2].avatar}
+                      </div>
+                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">3</div>
                     </div>
-                    <p className="font-semibold text-sm truncate max-w-[80px]">{leaders[2].name.split(" ")[0]}</p>
-                    <p className="text-xs text-muted-foreground">{leaders[2].points.toLocaleString()} pts</p>
-                    <div className="mt-2 w-10 h-12 bg-amber-600 rounded-t-lg mx-auto flex items-end justify-center pb-1">
-                      <Medal className="text-white -mt-4 bg-amber-700 rounded-full p-0.5" size={20} />
+                    <p className="font-semibold text-sm mt-2">{leaders[2].name}</p>
+                    <p className="text-sm font-bold text-primary">{leaders[2].points.toLocaleString()} pts</p>
+                    <div className="flex items-center justify-center gap-3 mt-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1"><Flame size={12} className="text-orange-500" />{leaders[2].streak}</span>
+                      <span className="flex items-center gap-1"><BookOpen size={12} />{leaders[2].courses}</span>
+                    </div>
+                    <div className="mt-3 w-16 h-16 bg-gradient-to-t from-amber-500 to-orange-400 rounded-t-xl mx-auto flex items-end justify-center pb-2 shadow-md">
+                      <Medal className="text-white -mt-5 bg-amber-600 rounded-full p-0.5 shadow-sm" size={18} />
                     </div>
                   </motion.div>
+                </div>
+                <div className="mx-auto mt-2 max-w-[320px]">
+                  <div className="h-4 bg-gradient-to-r from-slate-300 via-yellow-300 to-amber-400 dark:from-slate-600 dark:via-yellow-600 dark:to-amber-600 rounded-b-xl shadow-md"></div>
                 </div>
               </CardContent>
             </Card>
