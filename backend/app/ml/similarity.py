@@ -1,7 +1,12 @@
+"""Similarity computation functions for matching engine."""
+
 import numpy as np
 
 
 def cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
+    """Compute cosine similarity between two vectors."""
+    if len(vec1) != len(vec2):
+        return 0.0
     v1 = np.array(vec1)
     v2 = np.array(vec2)
     norm1 = np.linalg.norm(v1)
@@ -12,6 +17,7 @@ def cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
 
 
 def jaccard_similarity(set1: list[str], set2: list[str]) -> float:
+    """Compute Jaccard similarity between two sets."""
     if not set1 or not set2:
         return 0.0
     s1 = set(set1)
@@ -24,28 +30,39 @@ def jaccard_similarity(set1: list[str], set2: list[str]) -> float:
 
 
 def time_fit_score(user_hours: float, course_hours: float) -> float:
-    if course_hours == 0:
-        return 0.0
-    diff = abs(course_hours - user_hours)
-    max_hours = max(user_hours, course_hours)
-    if max_hours == 0:
+    """
+    Compute time fit score.
+    1.0 = perfect match
+    0.5 = 1.5x difference
+    0.0 = 2.5x+ difference
+    """
+    if course_hours <= 0 or user_hours <= 0:
+        return 0.5
+    
+    ratio = max(user_hours, course_hours) / min(user_hours, course_hours)
+    
+    if ratio <= 1.0:
         return 1.0
-    return max(0.0, 1.0 - (diff / max_hours))
-
-
-def nsqf_level_bonus(user_goal: str, course_nsqf_level: int) -> float:
-    if course_nsqf_level <= 0:
+    elif ratio <= 1.5:
+        return 1.0 - (ratio - 1.0) * 1.0
+    elif ratio <= 2.5:
+        return 0.5 - (ratio - 1.5) * 0.25
+    else:
         return 0.0
-    if user_goal in ("certification", "job"):
-        return 0.1
+
+
+def quality_signal(rating: float, review_count: int) -> float:
+    """
+    Compute quality signal from rating and review count.
+    Log-weighted to avoid small-n inflation.
+    """
+    if rating <= 0:
+        return 0.0
+    return (rating / 5.0) * np.log10(review_count + 1) / np.log10(101)
+
+
+def nsqf_bonus(goal: str, nsqf_level: int) -> float:
+    """NSQF alignment bonus for certification goals."""
+    if goal == "certification" and nsqf_level > 0:
+        return 1.0
     return 0.0
-
-
-def quality_signal(avg_rating: float, review_count: int) -> float:
-    if avg_rating is None or review_count is None:
-        return 0.0
-    if avg_rating <= 0:
-        return 0.0
-    rating_norm = avg_rating / 5.0
-    log_count = np.log10(review_count + 1)
-    return rating_norm * log_count / 3.0

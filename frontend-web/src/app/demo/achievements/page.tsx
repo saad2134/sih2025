@@ -233,7 +233,7 @@ export default function Achievements() {
 
   return (
     <div className="p-4 sm:p-6 pb-24">
-      <div className="max-w-6xl mx-auto">
+      <div className="mx-auto">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         </div>
 

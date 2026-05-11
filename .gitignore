@@ -1,9 +1,25 @@
-/temp
-error.log
+# Backend
+backend/__pycache__/
+backend/*.py[cod]
+backend/*.egg-info/
+backend/.eggs/
+backend/dist/
+backend/build/
+backend/.env
+backend/data/*.csv
+backend/data/*.index
+backend/ml/models/*.faiss
+backend/ml/models/*.joblib
+backend/tests/.pytest_cache/
+backend/.coverage
+backend/htmlcov/
+backend/coverage.xml
 
-# Environment files
-.env
-.env.local
+# Frontend
+frontend-web/.env.local
+frontend-web/.next/
+frontend-android/app/build/
+frontend-android/build/
 
 # Python
 __pycache__/
@@ -13,6 +29,11 @@ __pycache__/
 .eggs/
 dist/
 build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
 
 # IDE
 .vscode/
@@ -25,6 +46,7 @@ build/
 Thumbs.db
 __pycache__
 error.log
-.env
-.env.local
-frontend-web/.env.local
+
+# Misc
+/temp
+*.log

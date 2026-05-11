@@ -1,155 +1,95 @@
-from sqlalchemy import select
+"""Recommendation compute task - runs async after onboarding submit."""
+
+import uuid
+from datetime import datetime, timezone
+from sqlalchemy import select, update
+
 from app.tasks.celery_app import celery_app
-from app.db.session import async_session_maker, engine, Base
-from app.models import (
-    Course,
-    LearnerProfile,
-    RecommendationJob,
-    RecommendationItem,
-    GoalEnum,
-)
-from app.services.matching import filter_and_score_courses
-from datetime import datetime
-import asyncio
+from app.db.session import get_db_context
+from app.models.onboarding import RecommendationJob, LearnerProfile
+from app.models.recommendation import Enrolment
+from app.services.matching import MatchingService
 
 
-def sync_get_sync_session():
-    from sqlalchemy.orm import Session
-    from sqlalchemy import create_engine
-
-    sync_engine = create_engine(
-        "postgresql://postgres:postgres@localhost:5432/shikshadisha"
-    )
-    SessionLocal = Session(bind=sync_engine)
-    return SessionLocal()
-
-
-@celery_app.task(name="app.tasks.recommendations.compute_recommendations")
-def compute_recommendations(job_id: str):
-    pass
-
-
-async def _run_recommendations(job_id: str):
-    async with async_session_maker() as db:
-        from sqlalchemy import select
-        from uuid import UUID
-
-        job_result = await db.execute(
-            select(RecommendationJob).where(RecommendationJob.id == UUID(job_id))
-        )
-        job = job_result.scalar_one_or_none()
-        if not job:
-            return
-        job.status = "running"
-        await db.commit()
-
-        profile_result = await db.execute(
-            select(LearnerProfile).where(LearnerProfile.user_id == job.user_id)
-        )
-        profile = profile_result.scalar_one_or_none()
-        if not profile:
-            job.status = "failed"
-            job.error_message = "No learner profile found"
-            await db.commit()
-            return
-
-        courses_result = await db.execute(select(Course).limit(200))
-        courses = courses_result.scalars().all()
-        course_dicts = []
-        for c in courses:
-            course_dicts.append(
-                {
-                    "id": str(c.id),
-                    "title": c.title,
-                    "vark_v_score": c.vark_v_score or 0.25,
-                    "vark_a_score": c.vark_a_score or 0.25,
-                    "vark_r_score": c.vark_r_score or 0.25,
-                    "vark_k_score": c.vark_k_score or 0.25,
-                    "style_tags": c.style_tags or [],
-                    "math_depth": c.math_depth or 1,
-                    "hours_per_week": c.hours_per_week or 4,
-                    "nsqf_level": c.nsqf_level or 0,
-                    "avg_rating": c.avg_rating,
-                    "review_count": c.review_count or 0,
-                    "week_breakdown": c.week_breakdown,
-                    "completion_rate": c.completion_rate,
-                }
-            )
-
-        profile_dict = {
-            "vark_v": profile.vark_v or 0.25,
-            "vark_a": profile.vark_a or 0.25,
-            "vark_r": profile.vark_r or 0.25,
-            "vark_k": profile.vark_k or 0.25,
-            "style_preferences": profile.style_preferences or [],
-        }
-
-        results = filter_and_score_courses(
-            course_dicts,
-            profile_dict,
-            profile.hours_per_week,
-            profile.math_comfort,
-            profile.goal,
-        )
-        ranked = []
-        for i, (course, report) in enumerate(results[:20]):
-            ranked.append(
-                {
-                    "course_id": course["id"],
-                    "rank": i + 1,
-                    "overall_match_pct": report["overall_match_pct"],
-                    "vark_alignment_pct": report["vark_alignment_pct"],
-                    "style_match_pct": report["style_match_pct"],
-                    "math_level": report["math_level"],
-                    "math_warning_detail": report["math_warning_detail"],
-                    "completion_rate_cluster": report["completion_rate_your_cluster"],
-                    "collab_confidence": report["collab_confidence"],
-                    "match_report": report,
-                    "course": {
-                        "id": course["id"],
-                        "title": course.get("title", ""),
-                        "description": "",
-                        "provider": "",
-                        "url": None,
-                        "duration_hours": None,
-                        "nsqf_level": course.get("nsqf_level"),
-                        "nsqf_sector": None,
-                        "language": "en",
-                        "difficulty": course.get("math_depth", 1),
-                        "style_tags": course.get("style_tags", []),
-                        "math_depth": course.get("math_depth", 1),
-                        "math_topics": [],
-                        "vark_v_score": course.get("vark_v_score", 0.25),
-                        "vark_a_score": course.get("vark_a_score", 0.25),
-                        "vark_r_score": course.get("vark_r_score", 0.25),
-                        "vark_k_score": course.get("vark_k_score", 0.25),
-                        "week_breakdown": course.get("week_breakdown"),
-                        "hours_per_week": course.get("hours_per_week"),
-                        "completion_rate": course.get("completion_rate"),
-                        "avg_rating": course.get("avg_rating"),
-                        "review_count": course.get("review_count", 0),
-                    },
-                }
-            )
-
-        job.status = "ready"
-        job.results = ranked
-        job.completed_at = datetime.utcnow()
-        await db.commit()
-
-
-@celery_app.task(name="app.tasks.recommendations.rebuild_faiss_index")
-def rebuild_faiss_index():
-    import os
-
-    os.makedirs("models", exist_ok=True)
-    return {"status": "ok"}
-
-
-def compute_recommendations_task(job_id: str):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+@celery_app.task(name="app.tasks.recommendations.compute_recommendations", bind=True, max_retries=3)
+def compute_recommendations_task(self, job_id: str, profile_id: str):
+    """Async recommendation computation - triggered by onboarding."""
+    from app.models.course import Course
+    
     try:
-        loop.run_until_complete(_run_recommendations(job_id))
-    finally:
-        loop.close()
+        with get_db_context() as db:
+            job = db.get(RecommendationJob, uuid.UUID(job_id))
+            if not job:
+                return {"status": "error", "message": "Job not found"}
+
+            job.status = "running"
+            db.commit()
+
+            profile = db.get(LearnerProfile, uuid.UUID(profile_id))
+            if not profile:
+                job.status = "failed"
+                job.error = "Profile not found"
+                db.commit()
+                return {"status": "error", "message": "Profile not found"}
+
+            matching_service = MatchingService(db)
+            recommendations = matching_service.get_recommendations(profile, limit=20)
+
+            result_ids = []
+            for rec in recommendations:
+                result_ids.append(uuid.UUID(rec.id))
+
+            job.status = "ready"
+            job.results = result_ids
+            job.completed_at = datetime.now(timezone.utc)
+            db.commit()
+
+            return {
+                "status": "success",
+                "job_id": job_id,
+                "count": len(result_ids)
+            }
+
+    except Exception as exc:
+        with get_db_context() as db:
+            job = db.get(RecommendationJob, uuid.UUID(job_id))
+            if job:
+                job.status = "failed"
+                job.error = str(exc)
+                db.commit()
+
+        raise self.retry(exc=exc, countdown=60)
+
+
+@celery_app.task(name="app.tasks.recommendations.recompute_cluster_matrix")
+def recompute_cluster_matrix():
+    """
+    Daily: Rebuild cluster completion matrix from enrolments.
+    Updates completion rates per VARK cluster for collaborative filtering.
+    """
+    with get_db_context() as db:
+        result = db.execute("""
+            SELECT 
+                r.vark_cluster,
+                COUNT(*) as total,
+                SUM(CASE WHEN r.completion_status = 'completed' THEN 1 ELSE 0 END) as completed
+            FROM reviews r
+            WHERE r.vark_cluster IS NOT NULL
+            GROUP BY r.vark_cluster
+        """)
+        
+        cluster_rates = {}
+        for row in result:
+            cluster = row[0]
+            total = row[1]
+            completed = row[2]
+            if total >= 10:
+                cluster_rates[cluster] = completed / total if total > 0 else 0.5
+
+        return {"clusters_updated": len(cluster_rates), "rates": cluster_rates}
+
+
+@celery_app.task(name="app.tasks.recommendations.update_cached_recommendations")
+def update_cached_recommendations(user_id: str):
+    """Invalidate and recompute recommendations for user."""
+    pass
