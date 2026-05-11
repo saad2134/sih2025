@@ -38,6 +38,7 @@ const [loading, setLoading] = useState(true);
       }
     };
     
+  useEffect(() => {
     fetchData();
   }, [router]);
 

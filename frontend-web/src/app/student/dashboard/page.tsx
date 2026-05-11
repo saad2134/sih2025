@@ -48,8 +48,9 @@ const [loading, setLoading] = useState(true);
             }
         };
 
-        fetchData();
-    }, []);
+        useEffect(() => {
+            fetchData();
+        }, []);
 
     const milestones = userData ? [
         { id: 1, title: "Profile Setup", status: userData.progress && userData.progress >= 10 ? "completed" : "upcoming", description: "Basic information collected" },
