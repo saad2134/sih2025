@@ -1,55 +1,60 @@
-"""Seed expert review cards for Phase 1 testimonials."""
+"""
+Expert review seed script - run once for initial course reviews.
+
+Phase 1: Expert review cards (manually written, clearly labelled).
+These are NOT scraped testimonials - they are team-written analyses.
+"""
 
 import asyncio
-from app.db.session import async_session_maker
-from app.models import Review
-from uuid import uuid4
+import csv
+from pathlib import Path
+
+from app.db.session import AsyncSessionLocal
+from app.models.review import Review
+from app.models.course import Course
+from sqlalchemy import select
 
 
-EXPERT_REVIEWS = [
-    {
-        "course_id": "placeholder",
-        "body": "An excellent course for visual learners. The diagrams and flowcharts make complex concepts accessible.",
-        "rating": 5,
-        "vark_type": "V",
-        "reviewer_type": "expert",
-    },
-    {
-        "course_id": "placeholder",
-        "body": "Great hands-on approach. You will be writing code from week 1. Best for kinesthetic learners.",
-        "rating": 5,
-        "vark_type": "K",
-        "reviewer_type": "expert",
-    },
-    {
-        "course_id": "placeholder",
-        "body": "Well-structured reading material and references. Perfect for reading/writing preference learners.",
-        "rating": 4,
-        "vark_type": "R",
-        "reviewer_type": "expert",
-    },
-]
-
-
-async def seed_expert_reviews(course_id: str):
-    async with async_session_maker() as db:
-        for review_data in EXPERT_REVIEWS:
-            review = Review(
-                course_id=course_id,
-                reviewer_type="expert",
-                body=review_data["body"],
-                rating=review_data["rating"],
-                vark_type=review_data["vark_type"],
-            )
-            db.add(review)
-        await db.commit()
-        print(f"Seeded {len(EXPERT_REVIEWS)} expert reviews for course {course_id}")
+async def seed_expert_reviews(csv_path: str):
+    """Import expert reviews for courses."""
+    
+    async with AsyncSessionLocal() as session:
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            
+            for row in reader:
+                course_title = row.get("course_title", "").strip()
+                
+                result = await session.execute(
+                    select(Course).where(Course.title.ilike(f"%{course_title}%"))
+                )
+                course = result.scalar_one_or_none()
+                
+                if not course:
+                    print(f"Course not found: {course_title}")
+                    continue
+                
+                review = Review(
+                    course_id=course.id,
+                    user_id=None,
+                    rating=int(row.get("rating", 4)),
+                    body=row.get("review", "").strip(),
+                    completion_status="completed",
+                    reviewer_type="expert",
+                    vark_cluster=int(row.get("vark_cluster", 0)) if row.get("vark_cluster") else None,
+                    vark_type=row.get("vark_type", "V"),
+                )
+                session.add(review)
+        
+        await session.commit()
+        print(f"Imported expert reviews from {csv_path}")
 
 
 if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) < 2:
-        print("Usage: python seed_expert_reviews.py <course_id>")
+    csv_file = Path(__file__).parent.parent / "data" / "expert_reviews.csv"
+    if csv_file.exists():
+        asyncio.run(seed_expert_reviews(str(csv_file)))
     else:
-        asyncio.run(seed_expert_reviews(sys.argv[1]))
+        print(f"CSV file not found: {csv_file}")
+        print("Create data/expert_reviews.csv with columns:")
+        print("  course_title, rating, review, vark_cluster, vark_type")

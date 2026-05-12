@@ -1,11 +1,7 @@
-from app.ml.vark_scorer import compute_vark_scores, get_dominant_vark, VARK_QUESTIONS
-from app.ml.similarity import cosine_similarity, jaccard_similarity, time_fit_score
+"""ML modules."""
 
-__all__ = [
-    "compute_vark_scores",
-    "get_dominant_vark",
-    "VARK_QUESTIONS",
-    "cosine_similarity",
-    "jaccard_similarity",
-    "time_fit_score",
-]
+from app.ml.vark_scorer import VARKScorer, VARKScores
+from app.ml.similarity import cosine_similarity, jaccard_similarity, time_fit_score
+from app.services.matching import MatchingService
+
+__all__ = ["VARKScorer", "VARKScores", "cosine_similarity", "jaccard_similarity", "time_fit_score", "MatchingService"]

@@ -15,7 +15,7 @@
 
 ## 🔹 Context
 
-### 🏆 Prototype for AMD Slingshot Hackathon 2026
+### 🏆 Originally Built for SIH 2025 (Smart India Hackathon) as a Prototype
 
 - **Theme:** 2. AI in Education & Skilling
 - **Category:** Software
@@ -315,7 +315,7 @@ graph TB
 
 
 
-## 👥 Our AMD Slingshot Hackathon 2026 Team (DevBandits)
+## 👥 Our SIH 2025 Team (DevBandits)
 
 <div align="center">
 
@@ -383,12 +383,12 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ---
 
 ## ✍️ Endnote
-<p align="center">Developed with 💖 for the AMD Slingshot Hackathon 2026, with heartfelt thanks for the opportunity to build and innovate.</p>
+<p align="center">Developed with 💖 for the SIH 2025 (Smart India Hackathon), with heartfelt thanks for the opportunity to build and innovate.</p>
 
 ---
 
 ## 🏷 Tags  
 
-`#WebApp` `#SmartEducation` `#AIinEducation` `#PersonalizedLearning` `#SkillPathways` `#CareerGuidance` `#NSQFIntegration` `#VocationalEducation` `#AIPathGenerator` `#DigitalLearning` `#AdaptiveLearning` `#GamifiedLearning` `#TokenEconomy` `#AIMatching` `#SkillNavigator` `#FutureSkills` `#EdTechIndia` `#SkillForecasting` `#CareerIntelligence` `#MultilingualAI` `#AMDSlingshot2026` 
+`#WebApp` `#SmartEducation` `#AIinEducation` `#PersonalizedLearning` `#SkillPathways` `#CareerGuidance` `#NSQFIntegration` `#VocationalEducation` `#AIPathGenerator` `#DigitalLearning` `#AdaptiveLearning` `#GamifiedLearning` `#TokenEconomy` `#AIMatching` `#SkillNavigator` `#FutureSkills` `#EdTechIndia` `#SkillForecasting` `#CareerIntelligence` `#MultilingualAI` `#SIH2025` 
 
 

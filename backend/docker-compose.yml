@@ -1,63 +1,56 @@
-version: "3.9"
+version: "3.8"
 
 services:
-  api:
+  backend:
     build: .
     ports:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/shikshadisha
       - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://redis:6379/2
-      - ENVIRONMENT=development
+      - SECRET_KEY=${SECRET_KEY:-change-me}
+      - ENVIRONMENT=production
     depends_on:
       - db
       - redis
     restart: unless-stopped
 
-  worker:
+  celery:
     build: .
     command: celery -A app.tasks.celery_app worker --loglevel=info
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/shikshadisha
       - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://redis:6379/2
     depends_on:
       - db
       - redis
-    restart: unless-stopped
 
-  beat:
+  celery-beat:
     build: .
     command: celery -A app.tasks.celery_app beat --loglevel=info
     environment:
-      - CELERY_BROKER_URL=redis://redis:6379/1
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       - redis
-    restart: unless-stopped
 
   db:
-    image: postgres:15
+    image: pgvector/pgvector:pg15
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=shikshadisha
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    restart: unless-stopped
 
   redis:
-    image: redis:7
+    image: redis:7-alpine
     ports:
       - "6379:6379"
     volumes:
-      - redisdata:/data
-    restart: unless-stopped
+      - redis_data:/data
 
 volumes:
-  pgdata:
-  redisdata:
+  postgres_data:
+  redis_data:

@@ -21,7 +21,7 @@ import {
   FileUser,
   Settings,
   Bookmark,
-  History
+  Send
 } from "lucide-react";
 import AppUI from "@/components/logos/app_icon";
 import {
@@ -90,12 +90,6 @@ const demoNavItems = [
         icon: HelpCircle,
         description: "Test your knowledge",
       },
-      {
-        title: "Quiz History",
-        url: "/demo/quiz-history",
-        icon: History,
-        description: "View your quiz results and progress",
-      },
     ],
   },
   {
@@ -162,14 +156,53 @@ export default function DemoLayout({
 function DemoSidebar({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { setTheme } = useTheme();
+  const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  const [feedbackOpen, setFeedbackOpen] = React.useState(false);
+  const [feedbackText, setFeedbackText] = React.useState("");
+  const [cooldown, setCooldown] = React.useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("feedbackCooldown");
+      if (saved) {
+        const remaining = Math.ceil((parseInt(saved) - Date.now()) / 1000);
+        return remaining > 0 ? remaining : 0;
+      }
+    }
+    return 0;
+  });
+
+  React.useEffect(() => {
+    if (pathname.startsWith('/demo/quick-quiz/') && pathname !== '/demo/quick-quiz') {
+      setSidebarOpen(false);
+    } else {
+      setSidebarOpen(true);
+    }
+  }, [pathname]);
+
+  React.useEffect(() => {
+    if (cooldown > 0) {
+      localStorage.setItem("feedbackCooldown", (Date.now() + cooldown * 1000).toString());
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      localStorage.removeItem("feedbackCooldown");
+    }
+  }, [cooldown]);
+
+  const handleSendFeedback = () => {
+    if (feedbackText.trim() && cooldown === 0) {
+      setFeedbackText("");
+      setFeedbackOpen(false);
+      setCooldown(60);
+    }
+  };
 
   if (pathname === "/demo/onboarding") {
     return <>{children}</>;
   }
 
   return (
-    <SidebarProvider defaultOpen={true} className="h-screen">
-      <Sidebar collapsible="offcanvas" className="border-r z-200">
+    <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen} className="h-screen">
+      <Sidebar collapsible="offcanvas" className="border-r z-50">
         <SidebarHeader className="h-16 border-b">
           <div className="flex items-center justify-between px-2 h-full">
             <div className="flex items-center gap-3">
@@ -283,16 +316,44 @@ function DemoSidebar({ children }: { children: React.ReactNode }) {
 
       <SidebarInset className="flex flex-col flex-1 h-full overflow-auto">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 z-50 bg-background/80 backdrop-blur-md">
-          <SidebarTrigger />
+          {(!pathname.startsWith('/demo/quick-quiz/') || pathname === '/demo/quick-quiz') && <SidebarTrigger />}
           <div className="flex-1">
             {(() => {
               const directMatch = demoNavItems.find(item => item.url === pathname);
               const subItemMatch = demoNavItems.flatMap(item => item.items || []).find(subItem => subItem.url === pathname);
               const currentItem = directMatch || subItemMatch;
+              
+              if (pathname === "/demo/profile") {
+                return (
+                  <div>
+                    <h1 className="text-lg font-semibold">Profile</h1>
+                    <p className="text-xs text-muted-foreground line-clamp-1">View and edit your profile</p>
+                  </div>
+                );
+              }
+              
+              if (pathname === "/demo/billing") {
+                return (
+                  <div>
+                    <h1 className="text-lg font-semibold">Billing & Subscription</h1>
+                    <p className="text-xs text-muted-foreground line-clamp-1">Choose the plan that works best for you</p>
+                  </div>
+                );
+              }
+              
+              if (pathname === "/demo/settings") {
+                return (
+                  <div>
+                    <h1 className="text-lg font-semibold">Settings</h1>
+                    <p className="text-xs text-muted-foreground line-clamp-1">Manage your application preferences</p>
+                  </div>
+                );
+              }
+              
               return (
                 <div>
                   <h1 className="text-lg font-semibold">
-                    {currentItem?.title || "Dashboard"}
+                    {currentItem?.title || ""}
                   </h1>
                   {currentItem && 'description' in currentItem && (
                     <p className="text-xs text-muted-foreground line-clamp-1">
@@ -304,6 +365,7 @@ function DemoSidebar({ children }: { children: React.ReactNode }) {
             })()}
           </div>
           <div className="flex items-center gap-2">
+            {(!pathname.startsWith('/demo/quick-quiz/') || pathname === '/demo/quick-quiz') && (
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="border rounded-lg">
@@ -335,6 +397,39 @@ function DemoSidebar({ children }: { children: React.ReactNode }) {
                       <p className="text-xs text-muted-foreground mt-1">5 hours ago</p>
                     </div>
                   </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+            )}
+            <Sheet open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="border rounded-lg" disabled={cooldown > 0}>
+                  {cooldown > 0 ? (
+                    <span className="text-xs font-medium">{cooldown}s</span>
+                  ) : (
+                    <Send size={18} />
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Send Feedback</SheetTitle>
+                </SheetHeader>
+                <div className="mt-4 space-y-4">
+                  <textarea
+                    className="w-full h-32 p-3 border rounded-lg resize-none text-sm"
+                    placeholder="Share your thoughts, suggestions, or report issues..."
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                  />
+                  <Button 
+                    className="w-full" 
+                    onClick={handleSendFeedback}
+                    disabled={!feedbackText.trim() || cooldown > 0}
+                  >
+                    <Send size={16} className="mr-2" />
+                    {cooldown > 0 ? `Wait ${cooldown}s` : "Send Feedback"}
+                  </Button>
                 </div>
               </SheetContent>
             </Sheet>

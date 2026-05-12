@@ -1,3 +1,5 @@
+import { BACKEND_BASE_URL } from './api';
+
 export interface LoginData {
   email: string;
   password: string;
@@ -14,17 +16,19 @@ export interface AuthResponse {
   success: boolean;
   message: string;
   user?: {
-    id: number;
+    id: string;
     name: string;
     email: string;
   };
   token?: string;
+  access_token?: string;
+  refresh_token?: string;
 }
 
 export const authService = {
   async login(data: LoginData): Promise<AuthResponse> {
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${BACKEND_BASE_URL}/api/v1/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -38,19 +42,21 @@ export const authService = {
       const result = await response.json();
       
       if (response.ok && result.success) {
-        if (result.token) {
-          localStorage.setItem('auth_token', result.token);
-          localStorage.setItem('user_data', JSON.stringify(result.user));
-          if (result.user && result.user.id) {
-            localStorage.setItem('user_id', result.user.id.toString());
-          }
+        const token = result.data?.access_token;
+        if (token) {
+          localStorage.setItem('auth_token', token);
+          localStorage.setItem('refresh_token', result.data.refresh_token);
         }
         if (data.rememberMe) {
           localStorage.setItem('remember_email', data.email);
         }
       }
       
-      return result;
+      return {
+        success: result.success,
+        message: result.error?.message || (result.success ? 'Login successful' : 'Login failed'),
+        access_token: result.data?.access_token,
+      };
     } catch (error) {
       console.error('Login error:', error);
       return {
@@ -62,31 +68,33 @@ export const authService = {
 
   async signup(data: SignupData): Promise<AuthResponse> {
     try {
-      const response = await fetch('/api/auth/signup', {
+      const response = await fetch(`${BACKEND_BASE_URL}/api/v1/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: data.name,
           email: data.email,
-          password: data.password
+          password: data.password,
+          full_name: data.name,
         }),
       });
 
       const result = await response.json();
       
       if (response.ok && result.success) {
-        if (result.token) {
-          localStorage.setItem('auth_token', result.token);
-          localStorage.setItem('user_data', JSON.stringify(result.user));
-          if (result.user && result.user.id) {
-            localStorage.setItem('user_id', result.user.id.toString());
-          }
+        const token = result.data?.access_token;
+        if (token) {
+          localStorage.setItem('auth_token', token);
+          localStorage.setItem('refresh_token', result.data.refresh_token);
         }
       }
       
-      return result;
+      return {
+        success: result.success,
+        message: result.error?.message || (result.success ? 'Registration successful' : 'Registration failed'),
+        access_token: result.data?.access_token,
+      };
     } catch (error) {
       console.error('Signup error:', error);
       return {
@@ -98,6 +106,7 @@ export const authService = {
 
   logout() {
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('user_data');
     localStorage.removeItem('user_id');
     localStorage.removeItem('remember_email');
@@ -110,11 +119,6 @@ export const authService = {
 
   isAuthenticated(): boolean {
     return !!localStorage.getItem('auth_token');
-  },
-
-  getUser(): { id: number; name: string; email: string } | null {
-    const userData = localStorage.getItem('user_data');
-    return userData ? JSON.parse(userData) : null;
   },
 
   getToken(): string | null {

@@ -27,7 +27,7 @@ import { siteConfig } from "@/config/site";
 function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState(false);
   React.useEffect(() => {
-    const mq = window.matchMedia("(max-width: 1023px)");
+    const mq = window.matchMedia("(max-width: 768px)");
     setIsMobile(mq.matches);
     const handler = () => setIsMobile(mq.matches);
     mq.addEventListener("change", handler);
@@ -247,7 +247,7 @@ export default function CareerMap() {
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-3 order-1">
+        <div className="lg:col-span-3">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -359,7 +359,7 @@ export default function CareerMap() {
           </motion.div>
         </div>
 
-        <div className="space-y-4 lg:space-y-6 min-w-0 lg:sticky lg:top-24 lg:self-start order-2 lg:order-none">
+        <div className="space-y-4 lg:space-y-6 min-w-0 lg:sticky lg:top-24 lg:self-start lg:order-none">
           <div className="hidden lg:block">
             {selectedMilestone ? (
               <motion.div
@@ -518,7 +518,7 @@ export default function CareerMap() {
 
         {isMobile && selectedMilestone && (
           <Sheet open={true} onOpenChange={handleCloseSheet}>
-            <SheetContent side="bottom" className="h-[85dvh] overflow-y-auto rounded-t-2xl">
+            <SheetContent side="bottom" className="h-[85dvh] overflow-y-auto rounded-t-2xl  z-1000">
               <SheetHeader className="pr-12">
                 <SheetTitle className="flex items-center gap-2">
                   {React.createElement(selectedMilestone.icon, {

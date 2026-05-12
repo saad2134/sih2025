@@ -1,212 +1,141 @@
+"""Matching engine - 3 layer architecture for course recommendations."""
+
+import uuid
+import numpy as np
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, and_, or_, func
+from sqlalchemy.orm import selectinload
 from typing import Optional
-from app.ml.similarity import (
-    cosine_similarity,
-    jaccard_similarity,
-    time_fit_score,
-    nsqf_level_bonus,
-    quality_signal,
-)
-from app.enums import GoalEnum
+
+from app.models.course import Course
+from app.models.onboarding import LearnerProfile
+from app.schemas.recommendations import MatchReport, WarningItem, CourseWithMatch
+from app.ml.similarity import cosine_similarity, jaccard_similarity, time_fit_score, quality_signal
 
 
-MATH_WARNING_TOPICS = {
-    3: ["derivatives", "calculus", "probability", "linear algebra"],
-    4: [
-        "advanced calculus",
-        "linear algebra",
-        "statistics",
-        "proofs",
-        "derivatives",
-        "probability theory",
-    ],
+WEIGHTS = {
+    "vark": 0.30,
+    "style": 0.20,
+    "time": 0.20,
+    "nsqf": 0.15,
+    "quality": 0.15,
 }
 
 
-def check_math_level(
-    user_comfort: int, course_depth: int
-) -> tuple[str, Optional[str], list[str]]:
-    if course_depth <= user_comfort:
-        return "PASS", None, []
-    elif course_depth == user_comfort + 1:
-        topics = MATH_WARNING_TOPICS.get(course_depth, ["mathematical concepts"])
-        return "WARN", f"Requires: {', '.join(topics[:3])}.", topics
-    else:
-        topics = MATH_WARNING_TOPICS.get(course_depth, ["advanced mathematics"])
-        return "EXCLUDE", f"Requires: {', '.join(topics)}.", topics
+class MatchingService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
 
-
-def check_time_level(
-    user_hours: float, course_hours: float
-) -> tuple[str, Optional[str]]:
-    if course_hours <= user_hours:
-        return "PASS", None
-    elif course_hours <= user_hours * 1.5:
-        return (
-            "WARN",
-            f"Course needs {course_hours:.0f} hrs/week (you said {user_hours:.0f} available)",
+    async def get_recommendations(
+        self,
+        profile: LearnerProfile,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> list[CourseWithMatch]:
+        courses_result = await self.db.execute(
+            select(Course).limit(200)
         )
-    elif course_hours <= user_hours * 2.5:
-        return (
-            "WARN",
-            f"Significant time gap — course needs {course_hours:.0f} hrs/week",
-        )
-    else:
-        return (
-            "EXCLUDE",
-            f"Course requires {course_hours:.0f} hrs/week (way beyond {user_hours:.0f} available)",
-        )
+        all_courses = courses_result.scalars().all()
+        
+        scored = []
+        for course in all_courses:
+            match_report = await self.compute_match_report(profile, course)
+            if match_report.math_level != "EXCLUDE":
+                scored.append((course, match_report))
+        
+        scored.sort(key=lambda x: x[1].overall_match_pct, reverse=True)
+        
+        results = []
+        for i, (course, report) in enumerate(scored[offset:offset + limit]):
+            results.append(CourseWithMatch(
+                id=str(course.id),
+                title=course.title,
+                provider=course.provider,
+                url=course.url,
+                description=course.description,
+                nsqf_level=course.nsqf_level,
+                nsqf_sector=course.nsqf_sector,
+                style_tags=course.style_tags,
+                math_depth=course.math_depth,
+                hours_per_week=course.hours_per_week,
+                completion_rate=course.completion_rate,
+                avg_rating=course.avg_rating,
+                difficulty=course.difficulty,
+                language=course.language,
+                is_nsqf=course.nsqf_level > 0,
+                match_report=report,
+            ))
+        
+        return results
 
+    async def compute_match_report(
+        self,
+        profile: LearnerProfile,
+        course: Course,
+    ) -> MatchReport:
+        user_vark = [profile.vark_v, profile.vark_a, profile.vark_r, profile.vark_k]
+        course_vark = [course.vark_v_score, course.vark_a_score, course.vark_r_score, course.vark_k_score]
+        vark_sim = cosine_similarity(user_vark, course_vark)
+        style_sim = jaccard_similarity(profile.style_preferences, course.style_tags or [])
+        time_fit = time_fit_score(profile.hours_per_week, course.hours_per_week)
+        nsqf_match = profile.goal == "certification" and course.nsqf_level > 0
+        quality = quality_signal(course.avg_rating, course.review_count)
 
-def compute_match_report(
-    course: dict,
-    profile: dict,
-    user_hours: float,
-    user_comfort: int,
-    user_goal: GoalEnum,
-    cluster_completion: Optional[float] = None,
-    global_completion: Optional[float] = None,
-) -> dict:
-    vark_user = [
-        profile.get("vark_v", 0.25),
-        profile.get("vark_a", 0.25),
-        profile.get("vark_r", 0.25),
-        profile.get("vark_k", 0.25),
-    ]
-    vark_course = [
-        course.get("vark_v_score", 0.25),
-        course.get("vark_a_score", 0.25),
-        course.get("vark_r_score", 0.25),
-        course.get("vark_k_score", 0.25),
-    ]
-    vark_sim = cosine_similarity(vark_user, vark_course)
-    vark_pct = int(vark_sim * 100)
+        vark_pct = int(vark_sim * 100)
+        style_pct = int(style_sim * 100)
+        overall = int(
+            WEIGHTS["vark"] * vark_sim +
+            WEIGHTS["style"] * style_sim +
+            WEIGHTS["time"] * time_fit +
+            WEIGHTS["nsqf"] * (1.0 if nsqf_match else 0.0) +
+            WEIGHTS["quality"] * quality
+        ) * 100
 
-    style_user = profile.get("style_preferences", [])
-    style_course = course.get("style_tags", [])
-    style_sim = jaccard_similarity(style_user, style_course)
-    style_pct = int(style_sim * 100)
+        math_level, math_warning = self._check_math(profile.math_comfort, course.math_depth)
 
-    course_hours = course.get("hours_per_week", 4)
-    time_fit = time_fit_score(user_hours, course_hours)
-
-    nsqf_match = course.get("nsqf_level", 0) > 0 and user_goal in (
-        GoalEnum.certification,
-        GoalEnum.job,
-    )
-
-    math_level, math_detail, math_topics_ahead = check_math_level(
-        user_comfort, course.get("math_depth", 1)
-    )
-
-    time_level, time_detail = check_time_level(user_hours, course_hours)
-
-    warnings = []
-    if math_level == "WARN":
-        warnings.append(
-            {
-                "type": "math",
-                "severity": "warn",
-                "message": math_detail or "Math level may be challenging",
-            }
-        )
-    if time_level == "WARN":
-        warnings.append(
-            {
-                "type": "time",
-                "severity": "warn",
-                "message": time_detail or "Time commitment is higher than available",
-            }
-        )
-
-    avg_rating = course.get("avg_rating", 0) or 0
-    review_count = course.get("review_count", 0) or 0
-    quality = quality_signal(avg_rating, review_count)
-
-    score = (
-        0.30 * vark_sim
-        + 0.20 * style_sim
-        + 0.20 * time_fit
-        + 0.15 * nsqf_level_bonus(str(user_goal), course.get("nsqf_level", 0))
-        + 0.15 * quality
-    )
-    overall_pct = int(min(score, 1.0) * 100)
-
-    if overall_pct >= 80:
-        label = "Strong Match"
-    elif overall_pct >= 65:
-        label = "Good Match"
-    elif overall_pct >= 50:
-        label = "Proceed with Caution"
-    else:
-        label = "Not Recommended"
-
-    why = (
-        f"Ranked #{1} because: VARK match {vark_pct}%, time fit {int(time_fit * 100)}%"
-    )
-    if nsqf_match:
-        why += ", NSQF certified"
-
-    collab_confidence = "LOW"
-    if cluster_completion is not None and cluster_completion > 0:
-        collab_confidence = "HIGH"
-    elif global_completion is not None and global_completion > 0:
-        collab_confidence = "MEDIUM"
-
-    week_breakdown = None
-    if course.get("week_breakdown"):
-        week_breakdown = course["week_breakdown"]
-
-    return {
-        "overall_match_pct": overall_pct,
-        "vark_alignment_pct": vark_pct,
-        "style_match_pct": style_pct,
-        "time_fit": f"Course needs {course_hours:.0f} hrs/week (you said {user_hours:.0f})",
-        "nsqf_match": nsqf_match,
-        "math_level": math_level,
-        "math_warning_detail": math_detail,
-        "math_topics_ahead": math_topics_ahead,
-        "completion_rate_your_cluster": cluster_completion,
-        "completion_rate_global": global_completion,
-        "collab_confidence": collab_confidence,
-        "week_breakdown": week_breakdown,
-        "recommendation_label": label,
-        "warnings": warnings,
-        "why_this_ranking": why,
-    }
-
-
-def filter_and_score_courses(
-    courses: list[dict],
-    profile: dict,
-    user_hours: float,
-    user_comfort: int,
-    user_goal: GoalEnum,
-) -> list[tuple[dict, dict]]:
-    results = []
-    for course in courses:
-        math_level, _, _ = check_math_level(user_comfort, course.get("math_depth", 1))
-        if math_level == "EXCLUDE":
-            continue
-        time_level, _ = check_time_level(user_hours, course.get("hours_per_week", 4))
-        if time_level == "EXCLUDE":
-            continue
-
-        if profile.get("preferred_language"):
-            if course.get("language", "en") != profile.get("preferred_language"):
-                continue
-
-        match_report = compute_match_report(
-            course, profile, user_hours, user_comfort, user_goal
-        )
+        warnings = []
         if math_level == "WARN":
-            match_report["warnings"].insert(
-                0,
-                {
-                    "type": "math",
-                    "severity": "warn",
-                    "message": f"Math level is one step above your comfort",
-                },
-            )
-        results.append((course, match_report))
-    results.sort(key=lambda x: x[1]["overall_match_pct"], reverse=True)
-    return results
+            warnings.append(WarningItem(
+                type="math",
+                severity="warn",
+                message=f"Requires calculus-level math (depth {course.math_depth})",
+            ))
+        if time_fit < 0.5 and time_fit > 0:
+            warnings.append(WarningItem(
+                type="time",
+                severity="warn",
+                message=f"Course needs {course.hours_per_week}hrs/week, you have {profile.hours_per_week}",
+            ))
+
+        label = "Strong Match" if overall >= 80 else "Good Match" if overall >= 65 else "Proceed with Caution" if overall >= 50 else "Not Recommended"
+
+        time_fit_str = f"Good — {course.hours_per_week} hrs/week (you said {profile.hours_per_week} available)"
+        if time_fit < 0.5:
+            time_fit_str = f"Time mismatch — course needs {course.hours_per_week}hrs/week"
+
+        return MatchReport(
+            overall_match_pct=overall,
+            vark_alignment_pct=vark_pct,
+            style_match_pct=style_pct,
+            time_fit=time_fit_str,
+            nsqf_match=nsqf_match,
+            math_level=math_level,
+            math_warning_detail=math_warning,
+            math_topics_ahead=course.math_topics or [],
+            completion_rate_your_cluster=None,
+            completion_rate_global=course.completion_rate,
+            collab_confidence="LOW",
+            week_breakdown=course.week_breakdown,
+            recommendation_label=label,
+            warnings=warnings,
+            why_this_ranking=f"Scored {overall}% — VARK {vark_pct}%, Style {style_pct}%, Time {int(time_fit*100)}%",
+        )
+
+    def _check_math(self, comfort: int, depth: int) -> tuple[str, Optional[str]]:
+        if depth <= comfort:
+            return "PASS", None
+        elif depth == comfort + 1:
+            warning = f"Math warning: course requires level {depth} math (you rated {comfort})"
+            return "WARN", warning
+        else:
+            return "EXCLUDE", None

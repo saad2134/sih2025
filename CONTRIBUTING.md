@@ -1,7 +1,7 @@
 # 🤝 Contributing
 
 
-## 👥 Our AMD Slingshot Hackathon 2026 Team (DevBandits)
+## 👥 Our SIH 2025 Team (DevBandits)
 
 <div align="center">
 
