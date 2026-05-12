@@ -30,10 +30,18 @@ export interface UserProfile {
     id: string;
     email: string;
     full_name: string;
+    name?: string;
     timezone: string;
     preferred_language: string;
     onboarding_done: boolean;
     created_at: string;
+    interests: string[];
+    skills: string[];
+    career_goal?: string;
+    learning_goals?: string[];
+    target_roles?: string[];
+    preferred_nsqf_level?: number;
+    progress?: number;
 }
 
 export interface LearnerProfile {
