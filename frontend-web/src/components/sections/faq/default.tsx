@@ -44,7 +44,7 @@ export default function FAQ({
     <section id='faqs' className={`py-12 sm:py-16 relative overflow-hidden ${className || ''}`}>
       <div className="absolute inset-0">
         <motion.div
-            className="absolute top-20 left-10 h-24 w-24 rounded-full bg-primary/15 blur-xl"
+            className="absolute top-20 left-10 h-24 w-24 rounded-full bg-brand-foreground/25 blur-xl"
             animate={{
                 x: [0, -25, 0],
                 y: [0, 15, 0],
@@ -57,7 +57,7 @@ export default function FAQ({
             }}
         />
         <motion.div
-            className="absolute bottom-20 right-10 h-32 w-32 rounded-full bg-secondary/15 blur-xl"
+            className="absolute bottom-20 right-10 h-32 w-32 rounded-full bg-brand-foreground/25 blur-xl"
             animate={{
                 x: [0, 25, 0],
                 y: [0, -15, 0],
@@ -71,7 +71,7 @@ export default function FAQ({
             }}
         />
         <motion.div
-            className="absolute top-1/2 left-1/4 h-20 w-20 rounded-full bg-primary/10 blur-lg"
+            className="absolute top-1/2 left-1/4 h-20 w-20 rounded-full bg-brand-foreground/25 blur-lg"
             animate={{
                 x: [0, -15, 15, 0],
                 y: [0, -10, 10, 0],

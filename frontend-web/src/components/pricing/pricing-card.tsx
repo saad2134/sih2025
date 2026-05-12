@@ -2,6 +2,7 @@
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Check, Sparkles, Zap, Users, TrendingUp, Shield, Award, Rocket, Crown } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const freemiumFeatures = [
   'Access to 50+ free courses',
@@ -150,7 +151,48 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
     <div className="w-full">
       {showHeader && (
         <div className="relative overflow-hidden py-12 lg:py-16">
-          <div className="absolute inset-0 "></div>
+          <div className="absolute inset-0">
+            <motion.div
+              className="absolute top-20 left-10 h-24 w-24 rounded-full bg-brand-foreground/25 blur-xl"
+              animate={{
+                x: [0, -25, 0],
+                y: [0, 15, 0],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 10,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+            <motion.div
+              className="absolute bottom-20 right-10 h-32 w-32 rounded-full bg-brand-foreground/25 blur-xl"
+              animate={{
+                x: [0, 25, 0],
+                y: [0, -15, 0],
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: 12,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 2,
+              }}
+            />
+            <motion.div
+              className="absolute top-1/2 left-1/4 h-20 w-20 rounded-full bg-brand-foreground/25 blur-lg"
+              animate={{
+                x: [0, -15, 15, 0],
+                y: [0, -10, 10, 0],
+              }}
+              transition={{
+                duration: 14,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 4,
+              }}
+            />
+          </div>
           <div className="relative max-w-4xl mx-auto px-4 lg:px-6 text-center">
             <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 lg:px-6 py-2 mb-4 lg:mb-6">
               <Sparkles className="w-4 h-4 text-primary" />
@@ -192,7 +234,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
       </div>
 
       {showBottom && (
-        <div className="border-t border-border">
+        <div className="pb-8">
           <div className="max-w-6xl mx-auto px-4 lg:px-6 py-12 lg:py-16">
             <h3 className="text-xl lg:text-2xl font-bold text-center mb-8 lg:mb-12">
               Why Upgrade to Premium?

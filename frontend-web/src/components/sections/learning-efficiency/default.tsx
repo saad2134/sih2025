@@ -243,7 +243,7 @@ export default function LearningEfficiency() {
 
           <div className="flex-1 flex items-center justify-center">
             <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-6 lg:gap-8">
-              <div className="space-y-4">
+              <div className="space-y-4 ">
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     "px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-500",
@@ -263,10 +263,10 @@ export default function LearningEfficiency() {
                 </div>
 
                 <div className={cn(
-                  "p-4 md:p-5 rounded-xl bg-card border transition-all duration-500",
-                  showOptimized ? "border-green-500/30 shadow-lg shadow-green-500/10" : "border-border"
+                  "p-4 md:p-5 rounded-xl bg-card border transition-all duration-500 ",
+                  showOptimized ? "border-green-500/30 shadow-lg shadow-green-500/10 " : "border-border"
                 )}>
-                  <div className="space-y-3">
+                  <div className="space-y-3 ">
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-10 md:h-11 bg-muted rounded-lg flex items-center px-3 gap-2">
                         <Search className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -422,7 +422,7 @@ export default function LearningEfficiency() {
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 p-">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 md:p-4 rounded-xl bg-card border border-border">
                     <div className="flex items-center gap-1.5 mb-1">

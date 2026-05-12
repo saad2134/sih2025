@@ -8,6 +8,7 @@ import LearningEfficiency from "../components/sections/learning-efficiency/defau
 import Navbar from "../components/sections/navbar/default";
 import ProgrammingComputerSection from "../components/sections/programming-computer/default";
 import MagicBento from '@/components/MagicBento'
+import PricingSection from "@/components/pricing/pricing-card";
 
 export const metadata = {
   title: `${siteConfig.name} ✦ Personalized Roadmaps for Future-ready Skills`,
@@ -39,7 +40,7 @@ export default function Home() {
         <ProgrammingComputerSection />
         <LearningEfficiency />
         {/* <Stats /> */}
-        {/* <Pricing /> */}
+        <PricingSection />
         <FAQ />
         <CTA />
         <Footer />
