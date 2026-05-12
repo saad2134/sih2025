@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from "@/components/ui/drawer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
@@ -33,6 +34,63 @@ import {
     HelpCircle
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
+
+function ResponsiveDialog({ open, onOpenChange, trigger, children, title, description, footer, className }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    trigger: React.ReactNode;
+    children: React.ReactNode;
+    title: string;
+    description: string;
+    footer?: React.ReactNode;
+    className?: string;
+}) {
+    const [isSmallScreen, setIsSmallScreen] = React.useState(false);
+
+    React.useEffect(() => {
+        const checkScreenSize = () => setIsSmallScreen(window.innerWidth < 768);
+        checkScreenSize();
+        window.addEventListener('resize', checkScreenSize);
+        return () => window.removeEventListener('resize', checkScreenSize);
+    }, []);
+
+    if (isSmallScreen) {
+        return (
+            <Drawer open={open} onOpenChange={onOpenChange}>
+                <DrawerTrigger asChild>{trigger}</DrawerTrigger>
+                <DrawerContent>
+                    <DrawerHeader>
+                        <DrawerTitle>{title}</DrawerTitle>
+                        <DrawerDescription>{description}</DrawerDescription>
+                    </DrawerHeader>
+                    <div className="px-4 pb-4">{children}</div>
+                    <DrawerFooter>
+                        {footer}
+                        <DrawerClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                        </DrawerClose>
+                    </DrawerFooter>
+                </DrawerContent>
+            </Drawer>
+        );
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogTrigger asChild>{trigger}</DialogTrigger>
+            <DialogContent className={className}>
+                <DialogHeader>
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>{description}</DialogDescription>
+                </DialogHeader>
+                {children}
+                <DialogFooter>
+                    {footer}
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 const userProfile = {
     name: "Saad Mohammed",
@@ -92,6 +150,7 @@ const userProfile = {
 
 export default function Profile() {
     const router = useRouter();
+    const [isSmallScreen, setIsSmallScreen] = React.useState(false);
     const [editDialogOpen, setEditDialogOpen] = React.useState(false);
     const [isPaidUser, setIsPaidUser] = React.useState(false);
     const [activityFilter, setActivityFilter] = React.useState("all");
@@ -124,6 +183,15 @@ export default function Profile() {
 
     useEffect(() => {
         document.title = `Profile ✦ ${siteConfig.name}`;
+    }, []);
+
+    useEffect(() => {
+        const checkScreenSize = () => {
+            setIsSmallScreen(window.innerWidth < 768);
+        };
+        checkScreenSize();
+        window.addEventListener('resize', checkScreenSize);
+        return () => window.removeEventListener('resize', checkScreenSize);
     }, []);
 
     const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -202,99 +270,99 @@ export default function Profile() {
                             >
                                 <Card className="h-full">
                                     <CardHeader className="pb-2 relative">
-                                        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-                                            <DialogTrigger asChild>
+                                        <ResponsiveDialog
+                                            open={editDialogOpen}
+                                            onOpenChange={setEditDialogOpen}
+                                            trigger={
                                                 <Button variant="ghost" size="icon" className="absolute top-4 right-4 border">
                                                     <Edit size={18} />
                                                 </Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="sm:max-w-[500px]">
-                                                <DialogHeader>
-                                                    <DialogTitle>Edit Profile</DialogTitle>
-                                                    <DialogDescription>
-                                                        Update your personal information and career goals.
-                                                    </DialogDescription>
-                                                </DialogHeader>
-                                                <div className="grid gap-4 py-4">
-                                                    <div className="flex flex-col items-center gap-3">
-                                                        <div className="relative">
-                                                            <div className="w-24 h-24 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-3xl font-bold text-violet-600">
-                                                                {avatarPreview ? (
-                                                                    <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover rounded-full" />
-                                                                ) : (
-                                                                    userProfile.avatar
-                                                                )}
-                                                            </div>
-                                                            <label
-                                                                htmlFor="avatar-upload"
-                                                                className="absolute bottom-0 right-0 bg-violet-600 hover:bg-violet-700 text-white p-2 rounded-full cursor-pointer shadow-lg transition-colors"
-                                                            >
-                                                                <Camera className="w-4 h-4" />
-                                                                <input
-                                                                    id="avatar-upload"
-                                                                    type="file"
-                                                                    accept="image/*"
-                                                                    onChange={handleAvatarUpload}
-                                                                    className="hidden"
-                                                                />
-                                                            </label>
-                                                        </div>
-                                                        {avatarPreview && (
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={handleRemoveAvatar}
-                                                                className="text-xs"
-                                                            >
-                                                                Remove Photo
-                                                            </Button>
-                                                        )}
-                                                        <p className="text-xs text-muted-foreground">Click camera icon to upload photo</p>
-                                                    </div>
-                                                    <div className="grid gap-2">
-                                                        <Label htmlFor="name">Full Name</Label>
-                                                        <Input
-                                                            id="name"
-                                                            value={editForm.name}
-                                                            onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                                                        />
-                                                    </div>
-                                                    <div className="grid gap-2">
-                                                        <Label htmlFor="email">Email</Label>
-                                                        <Input
-                                                            id="email"
-                                                            type="email"
-                                                            value={editForm.email}
-                                                            onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                                                        />
-                                                    </div>
-                                                    <div className="grid gap-2">
-                                                        <Label htmlFor="phone">Phone</Label>
-                                                        <Input
-                                                            id="phone"
-                                                            value={editForm.phone}
-                                                            onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                                                        />
-                                                    </div>
-                                                    <div className="grid gap-2">
-                                                        <Label htmlFor="location">Location</Label>
-                                                        <Input
-                                                            id="location"
-                                                            value={editForm.location}
-                                                            onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <DialogFooter>
+                                            }
+                                            title="Edit Profile"
+                                            description="Update your personal information and career goals."
+                                            className="sm:max-w-[500px]"
+                                            footer={
+                                                <>
                                                     <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
                                                         Cancel
                                                     </Button>
                                                     <Button onClick={handleSaveProfile}>
                                                         Save Changes
                                                     </Button>
-                                                </DialogFooter>
-                                            </DialogContent>
-                                        </Dialog>
+                                                </>
+                                            }
+                                        >
+                                            <div className="grid gap-4 py-4">
+                                                <div className="flex flex-col items-center gap-3">
+                                                    <div className="relative">
+                                                        <div className="w-24 h-24 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-3xl font-bold text-violet-600">
+                                                            {avatarPreview ? (
+                                                                <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover rounded-full" />
+                                                            ) : (
+                                                                userProfile.avatar
+                                                            )}
+                                                        </div>
+                                                        <label
+                                                            htmlFor="avatar-upload"
+                                                            className="absolute bottom-0 right-0 bg-violet-600 hover:bg-violet-700 text-white p-2 rounded-full cursor-pointer shadow-lg transition-colors"
+                                                        >
+                                                            <Camera className="w-4 h-4" />
+                                                            <input
+                                                                id="avatar-upload"
+                                                                type="file"
+                                                                accept="image/*"
+                                                                onChange={handleAvatarUpload}
+                                                                className="hidden"
+                                                            />
+                                                        </label>
+                                                    </div>
+                                                    {avatarPreview && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={handleRemoveAvatar}
+                                                            className="text-xs"
+                                                        >
+                                                            Remove Photo
+                                                        </Button>
+                                                    )}
+                                                    <p className="text-xs text-muted-foreground">Click camera icon to upload photo</p>
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="name">Full Name</Label>
+                                                    <Input
+                                                        id="name"
+                                                        value={editForm.name}
+                                                        onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                                    />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="email">Email</Label>
+                                                    <Input
+                                                        id="email"
+                                                        type="email"
+                                                        value={editForm.email}
+                                                        onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                                                    />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="phone">Phone</Label>
+                                                    <Input
+                                                        id="phone"
+                                                        value={editForm.phone}
+                                                        onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                                                    />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="location">Location</Label>
+                                                    <Input
+                                                        id="location"
+                                                        value={editForm.location}
+                                                        onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </ResponsiveDialog>
                                         <div className="flex items-center gap-4">
                                             <div className="w-20 h-20 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-2xl font-bold text-violet-600 shrink-0">
                                                 {userProfile.avatar}
@@ -385,80 +453,80 @@ export default function Profile() {
                             >
                                 <Card>
                                     <CardHeader className="pb-3 relative">
-                                        <Dialog open={learningPrefsOpen} onOpenChange={setLearningPrefsOpen}>
-                                            <DialogTrigger asChild>
+                                        <ResponsiveDialog
+                                            open={learningPrefsOpen}
+                                            onOpenChange={setLearningPrefsOpen}
+                                            trigger={
                                                 <Button variant="ghost" size="icon" className="absolute top-4 right-4 border">
                                                     <Edit size={18} />
                                                 </Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="sm:max-w-[400px]">
-                                                <DialogHeader>
-                                                    <DialogTitle>Edit Learning Preferences</DialogTitle>
-                                                    <DialogDescription>
-                                                        Update your learning preferences.
-                                                    </DialogDescription>
-                                                </DialogHeader>
-                                                <div className="grid gap-4 py-4">
-                                                    <div className="grid gap-2">
-                                                        <Label>Learning Type</Label>
-                                                        <Select
-                                                            value={learningForm.type}
-                                                            onValueChange={(value) => setLearningForm({ ...learningForm, type: value })}
-                                                        >
-                                                            <SelectTrigger>
-                                                                <SelectValue />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="Videos">Videos</SelectItem>
-                                                                <SelectItem value="Hands-on projects">Hands-on projects</SelectItem>
-                                                                <SelectItem value="Articles">Articles</SelectItem>
-                                                                <SelectItem value="Quizzes">Quizzes</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                    <div className="grid gap-2">
-                                                        <Label>Learning Style</Label>
-                                                        <Select
-                                                            value={learningForm.style}
-                                                            onValueChange={(value) => setLearningForm({ ...learningForm, style: value })}
-                                                        >
-                                                            <SelectTrigger>
-                                                                <SelectValue />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="Guided paths with deadlines">Guided paths with deadlines</SelectItem>
-                                                                <SelectItem value="Self-paced">Self-paced learning</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                    <div className="grid gap-2">
-                                                        <Label>Time Commitment</Label>
-                                                        <Select
-                                                            value={learningForm.timeCommitment}
-                                                            onValueChange={(value) => setLearningForm({ ...learningForm, timeCommitment: value })}
-                                                        >
-                                                            <SelectTrigger>
-                                                                <SelectValue />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="Less than 1 hour/day">&lt;1 hour/day</SelectItem>
-                                                                <SelectItem value="1-2 hours/day">1-2 hours/day</SelectItem>
-                                                                <SelectItem value="2-5 hours/day">2-5 hours/day</SelectItem>
-                                                                <SelectItem value="5+ hours/day">5+ hours/day</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                </div>
-                                                <DialogFooter>
+                                            }
+                                            title="Edit Learning Preferences"
+                                            description="Update your learning preferences."
+                                            className="sm:max-w-[400px]"
+                                            footer={
+                                                <>
                                                     <Button variant="outline" onClick={() => setLearningPrefsOpen(false)}>
                                                         Cancel
                                                     </Button>
                                                     <Button onClick={handleSaveLearningPrefs}>
                                                         Save Changes
                                                     </Button>
-                                                </DialogFooter>
-                                            </DialogContent>
-                                        </Dialog>
+                                                </>
+                                            }
+                                        >
+                                            <div className="grid gap-4 py-4">
+                                                <div className="grid gap-2">
+                                                    <Label>Learning Type</Label>
+                                                    <Select
+                                                        value={learningForm.type}
+                                                        onValueChange={(value) => setLearningForm({ ...learningForm, type: value })}
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="Videos">Videos</SelectItem>
+                                                            <SelectItem value="Hands-on projects">Hands-on projects</SelectItem>
+                                                            <SelectItem value="Articles">Articles</SelectItem>
+                                                            <SelectItem value="Quizzes">Quizzes</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label>Learning Style</Label>
+                                                    <Select
+                                                        value={learningForm.style}
+                                                        onValueChange={(value) => setLearningForm({ ...learningForm, style: value })}
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="Guided paths with deadlines">Guided paths with deadlines</SelectItem>
+                                                            <SelectItem value="Self-paced">Self-paced learning</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label>Time Commitment</Label>
+                                                    <Select
+                                                        value={learningForm.timeCommitment}
+                                                        onValueChange={(value) => setLearningForm({ ...learningForm, timeCommitment: value })}
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="Less than 1 hour/day">&lt;1 hour/day</SelectItem>
+                                                            <SelectItem value="1-2 hours/day">1-2 hours/day</SelectItem>
+                                                            <SelectItem value="2-5 hours/day">2-5 hours/day</SelectItem>
+                                                            <SelectItem value="5+ hours/day">5+ hours/day</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            </div>
+                                        </ResponsiveDialog>
                                         <CardTitle className="flex items-center gap-2 text-lg">
                                             <BookOpen className="w-5 h-5 text-violet-500" />
                                             Learning Preferences
@@ -490,78 +558,78 @@ export default function Profile() {
                             >
                                 <Card className="h-full">
                                     <CardHeader className="pb-3 relative">
-                                        <Dialog open={skillsOpen} onOpenChange={setSkillsOpen}>
-                                            <DialogTrigger asChild>
+                                        <ResponsiveDialog
+                                            open={skillsOpen}
+                                            onOpenChange={setSkillsOpen}
+                                            trigger={
                                                 <Button variant="ghost" size="icon" className="absolute top-4 right-4 border">
                                                     <Edit size={18} />
                                                 </Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="sm:max-w-[500px]">
-                                                <DialogHeader>
-                                                    <DialogTitle>Edit Skills</DialogTitle>
-                                                    <DialogDescription>
-                                                        Add or remove skills and their proficiency levels.
-                                                    </DialogDescription>
-                                                </DialogHeader>
-                                                <div className="grid gap-4 py-4 max-h-[300px] overflow-y-auto">
-                                                    {skillsForm.map((skill, index) => (
-                                                        <div key={index} className="flex items-center gap-2">
-                                                            <Input
-                                                                value={skill.name}
-                                                                onChange={(e) => {
-                                                                    const newSkills = [...skillsForm];
-                                                                    newSkills[index] = { ...skill, name: e.target.value };
-                                                                    setSkillsForm(newSkills);
-                                                                }}
-                                                                className="flex-1"
-                                                            />
-                                                            <Input
-                                                                type="number"
-                                                                value={skill.level}
-                                                                onChange={(e) => {
-                                                                    const newSkills = [...skillsForm];
-                                                                    newSkills[index] = { ...skill, level: parseInt(e.target.value) || 0 };
-                                                                    setSkillsForm(newSkills);
-                                                                }}
-                                                                className="w-16"
-                                                                min={0}
-                                                                max={100}
-                                                            />
-                                                            <Checkbox
-                                                                checked={skill.certified}
-                                                                onCheckedChange={(checked) => {
-                                                                    const newSkills = [...skillsForm];
-                                                                    newSkills[index] = { ...skill, certified: checked as boolean };
-                                                                    setSkillsForm(newSkills);
-                                                                }}
-                                                            />
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                onClick={() => setSkillsForm(skillsForm.filter((_, i) => i !== index))}
-                                                            >
-                                                                ×
-                                                            </Button>
-                                                        </div>
-                                                    ))}
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => setSkillsForm([...skillsForm, { name: "", level: 0, certified: false }])}
-                                                    >
-                                                        + Add Skill
-                                                    </Button>
-                                                </div>
-                                                <DialogFooter>
+                                            }
+                                            title="Edit Skills"
+                                            description="Add or remove skills and their proficiency levels."
+                                            className="sm:max-w-[500px]"
+                                            footer={
+                                                <>
                                                     <Button variant="outline" onClick={() => setSkillsOpen(false)}>
                                                         Cancel
                                                     </Button>
                                                     <Button onClick={handleSaveSkills}>
                                                         Save Changes
                                                     </Button>
-                                                </DialogFooter>
-                                            </DialogContent>
-                                        </Dialog>
+                                                </>
+                                            }
+                                        >
+                                            <div className="grid gap-4 py-4 max-h-[300px] overflow-y-auto">
+                                                {skillsForm.map((skill, index) => (
+                                                    <div key={index} className="flex items-center gap-2">
+                                                        <Input
+                                                            value={skill.name}
+                                                            onChange={(e) => {
+                                                                const newSkills = [...skillsForm];
+                                                                newSkills[index] = { ...skill, name: e.target.value };
+                                                                setSkillsForm(newSkills);
+                                                            }}
+                                                            className="flex-1"
+                                                        />
+                                                        <Input
+                                                            type="number"
+                                                            value={skill.level}
+                                                            onChange={(e) => {
+                                                                const newSkills = [...skillsForm];
+                                                                newSkills[index] = { ...skill, level: parseInt(e.target.value) || 0 };
+                                                                setSkillsForm(newSkills);
+                                                            }}
+                                                            className="w-16"
+                                                            min={0}
+                                                            max={100}
+                                                        />
+                                                        <Checkbox
+                                                            checked={skill.certified}
+                                                            onCheckedChange={(checked) => {
+                                                                const newSkills = [...skillsForm];
+                                                                newSkills[index] = { ...skill, certified: checked as boolean };
+                                                                setSkillsForm(newSkills);
+                                                            }}
+                                                        />
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => setSkillsForm(skillsForm.filter((_, i) => i !== index))}
+                                                        >
+                                                            ×
+                                                        </Button>
+                                                    </div>
+                                                ))}
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setSkillsForm([...skillsForm, { name: "", level: 0, certified: false }])}
+                                                >
+                                                    + Add Skill
+                                                </Button>
+                                            </div>
+                                        </ResponsiveDialog>
                                         <CardTitle className="flex items-center gap-2 text-lg">
                                             <BookOpen className="w-5 h-5 text-blue-500" />
                                             Skills
@@ -636,80 +704,80 @@ export default function Profile() {
                             >
                                 <Card className="h-full">
                                     <div className="relative">
-                                        <Dialog open={careerGoalOpen} onOpenChange={setCareerGoalOpen}>
-                                            <DialogTrigger asChild>
+                                        <ResponsiveDialog
+                                            open={careerGoalOpen}
+                                            onOpenChange={setCareerGoalOpen}
+                                            trigger={
                                                 <Button variant="ghost" size="icon" className="absolute top-4 right-4 border z-10">
                                                     <Edit size={18} />
                                                 </Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="sm:max-w-[450px]">
-                                                <DialogHeader>
-                                                    <DialogTitle>Edit Career Goals & Interests</DialogTitle>
-                                                    <DialogDescription>
-                                                        Update your career goals and interests.
-                                                    </DialogDescription>
-                                                </DialogHeader>
-                                                <div className="grid gap-4 py-4">
-                                                    <div className="space-y-3">
-                                                        <Label className="text-sm font-medium">Career Goal</Label>
-                                                        <div className="grid gap-2">
-                                                            <Label className="text-xs text-muted-foreground">Domain</Label>
-                                                            <Input
-                                                                value={careerForm.careerGoal}
-                                                                onChange={(e) => setCareerForm({ ...careerForm, careerGoal: e.target.value })}
-                                                                placeholder="e.g., Software Development"
-                                                            />
-                                                        </div>
-                                                        <div className="grid gap-2">
-                                                            <Label className="text-xs text-muted-foreground">Targeted Roles</Label>
-                                                            <Input
-                                                                value={careerForm.targetRoles}
-                                                                onChange={(e) => setCareerForm({ ...careerForm, targetRoles: e.target.value })}
-                                                                placeholder="e.g., Full Stack Developer, Backend Engineer"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div className="space-y-3 pt-2">
-                                                        <Label className="text-sm font-medium">Interests</Label>
-                                                        {interestsForm.map((interest, index) => (
-                                                            <div key={index} className="flex items-center gap-2">
-                                                                <Input
-                                                                    value={interest}
-                                                                    onChange={(e) => {
-                                                                        const newInterests = [...interestsForm];
-                                                                        newInterests[index] = e.target.value;
-                                                                        setInterestsForm(newInterests);
-                                                                    }}
-                                                                    className="flex-1"
-                                                                />
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    onClick={() => setInterestsForm(interestsForm.filter((_, i) => i !== index))}
-                                                                >
-                                                                    ×
-                                                                </Button>
-                                                            </div>
-                                                        ))}
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => setInterestsForm([...interestsForm, ""])}
-                                                        >
-                                                            + Add Interest
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                                <DialogFooter>
+                                            }
+                                            title="Edit Career Goals & Interests"
+                                            description="Update your career goals and interests."
+                                            className="sm:max-w-[450px]"
+                                            footer={
+                                                <>
                                                     <Button variant="outline" onClick={() => setCareerGoalOpen(false)}>
                                                         Cancel
                                                     </Button>
                                                     <Button onClick={() => setCareerGoalOpen(false)}>
                                                         Save Changes
                                                     </Button>
-                                                </DialogFooter>
-                                            </DialogContent>
-                                        </Dialog>
+                                                </>
+                                            }
+                                        >
+                                            <div className="grid gap-4 py-4">
+                                                <div className="space-y-3">
+                                                    <Label className="text-sm font-medium">Career Goal</Label>
+                                                    <div className="grid gap-2">
+                                                        <Label className="text-xs text-muted-foreground">Domain</Label>
+                                                        <Input
+                                                            value={careerForm.careerGoal}
+                                                            onChange={(e) => setCareerForm({ ...careerForm, careerGoal: e.target.value })}
+                                                            placeholder="e.g., Software Development"
+                                                        />
+                                                    </div>
+                                                    <div className="grid gap-2">
+                                                        <Label className="text-xs text-muted-foreground">Targeted Roles</Label>
+                                                        <Input
+                                                            value={careerForm.targetRoles}
+                                                            onChange={(e) => setCareerForm({ ...careerForm, targetRoles: e.target.value })}
+                                                            placeholder="e.g., Full Stack Developer, Backend Engineer"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-3 pt-2">
+                                                    <Label className="text-sm font-medium">Interests</Label>
+                                                    {interestsForm.map((interest, index) => (
+                                                        <div key={index} className="flex items-center gap-2">
+                                                            <Input
+                                                                value={interest}
+                                                                onChange={(e) => {
+                                                                    const newInterests = [...interestsForm];
+                                                                    newInterests[index] = e.target.value;
+                                                                    setInterestsForm(newInterests);
+                                                                }}
+                                                                className="flex-1"
+                                                            />
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => setInterestsForm(interestsForm.filter((_, i) => i !== index))}
+                                                            >
+                                                                ×
+                                                            </Button>
+                                                        </div>
+                                                    ))}
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setInterestsForm([...interestsForm, ""])}
+                                                    >
+                                                        + Add Interest
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </ResponsiveDialog>
                                         <CardHeader className="pb-3">
                                             <CardTitle className="flex items-center gap-2 text-lg">
                                                 <Target className="w-5 h-5 text-violet-500" />
