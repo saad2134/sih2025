@@ -66,9 +66,6 @@ function ResponsiveDialog({ open, onOpenChange, trigger, children, title, descri
                     <div className="px-4 pb-4">{children}</div>
                     <DrawerFooter>
                         {footer}
-                        <DrawerClose asChild>
-                            <Button variant="outline">Cancel</Button>
-                        </DrawerClose>
                     </DrawerFooter>
                 </DrawerContent>
             </Drawer>
@@ -435,7 +432,7 @@ export default function Profile() {
                                             </p>
                                         </div>
                                         <Button
-                                            className={`w-full font-semibold transition-all duration-300 ${!isPaidUser ? 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700' : ''}`}
+                                            className={`w-full font-semibold transition-all duration-300 ${!isPaidUser ? 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 animate-shine' : ''}`}
                                             variant={isPaidUser ? "outline" : "default"}
                                             onClick={() => router.push("/demo/billing")}
                                         >
