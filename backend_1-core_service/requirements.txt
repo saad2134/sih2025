@@ -4,7 +4,7 @@ sqlalchemy==1.4.48
 psycopg2-binary==2.9.9
 alembic==1.13.3
 pydantic==1.10.13
-python-dotenv==1.0.1
+python-dotenv==1.2.2
 celery==5.4.0
 redis==5.0.8
 email-validator==2.1.0
