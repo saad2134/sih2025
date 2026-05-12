@@ -30,7 +30,11 @@ import {
   ThumbsUp,
   ThumbsDown,
   RefreshCw,
-  Volume2
+  Volume2,
+  Plus,
+  MessageCircle,
+  Trash2,
+  Clock
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 
@@ -40,6 +44,13 @@ interface Message {
   content: string;
   timestamp: Date;
   suggestions?: string[];
+}
+
+interface ChatSession {
+  id: string;
+  title: string;
+  messages: Message[];
+  lastUpdated: Date;
 }
 
 const quickActions = [
@@ -61,15 +72,54 @@ export default function AICompanion() {
   const [aiStatus, setAiStatus] = useState<{ status: string; loading: boolean }>({ status: 'checking', loading: true });
   const [chatHeight, setChatHeight] = useState(500);
   const [isDragging, setIsDragging] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
+  const [activeChatId, setActiveChatId] = useState<string>("default");
+  const [recentChats, setRecentChats] = useState<ChatSession[]>([
     {
-      id: 0,
-      role: "assistant",
-      content: "Hi there! I'm your AI Learning Companion. I'm here to help guide you on your learning journey. Ask me anything about your courses, career path, or learning strategies!",
-      timestamp: new Date(),
-      suggestions: ["What's my progress?", "Suggest next course", "Career advice"]
+      id: "default",
+      title: "Learning Journey",
+      messages: [
+        {
+          id: 0,
+          role: "assistant",
+          content: "Hi there! I'm your AI Learning Companion. I'm here to help guide you on your learning journey. Ask me anything about your courses, career path, or learning strategies!",
+          timestamp: new Date(),
+          suggestions: ["What's my progress?", "Suggest next course", "Career advice"]
+        }
+      ],
+      lastUpdated: new Date()
+    },
+    {
+      id: "chat-1",
+      title: "Course Recommendations",
+      messages: [
+        { id: 0, role: "assistant", content: "What courses are you interested in?", timestamp: new Date() },
+        { id: 1, role: "user", content: "I want to learn web development", timestamp: new Date() },
+        { id: 2, role: "assistant", content: "Great choice! I recommend starting with HTML, CSS, and JavaScript.", timestamp: new Date() }
+      ],
+      lastUpdated: new Date(Date.now() - 3600000)
+    },
+    {
+      id: "chat-2",
+      title: "Career Guidance",
+      messages: [
+        { id: 0, role: "assistant", content: "How can I help with your career today?", timestamp: new Date() },
+        { id: 1, role: "user", content: "What jobs can I get as a developer?", timestamp: new Date() }
+      ],
+      lastUpdated: new Date(Date.now() - 86400000)
+    },
+    {
+      id: "chat-3",
+      title: "Study Tips",
+      messages: [
+        { id: 0, role: "user", content: "Give me some study tips", timestamp: new Date() },
+        { id: 1, role: "assistant", content: "Here are some effective study strategies...", timestamp: new Date() }
+      ],
+      lastUpdated: new Date(Date.now() - 172800000)
     }
   ]);
+  
+  const activeChat = recentChats.find(c => c.id === activeChatId) || recentChats[0];
+  const messages = activeChat.messages;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -187,7 +237,14 @@ export default function AICompanion() {
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    
+    setRecentChats(prev => prev.map(chat => 
+      chat.id === activeChatId 
+        ? { ...chat, messages: updatedMessages, lastUpdated: new Date() }
+        : chat
+    ));
+    
     setInput("");
     setIsTyping(true);
 
@@ -200,9 +257,62 @@ export default function AICompanion() {
         timestamp: new Date(),
         suggestions: response.suggestions
       };
-      setMessages(prev => [...prev, assistantMessage]);
+      const finalMessages = [...updatedMessages, assistantMessage];
+      setRecentChats(prev => prev.map(chat => 
+        chat.id === activeChatId 
+          ? { ...chat, messages: finalMessages, lastUpdated: new Date() }
+          : chat
+      ));
       setIsTyping(false);
     }, 1000);
+  };
+
+  const createNewChat = () => {
+    const newChat: ChatSession = {
+      id: `chat-${Date.now()}`,
+      title: "New Conversation",
+      messages: [
+        {
+          id: 0,
+          role: "assistant",
+          content: "Hi there! I'm your AI Learning Companion. I'm here to help guide you on your learning journey. Ask me anything about your courses, career path, or learning strategies!",
+          timestamp: new Date(),
+          suggestions: ["What's my progress?", "Suggest next course", "Career advice"]
+        }
+      ],
+      lastUpdated: new Date()
+    };
+    setRecentChats(prev => [newChat, ...prev]);
+    setActiveChatId(newChat.id);
+  };
+
+  const switchChat = (chatId: string) => {
+    setActiveChatId(chatId);
+    setInput("");
+  };
+
+  const deleteChat = (chatId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (chatId === "default") return;
+    
+    const newChats = recentChats.filter(c => c.id !== chatId);
+    setRecentChats(newChats);
+    
+    if (activeChatId === chatId) {
+      setActiveChatId(newChats[0]?.id || "default");
+    }
+  };
+
+  const formatChatTime = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (hours < 1) return "Just now";
+    if (hours < 24) return `${hours}h ago`;
+    if (days === 1) return "Yesterday";
+    return `${days} days ago`;
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -286,7 +396,11 @@ export default function AICompanion() {
         timestamp: new Date(),
         suggestions: response.suggestions
       };
-      setMessages(prev => [...prev.slice(0, -1), newMessage]);
+      setRecentChats(prev => prev.map(chat => 
+        chat.id === activeChatId 
+          ? { ...chat, messages: [...chat.messages.slice(0, -1), newMessage], lastUpdated: new Date() }
+          : chat
+      ));
       setIsTyping(false);
     }, 1000);
   };
@@ -299,31 +413,96 @@ export default function AICompanion() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Card style={{ minHeight: `${chatHeight}px` }} className="flex flex-col overflow-hidden border-violet-200 dark:border-violet-800 w-full max-w-none">
-            <CardHeader className="p-4 border-b bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl shadow-lg">
-                    <Bot className="text-white" size={24} />
+          <div className="flex gap-4" style={{ minHeight: `${chatHeight}px` }}>
+            <Card className="w-72 shrink-0 flex flex-col overflow-hidden border-violet-200 dark:border-violet-800 hidden md:flex">
+              <CardHeader className="p-4 border-b bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-bold text-violet-700 dark:text-violet-300 flex items-center gap-2">
+                    <MessageCircle size={18} />
+                    Recent Chats
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-y-auto p-2 space-y-1">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-900/30"
+                  onClick={createNewChat}
+                >
+                  <Plus size={16} />
+                  New Chat
+                </Button>
+                <div className="mt-2 space-y-1">
+                  {recentChats.map((chat) => (
+                    <div
+                      key={chat.id}
+                      onClick={() => switchChat(chat.id)}
+                      className={`group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                        activeChatId === chat.id
+                          ? "bg-violet-100 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-800"
+                          : "hover:bg-muted border border-transparent"
+                      }`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium truncate ${
+                          activeChatId === chat.id 
+                            ? "text-violet-700 dark:text-violet-300" 
+                            : "text-foreground"
+                        }`}>
+                          {chat.title}
+                        </p>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                          <Clock size={10} />
+                          {formatChatTime(chat.lastUpdated)}
+                        </div>
+                      </div>
+                      {chat.id !== "default" && (
+                        <button
+                          onClick={(e) => deleteChat(chat.id, e)}
+                          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/20 text-destructive transition-opacity"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card style={{ flex: 1 }} className="flex flex-col overflow-hidden border-violet-200 dark:border-violet-800">
+              <CardHeader className="p-4 border-b bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl shadow-lg">
+                      <Bot className="text-white" size={24} />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg font-bold text-violet-700 dark:text-violet-300">Shiksha AI</CardTitle>
+                      <CardDescription className="flex items-center gap-2 mt-1">
+                        <span className={`w-2.5 h-2.5 rounded-full animate-pulse ${getStatusColor()}`}></span>
+                        <span className="text-muted-foreground">{getStatusText()}</span>
+                        <span className="text-muted-foreground/50">•</span>
+                        <span className="text-muted-foreground">{aiStatus.status === "online" ? "Ready to Help!" : "Demo Mode"}</span>
+                      </CardDescription>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle className="text-lg font-bold text-violet-700 dark:text-violet-300">Shiksha AI</CardTitle>
-                    <CardDescription className="flex items-center gap-2 mt-1">
-                      <span className={`w-2.5 h-2.5 rounded-full animate-pulse ${getStatusColor()}`}></span>
-                      <span className="text-muted-foreground">{getStatusText()}</span>
-                      <span className="text-muted-foreground/50">•</span>
-                      <span className="text-muted-foreground">{aiStatus.status === "online" ? "Ready to Help!" : "Demo Mode"}</span>
-                    </CardDescription>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="md:hidden"
+                      onClick={createNewChat}
+                    >
+                      <Plus size={16} />
+                    </Button>
+                    <Badge variant="secondary" className="bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300 text-xs font-medium">
+                      <Sparkles size={12} className="mr-1" />
+                      AI Powered
+                    </Badge>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300 text-xs font-medium">
-                    <Sparkles size={12} className="mr-1" />
-                    AI Powered
-                  </Badge>
-                </div>
-              </div>
-            </CardHeader>
+              </CardHeader>
             
             <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
               <AnimatePresence>
@@ -489,6 +668,7 @@ export default function AICompanion() {
               </div>
             </div>
           </Card>
+          </div>
         </motion.div>
       </div>
     </div>

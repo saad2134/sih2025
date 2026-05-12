@@ -522,7 +522,7 @@ const MagicBento = ({
     <section className="relative py-20 overflow-hidden px-4 z-10">
       <div className="absolute inset-0">
         <motion.div
-          className="absolute top-20 left-10 h-24 w-24 rounded-full bg-primary/20 dark:bg-primary/15 blur-xl"
+          className="absolute top-20 left-10 h-24 w-24 rounded-full  bg-brand-foreground/25  blur-xl"
           animate={{
             x: [0, -25, 0],
             y: [0, 15, 0],
@@ -535,7 +535,7 @@ const MagicBento = ({
           }}
         />
         <motion.div
-          className="absolute bottom-20 right-10 h-32 w-32 rounded-full bg-secondary/20 dark:bg-secondary/15 blur-xl"
+          className="absolute bottom-20 right-10 h-32 w-32 rounded-full bg-brand-foreground/25 blur-xl"
           animate={{
             x: [0, 25, 0],
             y: [0, -15, 0],
@@ -549,7 +549,7 @@ const MagicBento = ({
           }}
         />
         <motion.div
-          className="absolute top-1/2 left-1/4 h-20 w-20 rounded-full bg-accent/15 dark:bg-accent/10 blur-lg"
+          className="absolute top-1/2 left-1/4 h-20 w-20 rounded-full bg-brand-foreground/25 blur-lg"
           animate={{
             x: [0, -15, 15, 0],
             y: [0, -10, 10, 0],

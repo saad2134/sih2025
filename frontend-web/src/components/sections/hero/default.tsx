@@ -75,7 +75,7 @@ export default function Hero({
       {/* Background orbs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden -z-10">
         <motion.div
-          className="absolute top-10 left-10 w-[150px] h-[150px] rounded-full bg-primary/20 blur-[60px]"
+          className="absolute top-10 left-10 w-[150px] h-[150px] rounded-full bg-brand-foreground/25  blur-[60px]"
           animate={{
             x: [0, 20, 0],
             y: [0, 15, 0],
@@ -88,7 +88,7 @@ export default function Hero({
           }}
         />
         <motion.div
-          className="absolute top-10 right-10 w-[120px] h-[120px] rounded-full bg-secondary/20 blur-[50px]"
+          className="absolute top-10 right-10 w-[120px] h-[120px] rounded-full  bg-brand-foreground/25  blur-[50px]"
           animate={{
             x: [0, -15, 0],
             y: [0, 10, 0],
@@ -102,7 +102,7 @@ export default function Hero({
           }}
         />
         <motion.div
-          className="absolute top-1/3 left-1/4 w-[80px] h-[80px] rounded-full bg-accent/15 blur-[40px]"
+          className="absolute top-1/3 left-1/4 w-[80px] h-[80px] rounded-full  bg-brand-foreground/25  blur-[40px]"
           animate={{
             x: [0, 10, 0],
             y: [0, -10, 0],
