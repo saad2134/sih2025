@@ -19,7 +19,7 @@ export const metadata = {
 export default function Home() {
   return (
     <>
-      <main className="min-h-screen w-full overflow-hidden bg-background text-foreground">
+      <main className="min-h-screen w-full bg-background text-foreground overflow-x-hidden">
         <Navbar />
         <Hero />
         {/* <Logos /> */}

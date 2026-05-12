@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { motion, useMotionValue } from 'framer-motion';
+import { useRef, useState, useCallback } from 'react';
+import { motion, useSpring } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Section } from '@/components/ui/section';
-import { Search, Brain, Target, Zap, CheckCircle, Clock, Sparkles, BookOpen, ChevronDown, Award } from 'lucide-react';
+import { Search, Brain, Target, Zap, CheckCircle, Clock, Sparkles, BookOpen, ChevronDown, Award, MousePointer2 } from 'lucide-react';
 
 interface ScrollProgressState {
   progress: number;
@@ -53,7 +53,7 @@ const LEARNING_PATH = [
 
 export default function LearningEfficiency() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const progressValue = useMotionValue(0);
+  
   const [state, setState] = useState<ScrollProgressState>({
     progress: 0,
     stage: 'IDLE',
@@ -76,8 +76,7 @@ export default function LearningEfficiency() {
     }
 
     setState({ progress, stage });
-    progressValue.set(progress);
-  }, [progressValue]);
+  }, []);
 
   const getRelevanceScore = () => {
     switch (state.stage) {
@@ -130,9 +129,9 @@ export default function LearningEfficiency() {
 
   return (
     <Section className="relative py-20 overflow-hidden">
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 overflow-hidden">
         <motion.div
-          className="absolute top-20 left-10 h-24 w-24 rounded-full bg-primary/20 dark:bg-primary/15 blur-xl"
+          className="absolute top-20 left-10 h-24 w-24 rounded-full bg-brand-foreground/25 blur-xl"
           animate={{
             x: [0, -25, 0],
             y: [0, 15, 0],
@@ -145,7 +144,7 @@ export default function LearningEfficiency() {
           }}
         />
         <motion.div
-          className="absolute bottom-20 right-10 h-32 w-32 rounded-full bg-secondary/20 dark:bg-secondary/15 blur-xl"
+          className="absolute bottom-20 right-10 h-32 w-32 rounded-full bg-brand-foreground/25 blur-xl"
           animate={{
             x: [0, 25, 0],
             y: [0, -15, 0],
@@ -159,7 +158,7 @@ export default function LearningEfficiency() {
           }}
         />
         <motion.div
-          className="absolute top-1/2 left-1/4 h-20 w-20 rounded-full bg-accent/15 dark:bg-accent/10 blur-lg"
+          className="absolute top-1/2 left-1/4 h-20 w-20 rounded-full bg-brand-foreground/25 blur-lg"
           animate={{
             x: [0, -15, 15, 0],
             y: [0, -10, 10, 0],
@@ -179,7 +178,7 @@ export default function LearningEfficiency() {
       >
         <div className="absolute inset-0 " />
 
-        <div className="relative z-10 h-full flex flex-col  px-4 md:px-8 lg:px-12">
+        <div className="relative z-10 h-full flex flex-col px-4 md:px-8 lg:px-12">
           <div className="text-center mb-12">
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -237,8 +236,6 @@ export default function LearningEfficiency() {
                 <span>Complete</span>
               </div>
             </div>
-
-
           </div>
 
           <div className="flex-1 flex items-center justify-center">
@@ -524,8 +521,6 @@ export default function LearningEfficiency() {
               </div>
             </div>
           </div>
-
-
         </div>
       </div>
     </Section>
