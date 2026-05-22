@@ -18,8 +18,8 @@ backend/coverage.xml
 # Frontend
 frontend-web/.env.local
 frontend-web/.next/
-frontend-android/app/build/
-frontend-android/build/
+android/app/build/
+android/build/
 
 # Python
 __pycache__/
@@ -50,3 +50,4 @@ error.log
 # Misc
 /temp
 *.log
+/frontend-web/node_modules
