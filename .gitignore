@@ -50,3 +50,4 @@ error.log
 # Misc
 /temp
 *.log
+/frontend-web/node_modules
