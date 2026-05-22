@@ -111,7 +111,7 @@
 | Platform                                                       | Supported? |
 | --------------------------------------------------------------- | ----------- |
 | Web (any browser with JS functionality) + Fully Responsive       | ✅          |
-| [Android](frontend-android/) (non-natively through WebView)                | ✅          |
+| [Android](android/) (non-natively through WebView)                | ✅          |
 
 ## 🔧 Development
 
