@@ -30,7 +30,7 @@ const faqCategories = [
     bgColor: "bg-indigo-500/10",
     borderColor: "group-hover:border-indigo-500/30",
     questions: [
-      { q: "What types of courses are available?", a: "We offer courses across technology, business, design, data science, and soft skills. Each course includes video lessons, quizzes, and hands-on projects." },
+      { q: "What types of courses are available?", a: "Shikdha Disha aggregates and recommends courses across technology, business, design, data science, and soft skills. Each course includes video lessons, quizzes, and hands-on projects. Since we use AI to curate recommendations from various providers, we don't offer courses directly." },
       { q: "How are course recommendations generated?", a: "Our AI analyzes your academic background, skill level, career goals, and labor market trends to recommend the most relevant courses for you." },
       { q: "Can I earn certificates?", a: "Yes! Free users get 1 certificate per month, while Pro and Premium users get unlimited certificates upon course completion." },
     ],
@@ -55,7 +55,7 @@ const faqCategories = [
     borderColor: "group-hover:border-pink-500/30",
     questions: [
       { q: "What browsers are supported?", a: "ShikshaDisha works on all modern browsers including Chrome, Firefox, Safari, and Edge. We recommend keeping your browser updated." },
-      { q: "How do I reset my password?", a: "Click 'Forgot Password' on the login page and enter your email address. You'll receive a password reset link within minutes." },
+      { q: "How do I reset my password?", a: "Password reset will be added in a future update. Click 'Forgot Password' on the login page and enter your email address. You'll receive a password reset link within minutes." },
       { q: "Who do I contact for technical issues?", a: "You can reach our support team via the contact form or email us directly. We typically respond within 24 hours." },
     ],
   },

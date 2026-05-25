@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Checkbox } from "@/components/ui/checkbox";
 import { siteConfig } from "@/config/site";
 import { motion } from "framer-motion";
-import { Briefcase, GraduationCap, ArrowRight, Loader2, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Briefcase, GraduationCap, ArrowRight, Loader2, Mail, Lock, User, Eye, EyeOff, Key } from "lucide-react";
 import Silk from "@/components/Silk";
 import { authService } from "@/lib/auth";
 import { apiService } from "@/lib/api";
@@ -135,7 +135,7 @@ export default function AuthPage() {
       <div className="w-full lg:w-[40%] min-h-screen flex items-center justify-center bg-background p-4 py-16 lg:p-8">
         <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Authentication</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2 inline-flex items-center gap-2"><Lock className="h-7 w-7" />Authentication</h1>
           <p className="text-muted-foreground">Your personalized career journey starts here!</p>
         </div>
 
@@ -195,7 +195,7 @@ export default function AuthPage() {
                 <div className="space-y-2">
                   <Label htmlFor="login-password">Password</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="login-password"
                       type={showPassword ? "text" : "password"}
@@ -331,7 +331,7 @@ export default function AuthPage() {
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="signup-password"
                       type="password"
@@ -346,7 +346,7 @@ export default function AuthPage() {
                 <div className="space-y-2">
                   <Label htmlFor="signup-confirm">Confirm Password</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="signup-confirm"
                       type="password"

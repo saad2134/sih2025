@@ -59,8 +59,8 @@ export default function Hero({
     {
       href: siteConfig.links.github,
       text: "GitHub",
-      variant: "glow",
-      icon: <Github className="mr-2 size-4" />,
+      variant: "secondary",
+      icon: <Github className="mr-2 size-5" />,
     },
   ],
   className,
@@ -134,7 +134,7 @@ export default function Hero({
       </div>
       <div className="max-w-container mx-auto flex flex-col gap-8 sm:gap-12 md:gap-16 lg:gap-24 pt-20 sm:pt-16 md:pt-16 px-4 sm:px-6">
 
-        <div className="flex flex-col items-center gap-6 text-center sm:gap-12">
+        <div className="flex flex-col items-center gap-3 text-center sm:gap-6">
 
           <h1 className="animate-appear from-foreground to-foreground dark:to-muted-foreground relative z-10 inline-block bg-linear-to-r bg-clip-text text-3xl leading-tight font-semibold text-balance text-transparent drop-shadow-2xl sm:text-5xl sm:leading-tight md:text-7xl md:leading-tight">
             {title}
@@ -143,7 +143,7 @@ export default function Hero({
             {description}
           </p>
           {dynamicButtons.length > 0 && (
-            <div className="animate-appear relative z-10 flex flex-wrap justify-center gap-3 sm:gap-4 opacity-0 delay-300">
+            <div className="animate-appear relative z-10 flex flex-wrap justify-center gap-1.5 sm:gap-2 opacity-0 delay-300">
               {dynamicButtons.map((button, index) => (
                 <Button
                   key={index}
@@ -151,7 +151,7 @@ export default function Hero({
                   size="xl"
                   asChild
                 >
-                  <a href={button.href}>
+                  <a href={button.href} className={button.text === "Get Started" ? "animate-shine" : ""}>
                     {button.icon}
                     {button.text}
                     {button.iconRight}

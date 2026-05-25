@@ -298,13 +298,13 @@ function DemoSidebar({ children }: { children: React.ReactNode }) {
                 </Link>
               </Button>
               <Button
-                variant="ghost"
-                className="w-full justify-start text-muted-foreground border"
+                variant="default"
+                className="w-full justify-start font-bold shadow-lg animate-shine"
                 asChild
               >
                 <Link
                   href="/auth"
-                  className="flex items-center  p-2 rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+                  className="flex items-center p-2 rounded-lg"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   <span className="text-sm">Get Started (Sign Up)</span>

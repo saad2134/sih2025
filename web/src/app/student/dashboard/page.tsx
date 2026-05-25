@@ -91,11 +91,25 @@ export default function Dashboard() {
     useEffect(() => {
         document.title = `Dashboard ✦ ${siteConfig.name}`;
         
-        const fetchDashboardData = async () => {
+        const checkOnboarding = async () => {
             setLoading(true);
             try {
-                const [meRes, profileRes, recsRes, skillGapRes, careerScoreRes, enrolledRes] = await Promise.all([
-                    apiService.getMe().catch(() => ({ success: false, data: null })),
+                const meRes = await apiService.getMe();
+                if (!meRes.success || !meRes.data || !meRes.data.onboarding_done) {
+                    router.push("/student/onboarding");
+                    return;
+                }
+                loadDashboard(meRes.data.full_name || "Student");
+                return;
+            } catch {
+                router.push("/student/onboarding");
+                return;
+            }
+        };
+        
+        const loadDashboard = async (userName: string) => {
+            try {
+                const [profileRes, recsRes, skillGapRes, careerScoreRes, enrolledRes] = await Promise.all([
                     apiService.getLearnerProfile().catch(() => ({ success: false, data: null })),
                     apiService.getRecommendations(3, 0).catch(() => ({ success: false, data: null })),
                     apiService.getSkillGap().catch(() => ({ success: false, data: null })),
@@ -103,7 +117,7 @@ export default function Dashboard() {
                     apiService.getEnrolledCourses().catch(() => ({ success: false, data: null }))
                 ]);
 
-                let name = "Student";
+                let name = userName;
                 let careerGoal = "Software Development";
                 let targetRoles = "Full Stack Developer";
                 let hours = "1-2 hours/day";
@@ -111,10 +125,6 @@ export default function Dashboard() {
                 let prefType = "Hands-on";
                 let prefStyle = "Self-paced";
                 let interestsList: string[] = ["Web Development"];
-                
-                if (meRes.success && meRes.data) {
-                    name = meRes.data.full_name || "Student";
-                }
                 
                 if (profileRes.success && profileRes.data) {
                     careerGoal = profileRes.data.career_target || profileRes.data.topic || "Software Development";
@@ -182,7 +192,7 @@ export default function Dashboard() {
             }
         };
 
-        fetchDashboardData();
+        checkOnboarding();
     }, []);
 
     const recommendedCourses = [
@@ -816,49 +826,49 @@ export default function Dashboard() {
                                         </div>
                                     ) : (
                                         <>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                <div className="p-3 border rounded-lg">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                                                <div className="p-3 border rounded-lg overflow-hidden">
                                                     <div className="flex items-center gap-2 mb-2">
-                                                        <Target size={14} className="text-violet-500" />
+                                                        <Target size={14} className="text-violet-500 shrink-0" />
                                                         <span className="font-medium text-xs">Career Goal</span>
                                                     </div>
                                                     <div className="space-y-1 text-xs">
-                                                        <div className="flex justify-between">
-                                                            <span className="text-muted-foreground">Domain</span>
-                                                            <span className="text-right truncate max-w-[100px]" title={userData.careerGoal}>{userData.careerGoal}</span>
+                                                        <div className="flex justify-between gap-2">
+                                                            <span className="text-muted-foreground shrink-0">Domain</span>
+                                                            <span className="text-right break-words">{userData.careerGoal}</span>
                                                         </div>
-                                                        <div className="flex justify-between">
-                                                            <span className="text-muted-foreground">Target</span>
-                                                            <span className="text-right truncate max-w-[100px]" title={userData.targetRoles}>{userData.targetRoles}</span>
+                                                        <div className="flex justify-between gap-2">
+                                                            <span className="text-muted-foreground shrink-0">Target</span>
+                                                            <span className="text-right break-words">{userData.targetRoles}</span>
                                                         </div>
                                                     </div>
                                                 </div>
  
-                                                <div className="p-3 border rounded-lg">
+                                                <div className="p-3 border rounded-lg overflow-hidden">
                                                     <div className="flex items-center gap-2 mb-2">
-                                                        <BookOpen size={14} className="text-violet-500" />
+                                                        <BookOpen size={14} className="text-violet-500 shrink-0" />
                                                         <span className="font-medium text-xs">Learning Prefs</span>
                                                     </div>
                                                     <div className="space-y-1 text-xs">
-                                                        <div className="flex justify-between">
-                                                            <span className="text-muted-foreground">Type</span>
-                                                            <span className="text-right">{userData.prefType}</span>
+                                                        <div className="flex justify-between gap-2">
+                                                            <span className="text-muted-foreground shrink-0">Type</span>
+                                                            <span className="text-right break-words">{userData.prefType}</span>
                                                         </div>
-                                                        <div className="flex justify-between">
-                                                            <span className="text-muted-foreground">Style</span>
-                                                            <span className="text-right">{userData.prefStyle}</span>
+                                                        <div className="flex justify-between gap-2">
+                                                            <span className="text-muted-foreground shrink-0">Style</span>
+                                                            <span className="text-right break-words">{userData.prefStyle}</span>
                                                         </div>
-                                                        <div className="flex justify-between">
-                                                            <span className="text-muted-foreground">Time</span>
-                                                            <span className="text-right truncate max-w-[100px]">{userData.learningPace}</span>
+                                                        <div className="flex justify-between gap-2">
+                                                            <span className="text-muted-foreground shrink-0">Time</span>
+                                                            <span className="text-right break-words">{userData.learningPace}</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
  
-                                            <div className="p-3 border rounded-lg">
+                                            <div className="p-3 border rounded-lg overflow-hidden">
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <Star size={14} className="text-pink-500" />
+                                                    <Star size={14} className="text-pink-500 shrink-0" />
                                                     <span className="font-medium text-xs">Interests</span>
                                                 </div>
                                                 <div className="flex flex-wrap gap-1">
@@ -870,9 +880,9 @@ export default function Dashboard() {
                                                 </div>
                                             </div>
 
-                                            <div className="p-3 border rounded-lg">
+                                            <div className="p-3 border rounded-lg overflow-hidden">
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <Award size={14} className="text-blue-500" />
+                                                    <Award size={14} className="text-blue-500 shrink-0" />
                                                     <span className="font-medium text-xs">Skills</span>
                                                 </div>
                                                 <div className="flex flex-wrap gap-1">
@@ -888,30 +898,30 @@ export default function Dashboard() {
                                                 </div>
                                             </div>
 
-                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                                <div className="text-center p-2 border rounded-lg">
-                                                    <div className="text-lg font-bold text-primary">
+                                            <div className="grid grid-cols-4 gap-1 sm:gap-2">
+                                                <div className="text-center p-1.5 sm:p-2 border rounded-lg min-w-0">
+                                                    <div className="text-base sm:text-lg font-bold text-primary">
                                                         {enrolledCourses.filter(e => e.progress_pct >= 100).length}
                                                     </div>
-                                                    <div className="text-xs text-muted-foreground">Completed</div>
+                                                    <div className="text-[10px] sm:text-xs text-muted-foreground break-words">Completed</div>
                                                 </div>
-                                                <div className="text-center p-2 border rounded-lg">
-                                                    <div className="text-lg font-bold text-primary">
+                                                <div className="text-center p-1.5 sm:p-2 border rounded-lg min-w-0">
+                                                    <div className="text-base sm:text-lg font-bold text-primary">
                                                         {enrolledCourses.filter(e => e.progress_pct < 100).length}
                                                     </div>
-                                                    <div className="text-xs text-muted-foreground">In Progress</div>
+                                                    <div className="text-[10px] sm:text-xs text-muted-foreground break-words">In Progress</div>
                                                 </div>
-                                                <div className="text-center p-2 border rounded-lg">
-                                                    <div className="text-lg font-bold text-primary">
+                                                <div className="text-center p-1.5 sm:p-2 border rounded-lg min-w-0">
+                                                    <div className="text-base sm:text-lg font-bold text-primary">
                                                         {enrolledCourses.reduce((sum, e) => sum + Math.round((e.progress_pct / 100) * (e.total_hours || 20)), 0)}h
                                                     </div>
-                                                    <div className="text-xs text-muted-foreground">Hours</div>
+                                                    <div className="text-[10px] sm:text-xs text-muted-foreground break-words">Hours</div>
                                                 </div>
-                                                <div className="text-center p-2 border rounded-lg">
-                                                    <div className="text-lg font-bold text-primary">
+                                                <div className="text-center p-1.5 sm:p-2 border rounded-lg min-w-0">
+                                                    <div className="text-base sm:text-lg font-bold text-primary">
                                                         {enrolledCourses.filter(e => e.progress_pct >= 100).length}
                                                     </div>
-                                                    <div className="text-xs text-muted-foreground">Certificates</div>
+                                                    <div className="text-[10px] sm:text-xs text-muted-foreground break-words">Certificates</div>
                                                 </div>
                                             </div>
 

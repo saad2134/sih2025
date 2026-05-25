@@ -384,75 +384,75 @@ export default function Dashboard() {
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-3 text-sm">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div className="p-3 border rounded-lg">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                                        <div className="p-3 border rounded-lg overflow-hidden">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <Target size={14} className="text-violet-500" />
+                                                <Target size={14} className="text-violet-500 shrink-0" />
                                                 <span className="font-medium text-xs">Career Goal</span>
                                             </div>
                                             <div className="space-y-1 text-xs">
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">Domain</span>
-                                                    <span className="text-right">Software Dev</span>
+                                                <div className="flex justify-between gap-2">
+                                                    <span className="text-muted-foreground shrink-0">Domain</span>
+                                                    <span className="text-right break-words">Software Dev</span>
                                                 </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">Target</span>
-                                                    <span className="text-right">Full Stack</span>
+                                                <div className="flex justify-between gap-2">
+                                                    <span className="text-muted-foreground shrink-0">Target</span>
+                                                    <span className="text-right break-words">Full Stack</span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="p-3 border rounded-lg">
+                                        <div className="p-3 border rounded-lg overflow-hidden">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <BookOpen size={14} className="text-violet-500" />
+                                                <BookOpen size={14} className="text-violet-500 shrink-0" />
                                                 <span className="font-medium text-xs">Learning Prefs</span>
                                             </div>
                                             <div className="space-y-1 text-xs">
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">Type</span>
-                                                    <span className="text-right">Hands-on</span>
+                                                <div className="flex justify-between gap-2">
+                                                    <span className="text-muted-foreground shrink-0">Type</span>
+                                                    <span className="text-right break-words">Hands-on</span>
                                                 </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">Style</span>
-                                                    <span className="text-right">Self-paced</span>
+                                                <div className="flex justify-between gap-2">
+                                                    <span className="text-muted-foreground shrink-0">Style</span>
+                                                    <span className="text-right break-words">Self-paced</span>
                                                 </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">Time</span>
-                                                    <span className="text-right">1-2 hrs/d</span>
+                                                <div className="flex justify-between gap-2">
+                                                    <span className="text-muted-foreground shrink-0">Time</span>
+                                                    <span className="text-right break-words">1-2 hrs/d</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="p-3 border rounded-lg">
+                                    <div className="p-3 border rounded-lg overflow-hidden">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <Star size={14} className="text-pink-500" />
+                                            <Star size={14} className="text-pink-500 shrink-0" />
                                             <span className="font-medium text-xs">Interests</span>
                                         </div>
                                         <div className="flex flex-wrap gap-1">
                                             <Badge variant="secondary" className="text-[10px]">Web Dev</Badge>
-                                            <Badge variant="secondary" className="text-[10px]">Data Sci</Badge>
+                                            <Badge variant="secondary" className="text-[10px]">Data Science</Badge>
                                             <Badge variant="secondary" className="text-[10px]">AI/ML</Badge>
                                             <Badge variant="secondary" className="text-[10px]">Cloud</Badge>
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                        <div className="text-center p-2 border rounded-lg">
-                                            <div className="text-lg font-bold text-primary">5</div>
-                                            <div className="text-xs text-muted-foreground">Completed</div>
+                                    <div className="grid grid-cols-4 gap-1 sm:gap-2">
+                                        <div className="text-center p-1.5 sm:p-2 border rounded-lg min-w-0">
+                                            <div className="text-base sm:text-lg font-bold text-primary">5</div>
+                                            <div className="text-[10px] sm:text-xs text-muted-foreground break-words">Completed</div>
                                         </div>
-                                        <div className="text-center p-2 border rounded-lg">
-                                            <div className="text-lg font-bold text-primary">3</div>
-                                            <div className="text-xs text-muted-foreground">In Progress</div>
+                                        <div className="text-center p-1.5 sm:p-2 border rounded-lg min-w-0">
+                                            <div className="text-base sm:text-lg font-bold text-primary">3</div>
+                                            <div className="text-[10px] sm:text-xs text-muted-foreground break-words">In Progress</div>
                                         </div>
-                                        <div className="text-center p-2 border rounded-lg">
-                                            <div className="text-lg font-bold text-primary">48h</div>
-                                            <div className="text-xs text-muted-foreground">Hours</div>
+                                        <div className="text-center p-1.5 sm:p-2 border rounded-lg min-w-0">
+                                            <div className="text-base sm:text-lg font-bold text-primary">48h</div>
+                                            <div className="text-[10px] sm:text-xs text-muted-foreground break-words">Hours</div>
                                         </div>
-                                        <div className="text-center p-2 border rounded-lg">
-                                            <div className="text-lg font-bold text-primary">4</div>
-                                            <div className="text-xs text-muted-foreground">Certificates</div>
+                                        <div className="text-center p-1.5 sm:p-2 border rounded-lg min-w-0">
+                                            <div className="text-base sm:text-lg font-bold text-primary">4</div>
+                                            <div className="text-[10px] sm:text-xs text-muted-foreground break-words">Certificates</div>
                                         </div>
                                     </div>
 

@@ -71,7 +71,7 @@ export default function CTA({
                 size="xl"
                 asChild
               >
-                <a href={button.href}>
+                <a href={button.href} className={button.text === "Get Started" ? "animate-shine" : ""}>
                   {button.icon}
                   {button.text}
                   {button.iconRight}
