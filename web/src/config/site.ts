@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: "ShikshaDisha",
-  version: "v0.1.0",
+  version: "v1.0.0",
   url: "",
   getStartedUrl:
     "/auth",
