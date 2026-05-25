@@ -75,7 +75,7 @@ const studentNavItems = [
       },
       {
         title: "Browse Courses",
-        url: "/student/browse_courses",
+        url: "/student/browse-courses",
         icon: BookOpen,
         description: "Explore NSQF-aligned courses",
       },

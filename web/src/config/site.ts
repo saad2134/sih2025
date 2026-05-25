@@ -4,7 +4,6 @@ export const siteConfig = {
   url: "",
   getStartedUrl:
     "/auth",
-  ogImage: "",
   description:
     "Your personalized roadmap to future-ready skills.",
   links: {
@@ -12,21 +11,6 @@ export const siteConfig = {
     github: "https://github.com/saad2134/shiksha-disha",
     email: "mailto:reach.saad@outlook.com",
     phone: "",
-  },
-
-
-
-
-
-
-
-
-
-
-
-  pricing: {
-    pro: "",
-    team: "",
   },
 };
 
