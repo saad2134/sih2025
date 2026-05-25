@@ -13,21 +13,6 @@ export const siteConfig = {
     email: "mailto:reach.saad@outlook.com",
     phone: "",
   },
-
-
-
-
-
-
-
-
-
-
-
-  pricing: {
-    pro: "",
-    team: "",
-  },
 };
 
 export type SiteConfig = typeof siteConfig;

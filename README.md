@@ -13,12 +13,11 @@
 
 </div>
 
-## 🔹 Context
+## 🔹 Hackathon Origins
 
-### 🏆 Originally Built for SIH 2025 (Smart India Hackathon) as a Prototype
+ShikshaDisha originally started as a hackathon project for **SIH 2025 (Smart India Hackathon)** by the **DevBandits** team. It was also built for the **SUDHEE CBIT Hackathon 2026**. Over time, it has evolved into a robust, AI-powered career navigation and labor market matching platform.
 
-- **Theme:** 2. AI in Education & Skilling
-- **Category:** Software
+### 🏆 Built for SIH 2025 (Smart India Hackathon) as a Prototype
 
 
 ## 💡 Proposed Solution
@@ -315,7 +314,7 @@ graph TB
 
 
 
-## 👥 Our SIH 2025 Team (DevBandits)
+## 👥 Our Team (DevBandits)
 
 <div align="center">
 
@@ -383,7 +382,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ---
 
 ## ✍️ Endnote
-<p align="center">Developed with 💖 for the SIH 2025 (Smart India Hackathon), with heartfelt thanks for the opportunity to build and innovate.</p>
+<p align="center">Developed with 💖 for the SIH 2025 (Smart India Hackathon) and SUDHEE CBIT Hackathon 2026, with heartfelt thanks for the opportunity to build and innovate.</p>
 
 ---
 
