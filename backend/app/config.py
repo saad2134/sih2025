@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     UPLOADCARE_PUBLIC_KEY: str = ""
     UPLOADCARE_SECRET_KEY: str = ""
 
+    CORS_ALLOWED_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000,http://127.0.0.1:8000"
+
     SENTRY_DSN: str = ""
     ENVIRONMENT: str = "development"
     RATE_LIMIT_PER_MINUTE: int = 60
