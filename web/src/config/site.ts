@@ -4,7 +4,6 @@ export const siteConfig = {
   url: "",
   getStartedUrl:
     "/auth",
-  ogImage: "",
   description:
     "Your personalized roadmap to future-ready skills.",
   links: {
