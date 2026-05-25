@@ -566,7 +566,7 @@ export default function CareerMap() {
                                 className="mt-4"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  router.push('/student/browse_courses');
+                                  router.push('/student/browse-courses');
                                 }}
                               >
                                 Preview Content

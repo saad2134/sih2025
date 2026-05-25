@@ -726,7 +726,7 @@ export default function Dashboard() {
                                                                             if (url) {
                                                                                 window.open(url, '_blank');
                                                                             } else {
-                                                                                router.push('/student/browse_courses');
+                                                                                router.push('/student/browse-courses');
                                                                             }
                                                                         }}
                                                                     >
