@@ -11,9 +11,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from "@/components/ui/drawer";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, User, BookOpen, Target, Settings, Clock, Star, Send, LogOut, Play, Wand2, RotateCcw, Loader2, Lock } from "lucide-react";
+import { ChevronLeft, ChevronRight, User, BookOpen, Target, Settings, Clock, Star, Send, LogOut, Play, Wand2, RotateCcw, Loader2, Lock, Sparkles } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { apiService, QuizQuestion, VarkAnswer } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +30,15 @@ const steps = [
     { name: "Feedback", icon: Send },
 ];
 
+const stepTitles = [
+    "Basic Personal and Academic Information",
+    "Prerequisite Knowledge & Skill Assessment",
+    "Interests and Career Goals",
+    "VARK Learning Preferences Quiz",
+    "Time Commitment & Motivation",
+    "Additional Details & Custom Requests",
+];
+
 const PROFICIENCY_SKILLS = ["Computer basics", "Internet navigation", "Mathematics", "English communication", "Programming fundamentals"];
 
 export default function OnboardingForm() {
@@ -37,7 +48,33 @@ export default function OnboardingForm() {
     const [varkQuestions, setVarkQuestions] = useState<QuizQuestion[]>([]);
     const [varkAnswers, setVarkAnswers] = useState<Record<number, string>>({});
     const [loadingProfile, setLoadingProfile] = useState(true);
-    
+    const [exitDialogOpen, setExitDialogOpen] = useState(false);
+    const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+    useEffect(() => {
+        const check = () => setIsSmallScreen(window.innerWidth < 768);
+        check();
+        window.addEventListener("resize", check);
+        return () => window.removeEventListener("resize", check);
+    }, []);
+
+    const handleLogout = async () => {
+        try {
+            await apiService.logout();
+        } catch {
+            // fall through
+        }
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("refresh_token");
+        setExitDialogOpen(false);
+        window.location.href = "/auth";
+    };
+
+    const handleGoHome = () => {
+        setExitDialogOpen(false);
+        router.push("/");
+    };
+
     // Polling states
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [jobId, setJobId] = useState<string | null>(null);
@@ -334,6 +371,7 @@ export default function OnboardingForm() {
     };
 
     const progress = (step / (steps.length - 1)) * 100;
+    const CurrentStepIcon = steps[step].icon;
 
     if (loadingProfile) {
         return (
@@ -433,98 +471,218 @@ export default function OnboardingForm() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4 ">
-            <div className="w-full max-w-4xl p-4 sm:p-6 md:p-8 bg-card rounded-lg shadow-sm border overflow-x-hidden">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-foreground text-center">
-                    Welcome to Your Learning Journey
-                </h1>
-                <p className="text-muted-foreground text-center text-sm sm:text-base">
-                    Help us personalize your experience by answering a few questions
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-4 mb-6">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={fillDemoData}
-                        className="flex items-center gap-1.5 text-xs border border-violet-200 dark:border-violet-850 hover:bg-violet-50 dark:hover:bg-violet-950/20"
-                    >
-                        <Wand2 size={14} className="text-violet-500" />
-                        <span className="truncate">Fill Demo Data</span>
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={clearForm}
-                        className="flex items-center gap-1.5 text-xs"
-                    >
-                        <RotateCcw size={14} />
-                        <span className="truncate">Clear</span>
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => router.push("/")}
-                        className="flex items-center gap-1.5 text-xs text-muted-foreground"
-                    >
-                        <LogOut size={14} />
-                        <span className="truncate">Exit</span>
-                    </Button>
-                </div>
+        <div className="min-h-screen lg:h-screen flex flex-col bg-background">
 
-                <div className="mb-8">
-                    <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-muted-foreground">Progress</span>
-                        <span className="text-sm font-medium text-muted-foreground">{step + 1} of {steps.length}</span>
-                    </div>
-                    <Progress value={progress} className="h-2" />
-                </div>
-
-                <div className="flex justify-between mb-6 sm:mb-8 relative overflow-x-auto pb-2 -mx-1 scrollbar-thin">
-                    {steps.map((stepItem, index) => {
-                        const Icon = stepItem.icon;
-                        return (
-                            <div key={index} className="flex flex-col items-center z-10 shrink-0 min-w-[48px] sm:min-w-0">
-                                <div
-                                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 ${index <= step
-                                            ? "bg-primary border-primary text-primary-foreground"
-                                            : "bg-card border-muted text-muted-foreground"
-                                        } transition-colors duration-300`}
-                                >
-                                    <Icon size={14} className="sm:w-[18px] sm:h-[18px]" />
+            <div className="hidden lg:block w-full border-b border-border/50 bg-card/30">
+                <div className="max-w-6xl mx-auto px-8 py-3">
+                    <div className="flex items-center relative">
+                        {steps.map((stepItem, index) => {
+                            const Icon = stepItem.icon;
+                            return (
+                            <div key={index} className="flex-1 flex flex-col items-center z-10 relative">
+                                <div className="flex flex-col items-center">
+                                    <div
+                                        className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${index <= step
+                                                ? "bg-primary border-primary text-primary-foreground"
+                                                : "bg-card border-muted text-muted-foreground"
+                                            } transition-colors duration-300`}
+                                    >
+                                        <Icon size={18} />
+                                    </div>
+                                    <span
+                                        className={`text-xs mt-2 font-medium text-center ${index <= step ? "text-primary" : "text-muted-foreground"
+                                            }`}
+                                    >
+                                        {stepItem.name}
+                                    </span>
                                 </div>
-                                <span
-                                    className={`text-[10px] sm:text-xs mt-1 sm:mt-2 font-medium text-center leading-tight max-w-[56px] sm:max-w-none ${index <= step ? "text-primary" : "text-muted-foreground"
-                                        }`}
-                                >
-                                    {stepItem.name}
-                                </span>
+                                {index < steps.length - 1 && (
+                                    <motion.div
+                                        initial={{ x: -5, opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        transition={{ delay: index * 0.1, duration: 0.3 }}
+                                        className="absolute text-muted-foreground/30 top-2.5"
+                                        style={{ left: "calc(50% + 24px)" }}
+                                    >
+                                        <ChevronRight size={20} />
+                                    </motion.div>
+                                )}
                             </div>
-                        );
-                    })}
-                    <div className="absolute top-5 left-0 right-0 h-0.5 bg-muted -z-10"></div>
-                    <div
-                        className="absolute top-5 left-0 h-0.5 bg-primary -z-10 transition-all duration-500"
-                        style={{ width: `${progress}%` }}
-                    ></div>
+                            );
+                        })}
+                        <div className="absolute top-5 left-0 right-0 h-0.5 bg-muted -z-10"></div>
+                        <div
+                            className="absolute top-5 left-0 h-0.5 bg-primary -z-10 transition-all duration-500"
+                            style={{ width: `${progress}%` }}
+                        ></div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex-1 flex flex-col lg:flex-row lg:overflow-hidden">
+
+            <div className="w-full lg:w-[38%] flex flex-col p-4 pt-6 lg:p-8 lg:border-r border-border/50">
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="w-full max-w-md space-y-5">
+
+                        <div className="text-center p-4 rounded-xl bg-gradient-to-br from-primary/5 via-primary/[0.02] to-background border border-primary/10">
+                            <h1 className="text-xl sm:text-2xl font-bold text-foreground inline-flex items-center justify-center">
+                                <Sparkles size={22} className="text-foreground shrink-0 mr-1.5" />
+                                Welcome Aboard
+                            </h1>
+                            <p className="text-muted-foreground text-xs sm:text-sm mt-1.5">
+                                Help us personalize your experience by answering a few questions
+                            </p>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={fillDemoData}
+                                className="flex items-center gap-1.5 text-xs hover:bg-violet-50 dark:hover:bg-violet-950/20"
+                            >
+                                <Wand2 size={14} className="text-violet-500" />
+                                <span className="truncate">Fill Demo Data</span>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={clearForm}
+                                className="flex items-center gap-1.5 text-xs"
+                            >
+                                <RotateCcw size={14} />
+                                <span className="truncate">Clear</span>
+                            </Button>
+                        </div>
+
+                        <div>
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm font-medium text-muted-foreground">Progress</span>
+                                <span className="text-sm font-medium text-muted-foreground">{step + 1} of {steps.length}</span>
+                            </div>
+                            <Progress value={progress} className="h-2" />
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 rounded-full bg-primary/10 text-primary">
+                                <CurrentStepIcon size={22} />
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground">Step {step + 1}</p>
+                                <h2 className="text-lg font-semibold text-foreground leading-tight">{stepTitles[step]}</h2>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-0 lg:hidden">
+                            {steps.map((stepItem, index) => {
+                                const Icon = stepItem.icon;
+                                const isActive = index <= step;
+                                const isCurrent = index === step;
+                                return (
+                                    <div key={index} className="flex items-stretch">
+                                        <div className="flex flex-col items-center w-10 shrink-0">
+                                            <div
+                                                className={`w-8 h-8 rounded-full flex items-center justify-center border-2 z-10 ${isActive
+                                                        ? "bg-primary border-primary text-primary-foreground"
+                                                        : "bg-card border-muted text-muted-foreground"
+                                                    } transition-colors duration-300`}
+                                            >
+                                                <Icon size={14} />
+                                            </div>
+                                            {index < steps.length - 1 && (
+                                                <div className={`w-0.5 flex-1 min-h-[16px] ${isActive && index < step ? "bg-primary" : "bg-muted"}`} />
+                                            )}
+                                        </div>
+                                        <div className={`flex items-center pb-4 ml-2 ${isCurrent ? "text-foreground" : isActive ? "text-foreground/80" : "text-muted-foreground"}`}>
+                                            <span className={`text-sm font-medium ${isCurrent ? "text-primary font-semibold" : ""}`}>
+                                                {stepItem.name}
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                    </div>
                 </div>
 
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={step}
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -25 }}
-                        transition={{ duration: 0.4 }}
-                    >
-                        {step === 0 && (
-                            <Card>
-                                <CardHeader className="px-4 sm:px-6">
-                                    <CardTitle className="flex items-start sm:items-center gap-2 text-base sm:text-lg">
-                                        <User className="text-primary shrink-0 mt-0.5 sm:mt-0" size={22} />
-                                        <span>Basic Personal and Academic Information</span>
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
+                <div className="flex flex-col gap-3 mt-6 lg:mt-0">
+                    <div className="flex sm:hidden flex-row gap-3">
+                        {step > 0 ? (
+                            <Button variant="outline" onClick={prevStep} size="sm" className="flex items-center justify-center gap-1.5 flex-1">
+                                <ChevronLeft size={16} />
+                                Back
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setExitDialogOpen(true)}
+                                className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground flex-1"
+                            >
+                                <LogOut size={14} />
+                                <span className="truncate">Exit</span>
+                            </Button>
+                        )}
+                        {step < steps.length - 1 ? (
+                            <Button onClick={nextStep} size="sm" className="flex items-center justify-center gap-1.5 flex-1">
+                                Next
+                                <ChevronRight size={16} />
+                            </Button>
+                        ) : (
+                            <Button onClick={handleSubmit} size="sm" className="flex items-center justify-center gap-1.5 flex-1 bg-violet-600 hover:bg-violet-700 text-white font-bold">
+                                Submit
+                                <ChevronRight size={16} />
+                            </Button>
+                        )}
+                    </div>
+                    <div className="hidden sm:flex flex-row justify-between gap-3">
+                        <div className="flex gap-3">
+                            {step > 0 ? (
+                                <Button variant="outline" onClick={prevStep} className="flex items-center gap-2">
+                                    <ChevronLeft size={20} />
+                                    Back
+                                </Button>
+                            ) : (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setExitDialogOpen(true)}
+                                    className="flex items-center gap-2"
+                                >
+                                    <LogOut size={18} />
+                                    <span>Exit</span>
+                                </Button>
+                            )}
+                        </div>
+                        {step < steps.length - 1 ? (
+                            <Button onClick={nextStep} className="flex items-center gap-2 ml-auto">
+                                Next
+                                <ChevronRight size={20} />
+                            </Button>
+                        ) : (
+                            <Button onClick={handleSubmit} className="flex items-center gap-2 ml-auto bg-violet-600 hover:bg-violet-700 text-white font-bold">
+                                Submit & Begin Journey
+                                <ChevronRight size={20} />
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="w-full lg:w-[62%] flex items-center justify-center p-2 lg:p-3 bg-gradient-to-br from-background via-muted/30 to-background">
+                <div className="w-full h-full overflow-y-auto scrollbar-thin p-12">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={step}
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -25 }}
+                            transition={{ duration: 0.3 }}
+                            className="space-y-6"
+                        >
+                            {step === 0 && (
+                                <>
                                     {step === 0 && hasAttemptedNext && Object.keys(errors).length > 0 && (
                                         <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
                                             Please fill in all required fields before continuing.
@@ -631,19 +789,11 @@ export default function OnboardingForm() {
                                             {errors.fieldOfStudy && <p className="text-sm text-destructive">{errors.fieldOfStudy}</p>}
                                         </div>
                                     </div>
-                                </CardContent>
-                            </Card>
-                        )}
+                                </>
+                            )}
 
-                        {step === 1 && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <BookOpen className="text-primary" size={24} />
-                                        Prerequisite Knowledge & Skill Assessment
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
+                            {step === 1 && (
+                                <>
                                     {Object.keys(errors).length > 0 && (
                                         <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
                                             Please complete all required sections before continuing.
@@ -670,7 +820,7 @@ export default function OnboardingForm() {
                                     <div className="space-y-4">
                                         <Label>Rate your proficiency in these foundational skills (1-5): <span className="text-destructive">*</span></Label>
                                         {errors.proficiency && <p className="text-sm text-destructive">{errors.proficiency}</p>}
-                                        <div className="space-y-4">
+                                        <div className="space-y-4 pl-4">
                                             {PROFICIENCY_SKILLS.map((skill) => (
                                                 <div key={skill} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
                                                     <span className="font-medium text-sm sm:text-base">{skill}</span>
@@ -709,19 +859,11 @@ export default function OnboardingForm() {
                                             ))}
                                         </div>
                                     </div>
-                                </CardContent>
-                            </Card>
-                        )}
+                                </>
+                            )}
 
-                        {step === 2 && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Target className="text-primary" size={24} />
-                                        Interests and Career Goals
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
+                            {step === 2 && (
+                                <>
                                     {Object.keys(errors).length > 0 && (
                                         <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
                                             Please complete all required sections before continuing.
@@ -776,22 +918,11 @@ export default function OnboardingForm() {
                                         />
                                         {errors.targetRoles && <p className="text-sm text-destructive">{errors.targetRoles}</p>}
                                     </div>
-                                </CardContent>
-                            </Card>
-                        )}
+                                </>
+                            )}
 
-                        {step === 3 && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Settings className="text-primary" size={24} />
-                                        VARK Learning Preferences Quiz
-                                    </CardTitle>
-                                    <CardDescription>
-                                        This scientific assessment will match you to visual, auditory, reading/writing, or kinesthetic learning materials.
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
+                            {step === 3 && (
+                                <>
                                     {errors.vark && (
                                         <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
                                             {errors.vark}
@@ -837,19 +968,11 @@ export default function OnboardingForm() {
                                             ))}
                                         </div>
                                     )}
-                                </CardContent>
-                            </Card>
-                        )}
+                                </>
+                            )}
 
-                        {step === 4 && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Clock className="text-primary" size={24} />
-                                        Time Commitment & Motivation
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
+                            {step === 4 && (
+                                <>
                                     {Object.keys(errors).length > 0 && (
                                         <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
                                             Please complete all required sections before continuing.
@@ -978,19 +1101,11 @@ export default function OnboardingForm() {
                                             ))}
                                         </div>
                                     </div>
-                                </CardContent>
-                            </Card>
-                        )}
+                                </>
+                            )}
 
-                        {step === 5 && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Send className="text-primary" size={24} />
-                                        Additional Details & Custom Requests
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
+                            {step === 5 && (
+                                <>
                                     <div className="space-y-2">
                                         <Label htmlFor="featureRequests">Is there anything specific you want us to know about you?</Label>
                                         <Textarea
@@ -1016,33 +1131,58 @@ export default function OnboardingForm() {
                                             </div>
                                         </div>
                                     </div>
-                                </CardContent>
-                            </Card>
-                        )}
-                    </motion.div>
-                </AnimatePresence>
+                                </>
+                            )}
 
-                <div className={`flex flex-col-reverse sm:flex-row ${step > 0 ? 'justify-between' : 'justify-end'} mt-6 sm:mt-8 gap-3 sm:gap-4`}>
-                    {step > 0 && (
-                        <Button variant="outline" onClick={prevStep} className="flex items-center justify-center gap-2 w-full sm:w-auto">
-                            <ChevronLeft size={20} />
-                            Back
-                        </Button>
-                    )}
-
-                    {step < steps.length - 1 ? (
-                        <Button onClick={nextStep} className="flex items-center justify-center gap-2 w-full sm:w-auto sm:ml-auto">
-                            Next
-                            <ChevronRight size={20} />
-                        </Button>
-                    ) : (
-                        <Button onClick={handleSubmit} className="flex items-center justify-center gap-2 w-full sm:w-auto sm:ml-auto bg-violet-600 hover:bg-violet-700 text-white font-bold">
-                            Submit & Begin Journey
-                            <ChevronRight size={20} />
-                        </Button>
-                    )}
+                        </motion.div>
+                    </AnimatePresence>
                 </div>
             </div>
+
+            </div>
+
+            {isSmallScreen ? (
+                <Drawer open={exitDialogOpen} onOpenChange={setExitDialogOpen}>
+                    <DrawerContent>
+                        <DrawerHeader>
+                            <DrawerTitle>Leave onboarding?</DrawerTitle>
+                            <DrawerDescription>You can always come back later to complete your profile.</DrawerDescription>
+                        </DrawerHeader>
+                        <div className="px-4 pb-4 flex flex-row gap-2">
+                            <Button variant="outline" className="flex-1 justify-center" onClick={() => setExitDialogOpen(false)}>
+                                Stay Here
+                            </Button>
+                            <Button variant="outline" className="flex-1 justify-center" onClick={handleGoHome}>
+                                Go to Home
+                            </Button>
+                            <Button variant="destructive" className="flex-1 justify-center" onClick={handleLogout}>
+                                Logout
+                            </Button>
+                        </div>
+                    </DrawerContent>
+                </Drawer>
+            ) : (
+                <Dialog open={exitDialogOpen} onOpenChange={setExitDialogOpen}>
+                    <DialogContent className="sm:max-w-[400px]">
+                        <DialogHeader>
+                            <DialogTitle>Leave onboarding?</DialogTitle>
+                            <DialogDescription>You can always come back later to complete your profile.</DialogDescription>
+                        </DialogHeader>
+                        <div className="flex flex-row gap-2 px-6 pb-6">
+                            <Button variant="outline" className="flex-1" onClick={() => setExitDialogOpen(false)}>
+                                Stay Here
+                            </Button>
+                            <Button variant="outline" className="flex-1" onClick={handleGoHome}>
+                                Go to Home
+                            </Button>
+                            <Button variant="destructive" className="flex-1" onClick={handleLogout}>
+                                Logout
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
+
         </div>
     );
 }

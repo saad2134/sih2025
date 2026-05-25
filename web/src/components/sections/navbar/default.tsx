@@ -104,10 +104,10 @@ export default function Navbar({
           </NavbarLeft>
 
           {/* NavbarRight with DropdownMenu theme switcher, desktop buttons, and mobile menu */}
-          <NavbarRight className="flex items-center gap-2 sm:gap-4">
+          <NavbarRight className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="relative rounded-xl bg-background/50 hover:bg-muted/50 cursor-pointer h-9 w-9 p-0 flex items-center justify-center shrink-0">
+                <Button variant="secondary" className="relative cursor-pointer h-9 w-9 p-0 flex items-center justify-center shrink-0">
                   <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                   <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                   <span className="sr-only">Toggle theme</span>
@@ -126,7 +126,7 @@ export default function Navbar({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <div className="hidden md:flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-2">
               {dynamicActions.map((action, index) =>
                 action.isButton ? (
                   <Button
@@ -134,7 +134,7 @@ export default function Navbar({
                     variant={action.variant || "default"}
                     asChild
                   >
-                    <a href={action.href}>
+                    <a href={action.href} className={action.text === "Get Started" ? "animate-shine" : ""}>
                       {action.icon}
                       {action.text}
                       {action.iconRight}
@@ -191,7 +191,7 @@ export default function Navbar({
                           className="w-full justify-center"
                           asChild
                         >
-                          <a href={action.href}>
+                          <a href={action.href} className={action.text === "Get Started" ? "animate-shine" : ""}>
                             {action.icon}
                             {action.text}
                             {action.iconRight}
@@ -213,7 +213,7 @@ export default function Navbar({
                       <span className="text-sm font-medium text-muted-foreground">Theme</span>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="outline" className="relative rounded-xl bg-background/50 hover:bg-muted/50 cursor-pointer h-9 w-9 p-0 flex items-center justify-center shrink-0">
+                          <Button variant="secondary" className="relative cursor-pointer h-9 w-9 p-0 flex items-center justify-center shrink-0">
                             <Sun className="h-[1rem] w-[1rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                             <Moon className="absolute h-[1rem] w-[1rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                             <span className="sr-only">Toggle theme</span>
