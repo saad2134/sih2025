@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, Float, DateTime, ForeignKey, Enum, ARRAY, func
+from sqlalchemy import Column, String, Integer, Float, DateTime, ForeignKey, Enum, ARRAY, func, Text
 from sqlalchemy.dialects.postgresql import UUID, ARRAY as PG_ARRAY
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from typing import Optional
@@ -24,11 +24,11 @@ class LearnerProfile(Base):
     vark_cluster: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     
     topic: Mapped[str] = mapped_column(String(255), nullable=False)
-    goal: Mapped[str] = mapped_column(String(50), nullable=False)
+    goal: Mapped[str] = mapped_column(Text, nullable=False)
     hours_per_week: Mapped[int] = mapped_column(Integer, nullable=False)
     math_comfort: Mapped[int] = mapped_column(Integer, default=3)
     style_preferences: Mapped[list] = mapped_column(ARRAY(String), default=list)
-    prior_knowledge: Mapped[str] = mapped_column(String(50), default="none")
+    prior_knowledge: Mapped[str] = mapped_column(Text, default="none")
     career_target: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     language: Mapped[str] = mapped_column(String(10), default="en")
     

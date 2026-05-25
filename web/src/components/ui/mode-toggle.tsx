@@ -11,7 +11,7 @@ import {
   TooltipProvider
 } from "@/components/ui/tooltip";
 
-import { useTheme } from "@/components/contexts/theme-provider";
+import { useTheme } from "@/components/providers";
 
 export function ModeToggle() {
   const { theme, setTheme } = useTheme();

@@ -422,7 +422,7 @@ export default function Profile() {
                                         <div className="bg-muted/30 rounded-lg p-3">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <Badge variant="outline" className="bg-violet-50 dark:bg-violet-950/30 text-xs">
-                                                    Current Plan: {isPaidUser ? "Pro" : "Freemium"}
+                                                    Current Plan: {isPaidUser ? "Pro" : "Free"}
                                                 </Badge>
                                             </div>
                                             <p className="text-sm text-muted-foreground">
@@ -735,7 +735,7 @@ export default function Profile() {
                                                         />
                                                     </div>
                                                     <div className="grid gap-2">
-                                                        <Label className="text-xs text-muted-foreground">Targeted Roles</Label>
+                                                        <Label className="text-xs text-muted-foreground">Targets</Label>
                                                         <Input
                                                             value={careerForm.targetRoles}
                                                             onChange={(e) => setCareerForm({ ...careerForm, targetRoles: e.target.value })}
@@ -787,7 +787,7 @@ export default function Profile() {
                                                 <span className="text-right">{userProfile.careerGoal}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Targeted Roles</span>
+                                                <span className="text-muted-foreground">Targets</span>
                                                 <span className="text-right">{userProfile.targetRoles}</span>
                                             </div>
                                         </CardContent>

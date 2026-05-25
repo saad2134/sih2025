@@ -267,9 +267,10 @@ RATE_LIMIT_PER_MINUTE=60
 - [x] Create NSQF seed script
 - [x] Write docker-compose for monolith
 - [x] Update frontend API URL to single backend
-- [ ] Complete Celery task implementations
-- [ ] Write more unit/integration tests
-- [ ] Add Alembic migration runner
+- [x] Complete Celery task implementations (fully converted to run asynchronously under asyncio.run and configured NullPool to prevent closed event loop pool bugs)
+- [x] Write more unit/integration tests (implemented E2E integration test at test_student_flow.py covering the complete user onboarding, recommendations, chatbot, payments, and feedback loop)
+- [x] Add Alembic migration runner (implemented 002_subscription and 003_add_search_vector migrations, resolving the missing search_vector DB column blocker)
+- [x] Implement Dynamic Course Discovery (SerpAPI + Firecrawl + Gemini 2.5 Flash) and Milestone Overrides (see [COURSE_SEARCH_AND_MATCHING.md](file:///c:/Users/UwU/Desktop/shiksha-disha/docs/COURSE_SEARCH_AND_MATCHING.md))
 
 ---
 

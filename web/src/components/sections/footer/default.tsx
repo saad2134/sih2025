@@ -1,19 +1,11 @@
 "use client";
 
 import { ReactNode, useState, useEffect } from "react";
-import { useTheme } from "next-themes";
 
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Moon, Sun, Twitter, Github, Mail, Phone } from "lucide-react";
+import { Twitter, Github, Mail, Phone } from "lucide-react";
 
 import AppUI from "../../logos/app_icon";
 
@@ -42,12 +34,20 @@ export default function FooterSection({
   name = `${siteConfig.name}`,
   columns = [
     {
-      title: "Application",
+      title: "Platform",
       links: [
-        { text: "Home", href: "/" },
-        { text: "About", href: "/about" },
+        { text: "Overview", href: "/overview" },
         { text: "Our Team", href: "/team" },
         { text: "Pricing", href: "/pricing" },
+        { text: "Plans & Updates", href: "/plans-n-updates" },
+      ],
+    },
+    {
+      title: "Resources",
+      links: [
+        { text: "Contact Us", href: "/contact" },
+        { text: "Help Center", href: "/help-center" },
+        { text: "Blog", href: "/blog" },
       ],
     },
     {
@@ -59,18 +59,12 @@ export default function FooterSection({
         { text: "Refunds Policy", href: "/refunds" },
       ],
     },
-    {
-      title: "Support",
-      links: [
-        { text: "Contact Us", href: "/contact" },
-      ],
-    },
   ],
   copyright = `© ${Number.isFinite(new Date().getFullYear()) ? new Date().getFullYear() : 2025} ${siteConfig.name} ${siteConfig.version}. All rights reserved.`,
   showModeToggle = true,
   className,
 }: FooterProps) {
-  const { setTheme } = useTheme();
+
 
   const [status, setStatus] = useState<"operational" | "issues" | "degraded" | null>(null);
   const [loading, setLoading] = useState(true);
@@ -109,10 +103,10 @@ export default function FooterSection({
               {logo}
               <span className="text-xl font-bold">{name}</span>
               <a href="/status" className="inline-flex items-center rounded-md border border-foreground/30 px-2 py-0.5 text-xs font-semibold gap-2 bg-muted/50 text-foreground hover:bg-muted transition-colors cursor-pointer">
-                <span className={cn("w-2 h-2 rounded-full", 
-                  loading ? "bg-muted-foreground" : 
-                  status === "operational" ? "bg-green-500" : 
-                  status === "issues" ? "bg-yellow-500" : "bg-red-500"
+                <span className={cn("w-2 h-2 rounded-full",
+                  loading ? "bg-muted-foreground" :
+                    status === "operational" ? "bg-green-500" :
+                      status === "issues" ? "bg-yellow-500" : "bg-red-500"
                 )} />
                 <span>{loading ? "Checking..." : status ? status.charAt(0).toUpperCase() + status.slice(1) : ""}</span>
               </a>
@@ -154,31 +148,8 @@ export default function FooterSection({
           ))}
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-8 pt-6 border-t gap-4">
+        <div className="mt-8 pt-6 border-t text-center">
           <p className="text-xs text-muted-foreground">{copyright}</p>
-
-          {showModeToggle && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="relative">
-                  <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                  <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                  <span className="sr-only">Toggle theme</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setTheme("light")}>
-                  Light
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")}>
-                  Dark
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("system")}>
-                  System
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
         </div>
       </div>
     </footer>

@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowRightIcon } from "lucide-react";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
@@ -47,14 +47,14 @@ export default function Hero({
   ),
   buttons = [
     {
-      href: '/auth',
-      text: "Get Started",
+      href: '/student/dashboard',
+      text: "Dashboard",
       variant: "default",
     },
     {
       href: '/demo/onboarding',
       text: "Try Demo",
-      variant: "outline",
+      variant: "secondary",
     },
     {
       href: siteConfig.links.github,
@@ -65,6 +65,23 @@ export default function Hero({
   ],
   className,
 }: HeroProps) {
+  const [isAuth, setIsAuth] = useState(false);
+
+  useEffect(() => {
+    setIsAuth(!!localStorage.getItem('auth_token'));
+  }, []);
+
+  const dynamicButtons = buttons ? buttons.map(button => {
+    if (button.text === "Dashboard" && !isAuth) {
+      return {
+        ...button,
+        text: "Get Started",
+        href: "/auth"
+      };
+    }
+    return button;
+  }) : [];
+
   return (
     <Section
       className={cn(
@@ -125,9 +142,9 @@ export default function Hero({
           <p className="text-base sm:text-lg md:text-xl animate-appear text-muted-foreground relative z-10 max-w-[840px] font-medium text-balance opacity-0 delay-100 px-2">
             {description}
           </p>
-          {buttons !== false && buttons.length > 0 && (
+          {dynamicButtons.length > 0 && (
             <div className="animate-appear relative z-10 flex flex-wrap justify-center gap-3 sm:gap-4 opacity-0 delay-300">
-              {buttons.map((button, index) => (
+              {dynamicButtons.map((button, index) => (
                 <Button
                   key={index}
                   variant={button.variant || "default"}

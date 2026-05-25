@@ -3,9 +3,8 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 const getApiBaseUrl = () => {
-  if (process.env.BACKEND_SERVICE_CORE_BASE_URL) return process.env.BACKEND_SERVICE_CORE_BASE_URL;
-  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
-  return process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  if (process.env.BACKEND_BASE_URL) return process.env.BACKEND_BASE_URL;
+  return 'http://localhost:8000';
 };
 
 const API_BASE_URL = getApiBaseUrl();

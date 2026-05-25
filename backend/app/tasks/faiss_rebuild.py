@@ -2,6 +2,7 @@
 
 import os
 import pickle
+import asyncio
 from sqlalchemy import select
 import faiss
 import numpy as np
@@ -15,15 +16,10 @@ INDEX_PATH = os.environ.get("FAISS_INDEX_PATH", "/tmp/courses.index")
 META_PATH = os.environ.get("FAISS_META_PATH", "/tmp/courses_meta.pkl")
 
 
-@celery_app.task(name="app.tasks.faiss_rebuild.rebuild_faiss_index")
-def rebuild_faiss_index():
-    """
-    Daily: Rebuild FAISS index and serialize to disk.
-    FAISS index builds from course embeddings. Activates at 50+ enrolments.
-    """
+async def rebuild_faiss_index_async():
     try:
-        with get_db_context() as db:
-            result = db.execute(
+        async with get_db_context() as db:
+            result = await db.execute(
                 select(Course).where(
                     Course.llm_tagged == True,
                     Course.vark_v_score.isnot(None)
@@ -69,6 +65,15 @@ def rebuild_faiss_index():
 
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+
+@celery_app.task(name="app.tasks.faiss_rebuild.rebuild_faiss_index")
+def rebuild_faiss_index():
+    """
+    Daily: Rebuild FAISS index and serialize to disk.
+    FAISS index builds from course embeddings. Activates at 50+ enrolments.
+    """
+    return asyncio.run(rebuild_faiss_index_async())
 
 
 @celery_app.task(name="app.tasks.faiss_rebuild.load_faiss_index")

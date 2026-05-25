@@ -39,6 +39,8 @@ class CourseWithMatch(BaseModel):
     style_tags: list[str] = []
     math_depth: int = 1
     hours_per_week: float = 0
+    total_hours: float = 0
+    duration_months: int = 2
     completion_rate: float = 0
     avg_rating: float = 0
     difficulty: str = "beginner"
@@ -69,3 +71,10 @@ class CompareCourse(BaseModel):
 
 class CompareResponse(BaseModel):
     courses: list[CompareCourse]
+
+
+class EnrolmentUpdate(BaseModel):
+    progress_pct: Optional[float] = None
+    current_week: Optional[int] = None
+    dropped: Optional[bool] = None
+    study_mode: Optional[str] = None

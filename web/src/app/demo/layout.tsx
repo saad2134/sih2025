@@ -99,7 +99,7 @@ const demoNavItems = [
     items: [
       {
         title: "My Career Map",
-        url: "/demo/career_map",
+        url: "/demo/career-map",
         icon: MapPin,
         description: "Visualize your career journey",
       },

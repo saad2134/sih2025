@@ -12,7 +12,7 @@ import { siteConfig } from "@/config/site";
 
 const plans = [
     {
-        name: "Freemium",
+        name: "Free",
         price: "Free",
         period: "",
         description: "Perfect for getting started",

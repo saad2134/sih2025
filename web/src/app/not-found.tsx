@@ -27,7 +27,7 @@ export default function NotFound() {
               Go Home
             </Link>
           </Button>
-          
+
           <Button variant="outline" size="lg" onClick={() => window.history.back()} className="group">
             <ArrowLeft className="h-4 w-4 mr-2 transition-transform group-hover:-translate-x-1" />
             Go Back
