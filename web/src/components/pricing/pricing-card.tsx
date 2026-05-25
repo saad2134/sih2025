@@ -206,13 +206,13 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
               }}
             />
           </div>
-          <div className="relative max-w-4xl mx-auto px-4 lg:px-6 text-center">
+          <div className="relative max-w-4xl mx-auto px-4 lg:px-6 text-center animate-fade-in">
             <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 lg:px-6 py-2 mb-4 lg:mb-6">
               <Sparkles className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium">Transparent Pricing</span>
             </div>
             
-            <h1 className="text-3xl lg:text-5xl md:text-4xl lg:text-6xl font-bold mb-4 lg:mb-6">
+            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl bg-gradient-to-r from-primary via-brand-foreground to-brand bg-clip-text text-transparent pb-1 mb-4 lg:mb-6">
               Pricing
             </h1>
             

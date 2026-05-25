@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { 
   User, Briefcase, GraduationCap, Award, Languages, Heart, Plus, Trash2, Download,
   Settings, Monitor, Palette, Type, Layout, FileText, Link2, Eye, Image, X,
-  Mail, Phone, MapPin, Globe
+  Mail, Phone, MapPin, Globe, Loader2
 } from 'lucide-react';
 
 const IconMail = () => <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>;
@@ -207,6 +207,7 @@ interface ResumeData {
     projects: { id: string; name: string; visible: boolean; items: Project[] };
   };
   metadata: Metadata;
+  is_shared?: boolean;
 }
 
 const defaultResume: ResumeData = {
@@ -236,12 +237,24 @@ const defaultResume: ResumeData = {
 };
 
 interface ResumeContextType {
-  resume: ResumeData;
+  resumesList: ResumeResponse[];
+  currentResumeId: string | null;
+  resume: ResumeData | null;
+  loading: boolean;
+  saving: boolean;
+  loadResumes: () => Promise<void>;
+  selectResume: (id: string) => void;
+  createResume: (title: string) => Promise<void>;
+  deleteResume: (id: string) => Promise<void>;
+  updateResumeTitle: (id: string, title: string) => Promise<void>;
+  toggleResumeShare: (id: string, isShared: boolean) => Promise<void>;
   setValue: (path: string, value: unknown) => void;
   addItem: (section: string, item: unknown) => void;
   updateItem: (section: string, id: string, field: string, value: unknown) => void;
   removeItem: (section: string, id: string) => void;
 }
+
+import { apiService, ResumeResponse } from '@/lib/api';
 
 const ResumeContext = React.createContext<ResumeContextType | null>(null);
 
@@ -252,10 +265,181 @@ const useResume = () => {
 };
 
 const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [resume, setResume] = useState<ResumeData>(defaultResume);
+  const [resumesList, setResumesList] = useState<ResumeResponse[]>([]);
+  const [currentResumeId, setCurrentResumeId] = useState<string | null>(null);
+  const [resume, setResume] = useState<ResumeData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+
+  const loadResumes = async () => {
+    try {
+      setLoading(true);
+      const res = await apiService.listResumes();
+      if (res.success && res.data) {
+        setResumesList(res.data);
+        if (res.data.length > 0) {
+          const exists = res.data.find(x => x.id === currentResumeId);
+          const nextId = exists ? currentResumeId : res.data[0].id;
+          setCurrentResumeId(nextId);
+          const nextResume = res.data.find(x => x.id === nextId);
+          if (nextResume) {
+            setResume({
+              id: nextResume.id,
+              title: nextResume.title,
+              basics: nextResume.basics,
+              sections: nextResume.sections as any,
+              metadata: nextResume.metadata as any,
+              is_shared: nextResume.is_shared,
+            });
+            setIsDirty(false);
+          }
+        } else {
+          setResume(null);
+          setCurrentResumeId(null);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load resumes", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadResumes();
+  }, []);
+
+  // Handle auto-save
+  useEffect(() => {
+    if (!isDirty || !currentResumeId || !resume) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        setSaving(true);
+        await apiService.updateResume(currentResumeId, {
+          title: resume.title,
+          basics: resume.basics,
+          sections: resume.sections,
+          metadata: resume.metadata,
+          is_shared: resume.is_shared,
+        });
+        setIsDirty(false);
+        // Refresh list silently
+        const res = await apiService.listResumes();
+        if (res.success && res.data) {
+          setResumesList(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to auto-save resume", err);
+      } finally {
+        setSaving(false);
+      }
+    }, 1000); // 1s debounce
+
+    return () => clearTimeout(timer);
+  }, [resume, isDirty, currentResumeId]);
+
+  const selectResume = (id: string) => {
+    const item = resumesList.find(x => x.id === id);
+    if (item) {
+      setCurrentResumeId(id);
+      setResume({
+        id: item.id,
+        title: item.title,
+        basics: item.basics,
+        sections: item.sections as any,
+        metadata: item.metadata as any,
+        is_shared: item.is_shared,
+      });
+      setIsDirty(false);
+    }
+  };
+
+  const createResume = async (title: string) => {
+    try {
+      setLoading(true);
+      const newResumeObj = {
+        title,
+        basics: defaultResume.basics,
+        sections: defaultResume.sections,
+        metadata: defaultResume.metadata,
+      };
+      const res = await apiService.createResume(newResumeObj);
+      if (res.success && res.data) {
+        const created = res.data;
+        setResumesList(prev => [created, ...prev]);
+        setCurrentResumeId(created.id);
+        setResume({
+          id: created.id,
+          title: created.title,
+          basics: created.basics,
+          sections: created.sections as any,
+          metadata: created.metadata as any,
+          is_shared: created.is_shared,
+        });
+        setIsDirty(false);
+      }
+    } catch (err) {
+      console.error("Failed to create resume", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteResume = async (id: string) => {
+    try {
+      setLoading(true);
+      await apiService.deleteResume(id);
+      const remaining = resumesList.filter(x => x.id !== id);
+      setResumesList(remaining);
+      if (currentResumeId === id) {
+        if (remaining.length > 0) {
+          selectResume(remaining[0].id);
+        } else {
+          setResume(null);
+          setCurrentResumeId(null);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to delete resume", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateResumeTitle = async (id: string, title: string) => {
+    if (currentResumeId === id && resume) {
+      setResume(prev => prev ? { ...prev, title } : null);
+      setIsDirty(true);
+    } else {
+      try {
+        await apiService.updateResume(id, { title });
+        setResumesList(prev => prev.map(x => x.id === id ? { ...x, title } : x));
+      } catch (err) {
+        console.error("Failed to update resume title", err);
+      }
+    }
+  };
+
+  const toggleResumeShare = async (id: string, isShared: boolean) => {
+    if (currentResumeId === id && resume) {
+      setResume(prev => prev ? { ...prev, is_shared: isShared } : null);
+      setIsDirty(true);
+    } else {
+      try {
+        await apiService.updateResume(id, { is_shared: isShared });
+        setResumesList(prev => prev.map(x => x.id === id ? { ...x, is_shared: isShared } : x));
+      } catch (err) {
+        console.error("Failed to toggle share", err);
+      }
+    }
+  };
 
   const setValue = (path: string, value: unknown) => {
+    if (!resume) return;
     setResume(prev => {
+      if (!prev) return null;
       const newResume = { ...prev };
       const keys = path.split('.');
       let obj: Record<string, unknown> = newResume as unknown as Record<string, unknown>;
@@ -265,23 +449,31 @@ const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =
       obj[keys[keys.length - 1]] = value;
       return newResume;
     });
+    setIsDirty(true);
   };
 
   const addItem = (section: string, item: unknown) => {
-    setResume(prev => ({
-      ...prev,
-      sections: {
-        ...prev.sections,
-        [section]: {
-          ...prev.sections[section as keyof typeof prev.sections],
-          items: [...(prev.sections[section as keyof typeof prev.sections] as { items: unknown[] }).items, item],
+    if (!resume) return;
+    setResume(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        sections: {
+          ...prev.sections,
+          [section]: {
+            ...prev.sections[section as keyof typeof prev.sections],
+            items: [...(prev.sections[section as keyof typeof prev.sections] as { items: unknown[] }).items, item],
+          },
         },
-      },
-    }));
+      };
+    });
+    setIsDirty(true);
   };
 
   const updateItem = (section: string, id: string, field: string, value: unknown) => {
+    if (!resume) return;
     setResume(prev => {
+      if (!prev) return null;
       const sec = prev.sections[section as keyof typeof prev.sections] as { items: { id: string }[] };
       return {
         ...prev,
@@ -302,10 +494,13 @@ const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =
         },
       };
     });
+    setIsDirty(true);
   };
 
   const removeItem = (section: string, id: string) => {
+    if (!resume) return;
     setResume(prev => {
+      if (!prev) return null;
       const sec = prev.sections[section as keyof typeof prev.sections] as { items: { id: string }[] };
       return {
         ...prev,
@@ -318,10 +513,27 @@ const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =
         },
       };
     });
+    setIsDirty(true);
   };
 
   return (
-    <ResumeContext.Provider value={{ resume, setValue, addItem, updateItem, removeItem }}>
+    <ResumeContext.Provider value={{
+      resumesList,
+      currentResumeId,
+      resume,
+      loading,
+      saving,
+      loadResumes,
+      selectResume,
+      createResume,
+      deleteResume,
+      updateResumeTitle,
+      toggleResumeShare,
+      setValue,
+      addItem,
+      updateItem,
+      removeItem
+    }}>
       {children}
     </ResumeContext.Provider>
   );
@@ -339,17 +551,150 @@ const sectionList = [
   { id: 'interests', name: 'Interests', icon: Heart },
   { id: 'projects', name: 'Projects', icon: Briefcase },
   { id: 'settings', name: 'Settings', icon: Settings },
+  { id: 'sharing', name: 'Sharing', icon: Link2 },
 ];
 
-const AlertBox: React.FC = () => {
-  const router = useRouter();
+
+const EmptyState: React.FC = () => {
+  const { createResume } = useResume();
+  const [newTitle, setNewTitle] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+    createResume(newTitle.trim());
+  };
+
   return (
-    <div className="bg-muted border rounded-lg p-3 mb-3">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="font-medium">Get started today with a free account to autofill from profile, access an advanced builder, save & share resumes.</span>
-        <Button variant="outline" size="sm" className="ml-auto h-7 text-xs" onClick={() => router.push('/auth')}>
-          Get Started
+    <div className="flex flex-col items-center justify-center p-8 py-16 border rounded-lg bg-card text-center max-w-md mx-auto mt-12">
+      <FileText className="w-12 h-12 text-primary/40 mb-4" />
+      <h3 className="font-semibold text-lg mb-2">Create Your First Resume</h3>
+      <p className="text-sm text-muted-foreground mb-6">
+        Build a beautiful, job-ready resume. Start by giving it a title below.
+      </p>
+      <form onSubmit={handleSubmit} className="w-full space-y-3">
+        <Input
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+          placeholder="e.g. Frontend Developer Resume"
+          className="w-full h-10"
+          required
+        />
+        <Button type="submit" className="w-full h-10">
+          Create Resume
         </Button>
+      </form>
+    </div>
+  );
+};
+
+const ResumeManagerHeader: React.FC = () => {
+  const { resumesList, currentResumeId, selectResume, createResume, deleteResume, updateResumeTitle, saving, loading } = useResume();
+  const [newTitle, setNewTitle] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
+  const [editTitleVal, setEditTitleVal] = useState("");
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+    await createResume(newTitle.trim());
+    setNewTitle("");
+    setIsCreating(false);
+  };
+
+  const handleStartRename = (id: string, currentTitle: string) => {
+    setEditingTitleId(id);
+    setEditTitleVal(currentTitle);
+  };
+
+  const handleSaveRename = async (id: string) => {
+    if (!editTitleVal.trim()) return;
+    await updateResumeTitle(id, editTitleVal.trim());
+    setEditingTitleId(null);
+  };
+
+  const activeResume = resumesList.find(x => x.id === currentResumeId);
+
+  return (
+    <div className="bg-card border rounded-lg p-4 mb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="flex items-center gap-3 flex-wrap">
+        <FileText className="text-primary w-5 h-5 shrink-0" />
+        <span className="font-semibold text-sm">Select Resume:</span>
+        <select
+          value={currentResumeId || ""}
+          onChange={(e) => selectResume(e.target.value)}
+          className="h-9 px-2 rounded-md border bg-background text-sm min-w-[200px]"
+          disabled={loading}
+        >
+          {resumesList.map((res) => (
+            <option key={res.id} value={res.id}>
+              {res.title}
+            </option>
+          ))}
+          {resumesList.length === 0 && <option value="">No resumes</option>}
+        </select>
+
+        {activeResume && (
+          <div className="flex items-center gap-2">
+            {editingTitleId === activeResume.id ? (
+              <div className="flex items-center gap-1">
+                <Input
+                  value={editTitleVal}
+                  onChange={(e) => setEditTitleVal(e.target.value)}
+                  className="h-8 w-40"
+                  size={30}
+                />
+                <Button size="sm" onClick={() => handleSaveRename(activeResume.id)}>Save</Button>
+                <Button size="sm" variant="ghost" onClick={() => setEditingTitleId(null)}>Cancel</Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => handleStartRename(activeResume.id, activeResume.title)}
+                  className="h-8 text-xs text-muted-foreground"
+                >
+                  Rename
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    if (window.confirm("Are you sure you want to delete this resume?")) {
+                      deleteResume(activeResume.id);
+                    }
+                  }}
+                  className="h-8 text-xs text-destructive hover:bg-destructive/10"
+                >
+                  Delete
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-3">
+        {saving && <span className="text-xs text-muted-foreground animate-pulse">Saving changes...</span>}
+        {isCreating ? (
+          <form onSubmit={handleCreate} className="flex items-center gap-1">
+            <Input
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Resume Title"
+              className="h-8 w-40"
+              required
+            />
+            <Button type="submit" size="sm">Create</Button>
+            <Button size="sm" variant="ghost" onClick={() => setIsCreating(false)}>Cancel</Button>
+          </form>
+        ) : (
+          <Button size="sm" onClick={() => setIsCreating(true)}>
+            <Plus size={14} className="mr-1" /> New Resume
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -357,6 +702,7 @@ const AlertBox: React.FC = () => {
 
 const BasicsEditor: React.FC = () => {
   const { resume, setValue } = useResume();
+  if (!resume) return null;
   const { basics } = resume;
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -398,6 +744,7 @@ const BasicsEditor: React.FC = () => {
 
 const SummaryEditor: React.FC = () => {
   const { resume, setValue } = useResume();
+  if (!resume) return null;
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2"><FileText size={18} /><h3 className="font-semibold">Summary</h3></div>
@@ -433,6 +780,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, title, items, de
 
 const ProfilesEditor: React.FC = () => {
   const { resume, updateItem } = useResume();
+  if (!resume) return null;
   const { profiles } = resume.sections;
   return (
     <SectionEditor section="profiles" title="Profiles" items={profiles.items as { id: string }[]} defaultItem={{ network: '', username: '', url: { label: '', href: '' } }}
@@ -453,6 +801,7 @@ const ProfilesEditor: React.FC = () => {
 
 const ExperienceEditor: React.FC = () => {
   const { resume, updateItem } = useResume();
+  if (!resume) return null;
   const { experience } = resume.sections;
   return (
     <SectionEditor section="experience" title="Experience" items={experience.items as { id: string }[]} defaultItem={{ company: '', position: '', location: '', startDate: '', endDate: '', current: false, summary: '' }}
@@ -479,6 +828,7 @@ const ExperienceEditor: React.FC = () => {
 
 const EducationEditor: React.FC = () => {
   const { resume, updateItem } = useResume();
+  if (!resume) return null;
   const { education } = resume.sections;
   return (
     <SectionEditor section="education" title="Education" items={education.items as { id: string }[]} defaultItem={{ institution: '', studyType: '', area: '', startDate: '', endDate: '', current: false }}
@@ -504,6 +854,7 @@ const EducationEditor: React.FC = () => {
 
 const SkillsEditor: React.FC = () => {
   const { resume, updateItem } = useResume();
+  if (!resume) return null;
   const { skills } = resume.sections;
   return (
     <SectionEditor section="skills" title="Skills" items={skills.items as { id: string }[]} defaultItem={{ name: '', level: 3 }}
@@ -523,6 +874,7 @@ const SkillsEditor: React.FC = () => {
 
 const LanguagesEditor: React.FC = () => {
   const { resume, updateItem } = useResume();
+  if (!resume) return null;
   const { languages } = resume.sections;
   return (
     <SectionEditor section="languages" title="Languages" items={languages.items as { id: string }[]} defaultItem={{ name: '', description: '' }}
@@ -537,6 +889,7 @@ const LanguagesEditor: React.FC = () => {
 
 const CertificationsEditor: React.FC = () => {
   const { resume, updateItem } = useResume();
+  if (!resume) return null;
   const { certifications } = resume.sections;
   return (
     <SectionEditor section="certifications" title="Certifications" items={certifications.items as { id: string }[]} defaultItem={{ name: '', date: '', issuer: '', url: { label: '', href: '' } }}
@@ -551,6 +904,7 @@ const CertificationsEditor: React.FC = () => {
 
 const InterestsEditor: React.FC = () => {
   const { resume, updateItem } = useResume();
+  if (!resume) return null;
   const { interests } = resume.sections;
   return (
     <SectionEditor section="interests" title="Interests" items={interests.items as { id: string }[]} defaultItem={{ name: '' }}
@@ -565,6 +919,7 @@ const InterestsEditor: React.FC = () => {
 
 const ProjectsEditor: React.FC = () => {
   const { resume, updateItem } = useResume();
+  if (!resume) return null;
   const { projects } = resume.sections;
   return (
     <SectionEditor section="projects" title="Projects" items={projects.items as { id: string }[]} defaultItem={{ name: '', description: '', url: { label: '', href: '' } }}
@@ -579,6 +934,7 @@ const ProjectsEditor: React.FC = () => {
 
 const SettingsPanel: React.FC = () => {
   const { resume, setValue } = useResume();
+  if (!resume) return null;
   const { metadata } = resume;
   const templates = [{ id: 'onyx', name: 'Onyx' }, { id: 'pikachu', name: 'Pikachu' }, { id: 'chikorita', name: 'Chikorita' }, { id: 'leafish', name: 'Leafish' }, { id: 'glalie', name: 'Glalie' }];
   const fonts = ['Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Poppins'];
@@ -605,9 +961,60 @@ const SettingsPanel: React.FC = () => {
   );
 };
 
+const SharingPanel: React.FC = () => {
+  const { resume, toggleResumeShare } = useResume();
+  if (!resume) return null;
+  const { is_shared, id } = resume;
+  const [copied, setCopied] = useState(false);
+
+  const shareUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/resume/${id}`
+    : '';
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2"><Link2 size={18} /><h3 className="font-semibold">Public Sharing</h3></div>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Allow Public Access</Label>
+          <input
+            type="checkbox"
+            checked={!!is_shared}
+            onChange={(e) => toggleResumeShare(id, e.target.checked)}
+            className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+          />
+        </div>
+        {is_shared && (
+          <div className="space-y-1.5">
+            <Label className="text-[10px] text-muted-foreground">Share Link</Label>
+            <div className="flex gap-1.5">
+              <Input
+                readOnly
+                value={shareUrl}
+                className="h-8 text-xs bg-muted"
+              />
+              <Button size="sm" onClick={handleCopy} className="h-8 text-xs shrink-0">
+                {copied ? "Copied!" : "Copy"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+
 const ResumePreview: React.FC = () => {
   const { resume } = useResume();
   const printRef = useRef<HTMLDivElement>(null);
+  if (!resume) return null;
   const { basics, sections, metadata } = resume;
   const primaryColor = metadata.theme.primary;
   const template = metadata.template;
@@ -656,7 +1063,7 @@ const ResumePreview: React.FC = () => {
       return `
         <div style="margin-bottom: 14pt;">
           <div style="${tpl.sectionTitle}">${sections.experience.name}</div>
-          ${sections.experience.items.map(exp => `
+          ${sections.experience.items.map((exp: any) => `
             <div style="${tpl.sectionItem}">
               <div style="display: flex; justify-content: space-between;">
                 <div>
@@ -677,7 +1084,7 @@ const ResumePreview: React.FC = () => {
       return `
         <div style="margin-bottom: 14pt;">
           <div style="${tpl.sectionTitle}">${sections.education.name}</div>
-          ${sections.education.items.map(edu => `
+          ${sections.education.items.map((edu: any) => `
             <div style="${tpl.sectionItem}">
               <div style="display: flex; justify-content: space-between;">
                 <div>
@@ -699,7 +1106,7 @@ const ResumePreview: React.FC = () => {
         <div style="margin-bottom: 14pt;">
           <div style="${tpl.sectionTitle}">${sections.skills.name}</div>
           <div style="display: flex; flex-wrap: wrap; gap: 5px;">
-            ${sections.skills.items.map(skill => `<span style="${tpl.skill}">${skill.name} ${getStars(skill.level)}</span>`).join('')}
+            ${sections.skills.items.map((skill: any) => `<span style="${tpl.skill}">${skill.name} ${getStars(skill.level)}</span>`).join('')}
           </div>
         </div>
       `;
@@ -710,7 +1117,7 @@ const ResumePreview: React.FC = () => {
       return `
         <div style="margin-bottom: 14pt;">
           <div style="${tpl.sectionTitle}">${sections.projects.name}</div>
-          ${sections.projects.items.map(proj => `
+          ${sections.projects.items.map((proj: any) => `
             <div style="${tpl.sectionItem}">
               <div style="font-weight: 600; font-size: 10pt;">${proj.name}${proj.url.href ? ` <a href="${proj.url.href}" target="_blank" style="font-size:8pt;color:${primaryColor};">🔗</a>` : ''}</div>
               ${proj.description ? `<div style="font-size: 9pt; color: #666;">${proj.description}</div>` : ''}
@@ -725,7 +1132,7 @@ const ResumePreview: React.FC = () => {
       return `
         <div style="margin-bottom: 14pt;">
           <div style="${tpl.sectionTitle}">${sections.certifications.name}</div>
-          ${sections.certifications.items.map(cert => `
+          ${sections.certifications.items.map((cert: any) => `
             <div style="${tpl.sectionItem}">
               <div style="display: flex; justify-content: space-between;">
                 <div style="font-weight: 600; font-size: 10pt;">${cert.name}${cert.url?.href ? ` <a href="${cert.url.href}" target="_blank" style="font-size:8pt;color:${primaryColor};">🔗</a>` : ''}</div>
@@ -744,7 +1151,7 @@ const ResumePreview: React.FC = () => {
         <div style="margin-bottom: 14pt;">
           <div style="${tpl.sectionTitle}">${sections.languages.name}</div>
           <div style="display: flex; flex-wrap: wrap; gap: 5px;">
-            ${sections.languages.items.map(lang => `<span style="${tpl.skill}">${lang.name} (${lang.description})</span>`).join('')}
+            ${sections.languages.items.map((lang: any) => `<span style="${tpl.skill}">${lang.name} (${lang.description})</span>`).join('')}
           </div>
         </div>
       `;
@@ -756,7 +1163,7 @@ const ResumePreview: React.FC = () => {
         <div style="margin-bottom: 14pt;">
           <div style="${tpl.sectionTitle}">${sections.interests.name}</div>
           <div style="display: flex; flex-wrap: wrap; gap: 5px;">
-            ${sections.interests.items.map(i => `<span style="${tpl.skill}">${i.name}</span>`).join('')}
+            ${sections.interests.items.map((i: any) => `<span style="${tpl.skill}">${i.name}</span>`).join('')}
           </div>
         </div>
       `;
@@ -794,7 +1201,7 @@ const ResumePreview: React.FC = () => {
       <div style="margin-bottom: 14pt; ${tpl.firstSectionPadding}">
         <div style="${tpl.sectionTitle}">${sections.profiles.name}</div>
         <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-          ${sections.profiles.items.map(profile => `<a href="${profile.url.href}" target="_blank" style="font-size: 9pt; color: ${primaryColor};">${profile.network}</a>`).join('')}
+          ${sections.profiles.items.map((profile: any) => `<a href="${profile.url.href}" target="_blank" style="font-size: 9pt; color: ${primaryColor};">${profile.network}</a>`).join('')}
         </div>
       </div>
     ` : ''}
@@ -851,13 +1258,13 @@ const ResumePreview: React.FC = () => {
           )}
           {sections.profiles.items.length > 0 && <div className="mb-4" style={getFirstSectionStyle()}><div style={getSectionTitleStyle()}>{sections.profiles.name}</div><div className="flex flex-wrap gap-2">{sections.profiles.items.map((profile: Profile) => <a key={profile.id} href={profile.url.href} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: primaryColor, textDecoration: 'none' }}>{profile.network}</a>)}</div></div>}
           {sections.summary.content && <div className="mb-4" style={hasFirstSection ? {} : getFirstSectionStyle()}><div style={getSectionTitleStyle()}>{sections.summary.name}</div><div className="text-sm text-gray-600">{sections.summary.content}</div></div>}
-          {sections.experience.items.length > 0 && <div className="mb-4"><div style={getSectionTitleStyle()}>{sections.experience.name}</div>{sections.experience.items.map(exp => <div key={exp.id} className="mb-3"><div className="flex justify-between"><div><div className="font-semibold text-sm">{exp.position}</div><div className="text-xs text-gray-500">{exp.company}{exp.location && `, ${exp.location}`}</div></div><div className="text-xs text-gray-400">{exp.startDate || ''} - {exp.current ? 'Present' : exp.endDate || ''}</div></div>{exp.summary && <div className="text-xs text-gray-600 mt-1">{exp.summary}</div>}</div>)}</div>}
-          {sections.education.items.length > 0 && <div className="mb-4"><div style={getSectionTitleStyle()}>{sections.education.name}</div>{sections.education.items.map(edu => <div key={edu.id} className="mb-2"><div className="flex justify-between"><div><div className="font-semibold text-sm">{edu.studyType} in {edu.area}</div><div className="text-xs text-gray-500">{edu.institution}</div></div><div className="text-xs text-gray-400">{edu.startDate || ''} - {edu.current ? 'Present' : edu.endDate || ''}</div></div></div>)}</div>}
-          {sections.skills.items.length > 0 && <div className="mb-4"><div style={getSectionTitleStyle()}>{sections.skills.name}</div><div className="flex flex-wrap gap-1">{sections.skills.items.map(skill => <span key={skill.id} style={getSkillStyle()}>{skill.name} {'★'.repeat(skill.level)}{'☆'.repeat(5-skill.level)}</span>)}</div></div>}
-          {sections.projects.items.length > 0 && <div className="mb-4"><div style={getSectionTitleStyle()}>{sections.projects.name}</div>{sections.projects.items.map(proj => <div key={proj.id} className="mb-2"><div className="font-semibold text-sm">{proj.name}{proj.url.href && <a href={proj.url.href} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs text-primary">🔗</a>}</div>{proj.description && <div className="text-xs text-gray-600">{proj.description}</div>}</div>)}</div>}
-          {sections.certifications.items.length > 0 && <div className="mb-4"><div style={getSectionTitleStyle()}>{sections.certifications.name}</div>{sections.certifications.items.map(cert => <div key={cert.id} className="mb-2"><div className="flex justify-between"><div className="font-semibold text-sm">{cert.name}{cert.url.href && <a href={cert.url.href} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs text-primary">🔗</a>}</div><div className="text-xs text-gray-400">{cert.date || ''}</div></div><div className="text-xs text-gray-500">{cert.issuer}</div></div>)}</div>}
-          {sections.languages.items.length > 0 && <div className="mb-4"><div style={getSectionTitleStyle()}>{sections.languages.name}</div><div className="flex flex-wrap gap-1">{sections.languages.items.map(lang => <span key={lang.id} style={getSkillStyle()}>{lang.name} ({lang.description})</span>)}</div></div>}
-          {sections.interests.items.length > 0 && <div className="mb-4"><div style={getSectionTitleStyle()}>{sections.interests.name}</div><div className="flex flex-wrap gap-1">{sections.interests.items.map(i => <span key={i.id} style={getSkillStyle()}>{i.name}</span>)}</div></div>}
+          {sections.experience.items.length > 0 && <div className="mb-4"><div style={getSectionTitleStyle()}>{sections.experience.name}</div>{sections.experience.items.map((exp: any) => <div key={exp.id} className="mb-3"><div className="flex justify-between"><div><div className="font-semibold text-sm">{exp.position}</div><div className="text-xs text-gray-500">{exp.company}{exp.location && `, ${exp.location}`}</div></div><div className="text-xs text-gray-400">{exp.startDate || ''} - {exp.current ? 'Present' : exp.endDate || ''}</div></div>{exp.summary && <div className="text-xs text-gray-600 mt-1">{exp.summary}</div>}</div>)}</div>}
+          {sections.education.items.length > 0 && <div className="mb-4"><div style={getSectionTitleStyle()}>{sections.education.name}</div>{sections.education.items.map((edu: any) => <div key={edu.id} className="mb-2"><div className="flex justify-between"><div><div className="font-semibold text-sm">{edu.studyType} in {edu.area}</div><div className="text-xs text-gray-500">{edu.institution}</div></div><div className="text-xs text-gray-400">{edu.startDate || ''} - {edu.current ? 'Present' : edu.endDate || ''}</div></div></div>)}</div>}
+          {sections.skills.items.length > 0 && <div className="mb-4"><div style={getSectionTitleStyle()}>{sections.skills.name}</div><div className="flex flex-wrap gap-1">{sections.skills.items.map((skill: any) => <span key={skill.id} style={getSkillStyle()}>{skill.name} {'★'.repeat(skill.level)}{'☆'.repeat(5-skill.level)}</span>)}</div></div>}
+          {sections.projects.items.length > 0 && <div className="mb-4"><div style={getSectionTitleStyle()}>{sections.projects.name}</div>{sections.projects.items.map((proj: any) => <div key={proj.id} className="mb-2"><div className="font-semibold text-sm">{proj.name}{proj.url.href && <a href={proj.url.href} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs text-primary">🔗</a>}</div>{proj.description && <div className="text-xs text-gray-600">{proj.description}</div>}</div>)}</div>}
+          {sections.certifications.items.length > 0 && <div className="mb-4"><div style={getSectionTitleStyle()}>{sections.certifications.name}</div>{sections.certifications.items.map((cert: any) => <div key={cert.id} className="mb-2"><div className="flex justify-between"><div className="font-semibold text-sm">{cert.name}{cert.url.href && <a href={cert.url.href} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs text-primary">🔗</a>}</div><div className="text-xs text-gray-400">{cert.date || ''}</div></div><div className="text-xs text-gray-500">{cert.issuer}</div></div>)}</div>}
+          {sections.languages.items.length > 0 && <div className="mb-4"><div style={getSectionTitleStyle()}>{sections.languages.name}</div><div className="flex flex-wrap gap-1">{sections.languages.items.map((lang: any) => <span key={lang.id} style={getSkillStyle()}>{lang.name} ({lang.description})</span>)}</div></div>}
+          {sections.interests.items.length > 0 && <div className="mb-4"><div style={getSectionTitleStyle()}>{sections.interests.name}</div><div className="flex flex-wrap gap-1">{sections.interests.items.map((i: any) => <span key={i.id} style={getSkillStyle()}>{i.name}</span>)}</div></div>}
           {!basics.name && sections.experience.items.length === 0 && sections.education.items.length === 0 && sections.skills.items.length === 0 && <div className="text-center text-gray-400 py-20">Start filling in your information to see the preview</div>}
         </div>
       </div>
@@ -865,14 +1272,32 @@ const ResumePreview: React.FC = () => {
   );
 };
 
-const ResumeCVBuilderPage: React.FC = () => {
+const ResumeCVBuilderPageContent: React.FC = () => {
+  const { resume, loading, resumesList } = useResume();
   const [activeSection, setActiveSection] = useState('basics');
   const [mobileView, setMobileView] = useState<'editor' | 'preview'>('editor');
 
   useEffect(() => { document.title = `Resume/CV Builder ✦ ${siteConfig.name}`; }, []);
 
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!resume || resumesList.length === 0) {
+    return (
+      <div className="h-screen flex flex-col p-4 bg-muted/30">
+        <EmptyState />
+      </div>
+    );
+  }
+
   const renderEditor = () => {
     if (activeSection === 'settings') return <SettingsPanel />;
+    if (activeSection === 'sharing') return <SharingPanel />;
     switch (activeSection) {
       case 'basics': return <BasicsEditor />;
       case 'summary': return <SummaryEditor />;
@@ -889,49 +1314,55 @@ const ResumeCVBuilderPage: React.FC = () => {
   };
 
   return (
-    <ResumeProvider>
-      <div className="h-screen flex flex-col pb-8">
-        <div className="p-4 pb-2">
-          <div className="max-w-7xl mx-auto">
-            <AlertBox />
-          </div>
+    <div className="h-screen flex flex-col pb-8">
+      <div className="p-4 pb-2">
+        <div className="max-w-7xl mx-auto">
+          <ResumeManagerHeader />
         </div>
-        <div className="flex-1 min-h-0">
-          <div className="max-w-7xl mx-auto h-full">
-            <div className="h-full flex flex-col lg:flex-row">
-              <div className="lg:hidden flex border-b">
-                <button onClick={() => setMobileView('editor')} className={`flex-1 py-2 text-sm font-medium ${mobileView === 'editor' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}><Settings size={14} className="inline mr-1" /> Editor</button>
-                <button onClick={() => setMobileView('preview')} className={`flex-1 py-2 text-sm font-medium ${mobileView === 'preview' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}><Eye size={14} className="inline mr-1" /> Preview</button>
-              </div>
-              <div className="lg:hidden flex-1 overflow-auto">
-                {mobileView === 'editor' ? (
-                  <div className="p-4">
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {sectionList.map(section => {
-                        const Icon = section.icon;
-                        return <button key={section.id} onClick={() => setActiveSection(section.id)} className={`px-2 py-1.5 text-xs rounded ${activeSection === section.id ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}><Icon size={12} className="inline mr-1" />{section.name}</button>;
-                      })}
-                    </div>
-                    <Card><CardContent className="p-4">{renderEditor()}</CardContent></Card>
-                  </div>
-                ) : <ResumePreview />}
-              </div>
-              <div className="hidden lg:flex flex-1 min-h-0">
-                <div className="w-40 border-r  overflow-y-auto shrink-0">
-                  <div className="p-2">
+      </div>
+      <div className="flex-1 min-h-0">
+        <div className="max-w-7xl mx-auto h-full">
+          <div className="h-full flex flex-col lg:flex-row">
+            <div className="lg:hidden flex border-b">
+              <button onClick={() => setMobileView('editor')} className={`flex-1 py-2 text-sm font-medium ${mobileView === 'editor' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}><Settings size={14} className="inline mr-1" /> Editor</button>
+              <button onClick={() => setMobileView('preview')} className={`flex-1 py-2 text-sm font-medium ${mobileView === 'preview' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}><Eye size={14} className="inline mr-1" /> Preview</button>
+            </div>
+            <div className="lg:hidden flex-1 overflow-auto">
+              {mobileView === 'editor' ? (
+                <div className="p-4">
+                  <div className="flex flex-wrap gap-1 mb-4">
                     {sectionList.map(section => {
                       const Icon = section.icon;
-                      return <button key={section.id} onClick={() => setActiveSection(section.id)} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm mb-1 ${activeSection === section.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><Icon size={16} /><span className="truncate">{section.name}</span></button>;
+                      return <button key={section.id} onClick={() => setActiveSection(section.id)} className={`px-2 py-1.5 text-xs rounded ${activeSection === section.id ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}><Icon size={12} className="inline mr-1" />{section.name}</button>;
                     })}
                   </div>
+                  <Card><CardContent className="p-4">{renderEditor()}</CardContent></Card>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4"><Card><CardContent className="p-4">{renderEditor()}</CardContent></Card></div>
-                <div className="border-l shrink-0"><ResumePreview /></div>
+              ) : <ResumePreview />}
+            </div>
+            <div className="hidden lg:flex flex-1 min-h-0">
+              <div className="w-40 border-r  overflow-y-auto shrink-0">
+                <div className="p-2">
+                  {sectionList.map(section => {
+                    const Icon = section.icon;
+                    return <button key={section.id} onClick={() => setActiveSection(section.id)} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm mb-1 ${activeSection === section.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}><Icon size={16} /><span className="truncate">{section.name}</span></button>;
+                  })}
+                </div>
               </div>
+              <div className="flex-1 overflow-y-auto p-4"><Card><CardContent className="p-4">{renderEditor()}</CardContent></Card></div>
+              <div className="border-l shrink-0"><ResumePreview /></div>
             </div>
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+const ResumeCVBuilderPage: React.FC = () => {
+  return (
+    <ResumeProvider>
+      <ResumeCVBuilderPageContent />
     </ResumeProvider>
   );
 };

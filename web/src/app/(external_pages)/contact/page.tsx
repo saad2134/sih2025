@@ -23,8 +23,8 @@ export default async function Contact() {
 
         <section className="relative mx-auto max-w-6xl px-6 pt-32 pb-24 md:px-12 md:pt-40">
           {/* Header Title Section */}
-          <div className="space-y-4 mb-16 text-center lg:text-left animate-fade-in">
-            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl bg-gradient-to-r from-primary via-brand-foreground to-brand bg-clip-text text-transparent">
+          <div className="space-y-4 mb-16 animate-fade-in">
+            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl bg-gradient-to-r from-primary via-brand-foreground to-brand bg-clip-text text-transparent pb-1">
               Contact Our Team
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl">

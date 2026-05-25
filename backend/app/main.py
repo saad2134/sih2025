@@ -23,6 +23,7 @@ from app.routers import (
     companion_router,
     feedback_router,
     contact_router,
+    resume_router,
 )
 
 
@@ -73,6 +74,7 @@ app.include_router(payments_router, prefix="/api/v1")
 app.include_router(companion_router, prefix="/api/v1")
 app.include_router(feedback_router, prefix="/api/v1")
 app.include_router(contact_router, prefix="/api/v1")
+app.include_router(resume_router, prefix="/api/v1")
 
 
 @app.get("/api/v1/health")
@@ -217,6 +219,8 @@ async def global_exception_handler(request: Request, exc: Exception):
             }
         }
     )
+
+
 
 
 if __name__ == "__main__":

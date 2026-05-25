@@ -10,6 +10,7 @@ from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from app.models.onboarding import LearnerProfile, RecommendationJob
     from app.models.review import Review
+    from app.models.resume import Resume
 
 from app.db.base import Base
 
@@ -36,3 +37,4 @@ class User(Base):
     learner_profile: Mapped[Optional["LearnerProfile"]] = relationship("LearnerProfile", back_populates="user", uselist=False)
     recommendations: Mapped[list["RecommendationJob"]] = relationship("RecommendationJob", back_populates="user")
     reviews: Mapped[list["Review"]] = relationship("Review", back_populates="user")
+    resumes: Mapped[list["Resume"]] = relationship("Resume", back_populates="user", cascade="all, delete-orphan")

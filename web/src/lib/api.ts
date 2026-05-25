@@ -283,6 +283,18 @@ export interface ApiResponse<T> {
     };
 }
 
+export interface ResumeResponse {
+    id: string;
+    user_id: string;
+    title: string;
+    basics: any;
+    sections: any;
+    metadata: any;
+    is_shared: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
 export const apiService = {
     async register(email: string, password: string, fullName: string): Promise<ApiResponse<{ user_id: string; access_token: string; refresh_token: string }>> {
         const response = await fetch(`${BACKEND_BASE_URL}/api/v1/auth/register`, {
@@ -647,6 +659,53 @@ export const apiService = {
             method: 'PUT',
             headers: getAuthHeaders(),
             body: JSON.stringify({ avatar_url: avatarUrl, old_file_uuid: oldFileUuid ?? null })
+        });
+        return handleResponse(response);
+    },
+
+    async listResumes(): Promise<ApiResponse<ResumeResponse[]>> {
+        const response = await fetch(`${BACKEND_BASE_URL}/api/v1/resumes`, {
+            headers: getAuthHeaders()
+        });
+        return handleResponse(response);
+    },
+
+    async createResume(data: { title: string; basics: any; sections: any; metadata: any }): Promise<ApiResponse<ResumeResponse>> {
+        const response = await fetch(`${BACKEND_BASE_URL}/api/v1/resumes`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data)
+        });
+        return handleResponse(response);
+    },
+
+    async getResume(id: string): Promise<ApiResponse<ResumeResponse>> {
+        const response = await fetch(`${BACKEND_BASE_URL}/api/v1/resumes/${id}`, {
+            headers: getAuthHeaders()
+        });
+        return handleResponse(response);
+    },
+
+    async updateResume(id: string, data: { title?: string; basics?: any; sections?: any; metadata?: any; is_shared?: boolean }): Promise<ApiResponse<ResumeResponse>> {
+        const response = await fetch(`${BACKEND_BASE_URL}/api/v1/resumes/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data)
+        });
+        return handleResponse(response);
+    },
+
+    async deleteResume(id: string): Promise<ApiResponse<{ message: string }>> {
+        const response = await fetch(`${BACKEND_BASE_URL}/api/v1/resumes/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        return handleResponse(response);
+    },
+
+    async getSharedResume(id: string): Promise<ApiResponse<ResumeResponse>> {
+        const response = await fetch(`${BACKEND_BASE_URL}/api/v1/resumes/shared/${id}`, {
+            headers: { 'Content-Type': 'application/json' }
         });
         return handleResponse(response);
     }

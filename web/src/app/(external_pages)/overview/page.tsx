@@ -6,11 +6,11 @@ import { siteConfig } from "@/config/site";
 import { Target, Compass, Cpu, Award, Mail, ArrowRight } from "lucide-react";
 
 export const metadata = {
-  title: `About Us ✦ ${siteConfig.name}`,
+  title: `Overview ✦ ${siteConfig.name}`,
   description: "Discover our mission, vision, and team dedicated to guiding your career journey.",
 };
 
-export default function About() {
+export default function Overview() {
   const sections = [
     {
       title: "Our Mission",
@@ -55,7 +55,7 @@ export default function About() {
         <Glow variant="top" className="opacity-70 dark:opacity-35 pointer-events-none" />
 
         <div className="max-w-container mx-auto px-6 py-24 pt-32 md:pt-36 flex flex-col items-center gap-12 sm:gap-16">
-          
+
           {/* Header section */}
           <div className="flex flex-col items-center text-center gap-4 max-w-3xl">
             <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 text-xs font-semibold text-primary">
@@ -63,7 +63,7 @@ export default function About() {
               <span>Who We Are</span>
             </div>
             <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-balance leading-tight bg-gradient-to-r from-primary via-brand-foreground to-brand bg-clip-text text-transparent pb-1">
-              About {siteConfig.name}
+              Overview of {siteConfig.name}
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground text-balance max-w-2xl font-medium">
               Empowering learners with AI-driven guidance, labor market insights, and personalized skill pathways.

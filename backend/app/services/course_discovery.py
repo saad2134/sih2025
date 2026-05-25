@@ -156,26 +156,32 @@ class CourseDiscoveryService:
             logger.error(f"Firecrawl scrape failed for {url}: {e}")
         return ""
 
+    def _get_provider_from_url(self, url: str) -> str:
+        """Securely extracts course provider name from URL host to satisfy CodeQL hostname checks."""
+        try:
+            parsed_url = urlparse(url)
+            domain = (parsed_url.hostname or "").lower()
+            if domain == "coursera.org" or domain.endswith(".coursera.org"):
+                return "Coursera"
+            elif domain == "udemy.com" or domain.endswith(".udemy.com"):
+                return "Udemy"
+            elif domain == "nptel.ac.in" or domain.endswith(".nptel.ac.in") or "nptel" in domain:
+                return "NPTEL"
+            elif domain == "swayam.gov.in" or domain.endswith(".swayam.gov.in") or "swayam" in domain:
+                return "Swayam"
+            elif domain == "edx.org" or domain.endswith(".edx.org"):
+                return "edX"
+        except Exception:
+            pass
+        return "Online Course"
+
     async def _parse_course_with_gemini(self, url: str, serp_data: dict, scraped_content: str) -> dict | None:
         """Parse raw webpage content or search snippet using Gemini and output clean JSON."""
         if not settings.GEMINI_API_KEY:
             logger.warning("GEMINI_API_KEY not configured, using default course layout.")
             return self._get_fallback_course_data(url, serp_data)
 
-        # Extract provider from url
-        parsed_url = urlparse(url)
-        domain = parsed_url.netloc.lower()
-        provider = "Online Course"
-        if "coursera.org" in domain:
-            provider = "Coursera"
-        elif "udemy.com" in domain:
-            provider = "Udemy"
-        elif "nptel" in domain:
-            provider = "NPTEL"
-        elif "swayam" in domain:
-            provider = "Swayam"
-        elif "edx.org" in domain:
-            provider = "edX"
+        provider = self._get_provider_from_url(url)
 
         snippet = serp_data.get("snippet", "")
         title = serp_data.get("title", "Course")
@@ -248,19 +254,7 @@ class CourseDiscoveryService:
             return self._get_fallback_course_data(url, serp_data)
 
     def _get_fallback_course_data(self, url: str, serp_data: dict) -> dict:
-        parsed_url = urlparse(url)
-        domain = parsed_url.netloc.lower()
-        provider = "Online Course"
-        if "coursera.org" in domain:
-            provider = "Coursera"
-        elif "udemy.com" in domain:
-            provider = "Udemy"
-        elif "nptel" in domain:
-            provider = "NPTEL"
-        elif "swayam" in domain:
-            provider = "Swayam"
-        elif "edx.org" in domain:
-            provider = "edX"
+        provider = self._get_provider_from_url(url)
 
         title = serp_data.get("title", "Discovered Online Course")
         title = re.sub(r"\s*-\s*(Coursera|Udemy|NPTEL|Swayam|edX).*", "", title, flags=re.IGNORECASE).strip()
