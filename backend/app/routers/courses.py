@@ -12,6 +12,10 @@ from app.schemas.common import ApiResponse, PaginatedResponse
 router = APIRouter(prefix="/courses", tags=["courses"])
 
 
+async def get_course_service(db: AsyncSession = Depends(get_db)) -> CourseService:
+    return CourseService(db)
+
+
 @router.get("")
 async def list_courses(
     topic: Optional[str] = None,
@@ -21,7 +25,7 @@ async def list_courses(
     provider: Optional[str] = None,
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
-    service: CourseService = Depends(),
+    service: CourseService = Depends(get_course_service),
 ):
     courses, total = await service.list_courses(
         topic=topic,
@@ -67,7 +71,7 @@ async def list_courses(
 @router.get("/{course_id}")
 async def get_course(
     course_id: str,
-    service: CourseService = Depends(),
+    service: CourseService = Depends(get_course_service),
 ):
     course = await service.get_course(course_id)
     if not course:
@@ -105,7 +109,7 @@ async def get_course(
 async def search_courses(
     q: str,
     limit: int = Query(20, ge=1, le=100),
-    service: CourseService = Depends(),
+    service: CourseService = Depends(get_course_service),
 ):
     results = await service.search_courses(q, limit)
     return ApiResponse.ok({"items": results, "total": len(results)})

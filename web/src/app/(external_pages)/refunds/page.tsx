@@ -57,7 +57,7 @@ export default async function Refunds() {
             <ul>
               <li>You will retain access to Premium features until the end of your current billing period</li>
               <li>No further charges will be made after cancellation</li>
-              <li>Your account will automatically downgrade to Freemium</li>
+              <li>Your account will automatically downgrade to the Free plan</li>
             </ul>
 
             <h2>5. What&apos;s Not Refundable</h2>

@@ -10,15 +10,16 @@ from typing import Optional
 from app.models.course import Course
 from app.models.onboarding import LearnerProfile
 from app.schemas.recommendations import MatchReport, WarningItem, CourseWithMatch
-from app.ml.similarity import cosine_similarity, jaccard_similarity, time_fit_score, quality_signal
+from app.ml.similarity import cosine_similarity, style_similarity, time_fit_score, quality_signal
 
 
 WEIGHTS = {
-    "vark": 0.30,
-    "style": 0.20,
-    "time": 0.20,
-    "nsqf": 0.15,
-    "quality": 0.15,
+    "career": 0.40,
+    "vark": 0.15,
+    "style": 0.15,
+    "time": 0.10,
+    "nsqf": 0.10,
+    "quality": 0.10,
 }
 
 
@@ -76,20 +77,48 @@ class MatchingService:
         user_vark = [profile.vark_v, profile.vark_a, profile.vark_r, profile.vark_k]
         course_vark = [course.vark_v_score, course.vark_a_score, course.vark_r_score, course.vark_k_score]
         vark_sim = cosine_similarity(user_vark, course_vark)
-        style_sim = jaccard_similarity(profile.style_preferences, course.style_tags or [])
+        style_sim = style_similarity(profile.style_preferences, course.style_tags or [])
         time_fit = time_fit_score(profile.hours_per_week, course.hours_per_week)
         nsqf_match = profile.goal == "certification" and course.nsqf_level > 0
         quality = quality_signal(course.avg_rating, course.review_count)
 
+        # Compute semantic/keyword matching boost with higher priority on career target
+        career_target = (profile.career_target or "").lower()
+        topic = (profile.topic or "").lower()
+        course_text = f"{course.title} {course.description or ''} {' '.join(course.job_roles or [])} {course.nsqf_sector or ''}".lower()
+        
+        career_words = set([w for w in career_target.split() if len(w) > 2])
+        topic_words = set([w for w in topic.split() if len(w) > 2])
+        
+        career_match = 0.0
+        if career_words:
+            overlap_career = [w for w in career_words if w in course_text]
+            career_match = len(overlap_career) / len(career_words)
+            
+        topic_match = 0.0
+        if topic_words:
+            overlap_topic = [w for w in topic_words if w in course_text]
+            topic_match = len(overlap_topic) / len(topic_words)
+            
+        if career_words and topic_words:
+            word_match = 0.8 * career_match + 0.2 * topic_match
+        elif career_words:
+            word_match = career_match
+        else:
+            word_match = topic_match
+
         vark_pct = int(vark_sim * 100)
         style_pct = int(style_sim * 100)
         overall = int(
-            WEIGHTS["vark"] * vark_sim +
-            WEIGHTS["style"] * style_sim +
-            WEIGHTS["time"] * time_fit +
-            WEIGHTS["nsqf"] * (1.0 if nsqf_match else 0.0) +
-            WEIGHTS["quality"] * quality
-        ) * 100
+            (
+                WEIGHTS["career"] * word_match +
+                WEIGHTS["vark"] * vark_sim +
+                WEIGHTS["style"] * style_sim +
+                WEIGHTS["time"] * time_fit +
+                WEIGHTS["nsqf"] * (1.0 if nsqf_match else 0.0) +
+                WEIGHTS["quality"] * quality
+            ) * 100
+        )
 
         math_level, math_warning = self._check_math(profile.math_comfort, course.math_depth)
 
@@ -138,4 +167,5 @@ class MatchingService:
             warning = f"Math warning: course requires level {depth} math (you rated {comfort})"
             return "WARN", warning
         else:
-            return "EXCLUDE", None
+            warning = f"Math gap: course requires level {depth} math (you rated {comfort})"
+            return "EXCLUDE", warning

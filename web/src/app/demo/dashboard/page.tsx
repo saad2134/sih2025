@@ -242,7 +242,7 @@ export default function Dashboard() {
 
                                         <div className="mt-2">
                                             <Button
-                                                onClick={() => router.push('/demo/career_map')}
+                                                onClick={() => router.push('/demo/career-map')}
                                                 className="w-full flex items-center gap-2"
                                             >
                                                 <MapPin size={16} />

@@ -1,7 +1,7 @@
 """Auth schemas."""
 
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from typing import Optional
+from typing import Optional, Dict, Any
 
 
 class SignupRequest(BaseModel):
@@ -34,6 +34,10 @@ class UserResponse(BaseModel):
     preferred_language: str = "en"
     onboarding_done: bool = False
     created_at: str
+    subscription_tier: str = "free"
+    pending_subscription_tier: Optional[str] = None
+    subscription_expires_at: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -42,3 +46,36 @@ class AuthResponse(BaseModel):
     user_id: str
     access_token: str
     refresh_token: str
+
+
+DEFAULT_USER_SETTINGS: Dict[str, Any] = {
+    # App
+    "high-contrast": False,
+    "low-animations": False,
+    "language": "English",
+    # Privacy
+    "profile-visibility": True,
+    "activity-status": True,
+    "data-usage": True,
+    # Notifications
+    "course-updates": True,
+    "achievement-alerts": True,
+    "email-notifications": True,
+    "reminder-notifications": True,
+    # Other
+    "data-saver": False,
+    "compact-view": False,
+}
+
+
+class UserSettingsRequest(BaseModel):
+    settings: Dict[str, Any]
+
+
+class UserSettingsResponse(BaseModel):
+    settings: Dict[str, Any]
+
+
+class AvatarUpdateRequest(BaseModel):
+    avatar_url: str
+    old_file_uuid: Optional[str] = None

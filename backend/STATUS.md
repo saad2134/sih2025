@@ -15,6 +15,6 @@ See `../docs/ARCHITECTURE_PLAN.md` for details.
 - [x] Reviews
 - [x] Celery tasks (stubs)
 - [x] Docker + docker-compose
-- [ ] Complete Celery task implementations
-- [ ] Alembic migrations
-- [ ] Unit tests
+- [x] Complete Celery task implementations
+- [x] Alembic migrations
+- [x] Unit / integration tests (E2E suite implemented and verified)

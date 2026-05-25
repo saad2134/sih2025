@@ -13,6 +13,8 @@ celery_app = Celery(
         "app.tasks.ingest",
         "app.tasks.tagger",
         "app.tasks.faiss_rebuild",
+        "app.tasks.career",
+        "app.tasks.digest",
     ],
 )
 

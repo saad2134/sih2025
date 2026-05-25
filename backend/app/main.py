@@ -1,7 +1,7 @@
 """FastAPI main application."""
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
@@ -19,6 +19,10 @@ from app.routers import (
     courses_router,
     career_router,
     reviews_router,
+    payments_router,
+    companion_router,
+    feedback_router,
+    contact_router,
 )
 
 
@@ -42,9 +46,16 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -58,6 +69,10 @@ app.include_router(recommendations_router, prefix="/api/v1")
 app.include_router(courses_router, prefix="/api/v1")
 app.include_router(career_router, prefix="/api/v1")
 app.include_router(reviews_router, prefix="/api/v1")
+app.include_router(payments_router, prefix="/api/v1")
+app.include_router(companion_router, prefix="/api/v1")
+app.include_router(feedback_router, prefix="/api/v1")
+app.include_router(contact_router, prefix="/api/v1")
 
 
 @app.get("/api/v1/health")
@@ -86,6 +101,103 @@ async def health_check():
         "database": db_status,
         "redis": redis_status,
     }
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    code = "HTTP_ERROR"
+    message = str(exc.detail)
+    details = None
+    
+    if isinstance(exc.detail, dict):
+        code = exc.detail.get("code", "HTTP_ERROR")
+        message = exc.detail.get("message", str(exc.detail))
+        details = exc.detail.get("details")
+        
+    return JSONResponse(
+        status_code=exc.status_code,
+        headers=exc.headers,
+        content={
+            "success": False,
+            "error": {
+                "code": code,
+                "message": message,
+                "details": details
+            }
+        }
+    )
+
+
+@app.exception_handler(ValueError)
+async def value_error_handler(request: Request, exc: ValueError):
+    error_msg = str(exc)
+    
+    if error_msg in ["INVALID_TOKEN", "TOKEN_EXPIRED"]:
+        return JSONResponse(
+            status_code=401,
+            content={
+                "success": False,
+                "error": {
+                    "code": error_msg,
+                    "message": "Invalid or expired authorization token"
+                }
+            }
+        )
+    elif error_msg == "USER_NOT_FOUND":
+        return JSONResponse(
+            status_code=404,
+            content={
+                "success": False,
+                "error": {
+                    "code": "USER_NOT_FOUND",
+                    "message": "User not found"
+                }
+            }
+        )
+    elif error_msg == "PROFILE_NOT_FOUND":
+        return JSONResponse(
+            status_code=404,
+            content={
+                "success": False,
+                "error": {
+                    "code": "PROFILE_NOT_FOUND",
+                    "message": "Learner profile not found"
+                }
+            }
+        )
+    elif error_msg == "DUPLICATE_EMAIL":
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "error": {
+                    "code": "EMAIL_ALREADY_EXISTS",
+                    "message": "Email already registered"
+                }
+            }
+        )
+    elif error_msg == "INVALID_PASSWORD":
+        return JSONResponse(
+            status_code=401,
+            content={
+                "success": False,
+                "error": {
+                    "code": "INVALID_PASSWORD",
+                    "message": "Incorrect password"
+                }
+            }
+        )
+        
+    return JSONResponse(
+        status_code=400,
+        content={
+            "success": False,
+            "error": {
+                "code": "BAD_REQUEST",
+                "message": error_msg
+            }
+        }
+    )
 
 
 @app.exception_handler(Exception)

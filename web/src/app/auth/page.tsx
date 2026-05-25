@@ -13,6 +13,8 @@ import { motion } from "framer-motion";
 import { Briefcase, GraduationCap, ArrowRight, Loader2, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import Silk from "@/components/Silk";
 import { authService } from "@/lib/auth";
+import { apiService } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -23,6 +25,7 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [googleLoginAvailable, setGoogleLoginAvailable] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
     document.title = `Sign In ✦ ${siteConfig.name}`;
@@ -31,7 +34,22 @@ export default function AuthPage() {
       setLoginData(prev => ({ ...prev, email: storedEmail, rememberMe: true }));
     }
     if (authService.isAuthenticated()) {
-      router.push("/student/onboarding");
+      setIsCheckingAuth(true);
+      apiService.getMe()
+        .then(res => {
+          if (res.success && res.data?.onboarding_done) {
+            router.push("/student/dashboard");
+          } else {
+            router.push("/student/onboarding");
+            setIsCheckingAuth(false);
+          }
+        })
+        .catch(() => {
+          router.push("/student/onboarding");
+          setIsCheckingAuth(false);
+        });
+    } else {
+      setIsCheckingAuth(false);
     }
   }, [router]);
 
@@ -44,7 +62,20 @@ export default function AuthPage() {
       const result = await authService.login(loginData);
 
       if (result.success) {
-        router.push("/student/onboarding");
+        setIsCheckingAuth(true);
+        apiService.getMe()
+          .then(res => {
+            if (res.success && res.data?.onboarding_done) {
+              router.push("/student/dashboard");
+            } else {
+              router.push("/student/onboarding");
+              setIsCheckingAuth(false);
+            }
+          })
+          .catch(() => {
+            router.push("/student/onboarding");
+            setIsCheckingAuth(false);
+          });
       } else {
         setError(result.message || "Login failed. Please try again.");
       }
@@ -108,7 +139,32 @@ export default function AuthPage() {
           <p className="text-muted-foreground">Your personalized career journey starts here!</p>
         </div>
 
-        {isLogin ? (
+        {isCheckingAuth ? (
+          <Card>
+            <CardHeader className="space-y-2">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-48" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <Skeleton className="h-4 w-4 rounded" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+                <Skeleton className="h-4 w-28" />
+              </div>
+              <Skeleton className="h-10 w-full animate-pulse" />
+            </CardContent>
+          </Card>
+        ) : isLogin ? (
           <Card>
             <CardHeader>
               <CardTitle>Welcome Back</CardTitle>

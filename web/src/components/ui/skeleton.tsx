@@ -1,8 +1,12 @@
 import { cn } from "@/lib/utils"
 
-function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
+interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement | HTMLSpanElement> {
+  as?: "div" | "span"
+}
+
+function Skeleton({ className, as: Component = "div", ...props }: SkeletonProps) {
   return (
-    <div
+    <Component
       data-slot="skeleton"
       className={cn("bg-accent animate-pulse rounded-md", className)}
       {...props}
@@ -11,3 +15,4 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 export { Skeleton }
+

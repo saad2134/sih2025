@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,21 +9,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
-import { authService } from "@/lib/auth";
-import { ChevronLeft, ChevronRight, User, BookOpen, Target, Settings, Clock, Star, Send, LogOut } from "lucide-react";
+import { ChevronLeft, ChevronRight, User, BookOpen, Target, Settings, Clock, Star, Send, LogOut, Play, Wand2, RotateCcw, Loader2, Lock } from "lucide-react";
 import { siteConfig } from "@/config/site";
-
+import { apiService, QuizQuestion, VarkAnswer } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
+import AvatarUpload from "@/components/uploadcare/avatar-upload";
 
 const steps = [
     { name: "Personal Info", icon: User },
     { name: "Skills & Assessment", icon: BookOpen },
     { name: "Career Goals", icon: Target },
-    { name: "Learning Preferences", icon: Settings },
+    { name: "Learning Style Quiz", icon: Settings },
     { name: "Availability & Motivation", icon: Clock },
     { name: "Feedback", icon: Send },
 ];
@@ -34,31 +34,128 @@ export default function OnboardingForm() {
     const [step, setStep] = React.useState(0);
     const [errors, setErrors] = React.useState<Record<string, string>>({});
     const [hasAttemptedNext, setHasAttemptedNext] = React.useState(false);
+    const [varkQuestions, setVarkQuestions] = useState<QuizQuestion[]>([]);
+    const [varkAnswers, setVarkAnswers] = useState<Record<number, string>>({});
+    const [loadingProfile, setLoadingProfile] = useState(true);
+    
+    // Polling states
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [jobId, setJobId] = useState<string | null>(null);
+    const [pollingStatus, setPollingStatus] = useState<string>("pending");
+    const [pollingError, setPollingError] = useState<string | null>(null);
+
+    // Avatar state (optional during onboarding)
+    const [onboardingAvatarUrl, setOnboardingAvatarUrl] = useState<string | null>(null);
+    const [onboardingAvatarUuid, setOnboardingAvatarUuid] = useState<string | null>(null);
+
     const [formData, setFormData] = React.useState<any>({
+        fullName: "",
+        email: "",
+        phone: "",
+        education: "",
+        fieldOfStudy: "",
         comfortableSubjects: [],
         skills: [],
         interests: [],
         learningGoals: [],
+        targetRoles: "",
+        domainStack: [],
         learningTypes: [],
+        pacePreference: "moderate",
+        learningStyle: "selfPaced",
+        timeCommitment: "2-5hrs",
+        duration: "2-6months",
+        budgetRange: "500-2000",
         motivations: [],
-        familiarWith: [],
-        neurodivergentConditions: [],
-        learningEnvironment: [],
-        internetSituation: [],
+        featureRequests: "",
+        language: "en"
     });
     const router = useRouter();
+
+    // Fetch VARK quiz and user profile details from backend
+    useEffect(() => {
+        apiService.getOnboardingQuiz()
+            .then(res => {
+                if (res.success && res.data?.questions) {
+                    setVarkQuestions(res.data.questions);
+                }
+            })
+            .catch(err => {
+                console.error("Failed to load VARK quiz from backend", err);
+            });
+        
+        apiService.getMe()
+            .then(res => {
+                if (res.success && res.data) {
+                    if (res.data.onboarding_done) {
+                        router.push("/student/dashboard");
+                        return;
+                    }
+                    const fullName = res.data.full_name;
+                    const email = res.data.email;
+                    setFormData((prev: any) => ({
+                        ...prev,
+                        fullName: fullName || prev.fullName || "",
+                        email: email || prev.email || "",
+                    }));
+                }
+                setLoadingProfile(false);
+            })
+            .catch(err => {
+                console.error("Failed to fetch current user profile", err);
+                setLoadingProfile(false);
+            });
+        
+        document.title = `Onboarding Questionnaire ✦ ${siteConfig.name}`;
+    }, [router]);
+
+    // Polling job status
+    useEffect(() => {
+        if (!jobId || pollingStatus === "completed" || pollingStatus === "failed") return;
+
+        const interval = setInterval(async () => {
+            try {
+                const res = await apiService.getOnboardingStatus(jobId);
+                if (res.success && res.data) {
+                    const status = res.data.status;
+                    setPollingStatus(status);
+                    if (status === "completed" || status === "ready" || status === "success") {
+                        clearInterval(interval);
+                        // Persist avatar if one was uploaded
+                        if (onboardingAvatarUrl) {
+                            try {
+                                await apiService.updateAvatar(onboardingAvatarUrl);
+                            } catch (_) {}
+                        }
+                        // Redirect to dashboard
+                        router.push("/student/dashboard");
+                    } else if (status === "failed") {
+                        clearInterval(interval);
+                        setPollingError(res.data.error || "Recommendation engine failed.");
+                    }
+                }
+            } catch (err) {
+                console.error("Error polling onboarding status", err);
+            }
+        }, 1500);
+
+        return () => clearInterval(interval);
+    }, [jobId, pollingStatus, onboardingAvatarUrl]);
+
 
     const validateStep = (s: number): boolean => {
         const newErrors: Record<string, string> = {};
         if (s === 0) {
             if (!formData.fullName?.trim()) newErrors.fullName = "Full name is required";
-            if (!formData.contact?.trim()) newErrors.contact = "Email or mobile number is required";
-            else {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                const phoneRegex = /^\+?[\d\s-]{10,}$/;
-                if (!emailRegex.test(formData.contact.trim()) && !phoneRegex.test(formData.contact.replace(/\s/g, ''))) {
-                    newErrors.contact = "Enter a valid email or phone number";
-                }
+            if (!formData.email?.trim()) {
+                newErrors.email = "Email address is required";
+            } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+                newErrors.email = "Please enter a valid email address";
+            }
+            if (!formData.phone?.trim()) {
+                newErrors.phone = "Phone number is required";
+            } else if (!/^\+?[0-9\s-]{10,20}$/.test(formData.phone)) {
+                newErrors.phone = "Please enter a valid phone number (10+ digits)";
             }
             if (!formData.education) newErrors.education = "Please select your qualification";
             if (!formData.fieldOfStudy?.trim()) newErrors.fieldOfStudy = "Field of study is required";
@@ -68,27 +165,22 @@ export default function OnboardingForm() {
             if (!allRated) newErrors.proficiency = "Please rate all 5 foundational skills";
             if (!formData.skills?.length) newErrors.skills = "Select at least one skill you possess";
         } else if (s === 2) {
-            if (!formData.interests?.length && !formData.otherInterest?.trim()) newErrors.interests = "Select or specify at least one interest";
-            if (!formData.learningGoals?.length && !formData.otherGoal?.trim()) newErrors.learningGoals = "Select or specify at least one learning goal";
+            if (!formData.interests?.length) newErrors.interests = "Select at least one interest";
+            if (!formData.learningGoals?.length) newErrors.learningGoals = "Select at least one learning goal";
             if (!formData.targetRoles?.trim()) newErrors.targetRoles = "Please specify target industries or roles";
         } else if (s === 3) {
-            if (!formData.learningTypes?.length) newErrors.learningTypes = "Select at least one learning type";
-            if (!formData.videoFormat) newErrors.videoFormat = "Please select your preferred video format";
-            if (!formData.instructorStyle) newErrors.instructorStyle = "Please select instructor style preference";
-            if (!formData.courseStructure) newErrors.courseStructure = "Please select course structure preference";
-            if (!formData.theoryPracticeRatio) newErrors.theoryPracticeRatio = "Please select theory vs practice ratio";
-            if (!formData.mathIntensity) newErrors.mathIntensity = "Please select math intensity preference";
-            if (!formData.learningEnvironment?.length) newErrors.learningEnvironment = "Please select at least one learning environment";
-            if (!formData.internetSituation?.length) newErrors.internetSituation = "Please select your internet situation";
-            if (!formData.learningStyle) newErrors.learningStyle = "Please select your learning preference";
-            if (!formData.collaborativeLearning) newErrors.collaborativeLearning = "Please select collaborative learning preference";
+            // Validate VARK answers
+            if (varkQuestions.length > 0) {
+                const unanswered = varkQuestions.filter(q => !varkAnswers[q.id]);
+                if (unanswered.length > 0) {
+                    newErrors.vark = `Please answer all ${varkQuestions.length} learning style questions.`;
+                }
+            }
         } else if (s === 4) {
             if (!formData.timeCommitment) newErrors.timeCommitment = "Please select time commitment";
-            if (!formData.timeline) newErrors.timeline = "Please select target timeline";
+            if (!formData.duration) newErrors.duration = "Please select preferred duration";
+            if (!formData.budgetRange) newErrors.budgetRange = "Please select budget range";
             if (!formData.motivations?.length) newErrors.motivations = "Select at least one motivation";
-            if (!formData.hasResources) newErrors.hasResources = "Please select resource availability";
-            if (!formData.reminders) newErrors.reminders = "Please select reminder preference";
-            if (!formData.gamification) newErrors.gamification = "Please select gamification preference";
         }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -101,6 +193,7 @@ export default function OnboardingForm() {
         setErrors({});
         setStep((prev) => Math.min(prev + 1, steps.length - 1));
     };
+
     const prevStep = () => {
         setErrors({});
         setHasAttemptedNext(false);
@@ -120,128 +213,264 @@ export default function OnboardingForm() {
         }));
     };
 
-    const [saving, setSaving] = React.useState(false);
+    const handleVarkAnswer = (questionId: number, optionId: string) => {
+        setVarkAnswers(prev => ({
+            ...prev,
+            [questionId]: optionId
+        }));
+        setErrors(prev => ({ ...prev, vark: "" }));
+    };
 
     const handleSubmit = async () => {
         setHasAttemptedNext(true);
         if (!validateStep(step)) return;
-        
-        setSaving(true);
+
+        setIsSubmitting(true);
+        setPollingError(null);
+
+        // Map UI selections to API payload format
+        const varkAnswersPayload: VarkAnswer[] = Object.entries(varkAnswers).map(([qId, optId]) => ({
+            question_id: parseInt(qId),
+            option_id: optId
+        }));
+
+        // Hours per week conversion
+        let hours = 10;
+        if (formData.timeCommitment === "less1hr") hours = 5;
+        else if (formData.timeCommitment === "1-2hrs") hours = 10;
+        else if (formData.timeCommitment === "2-5hrs") hours = 20;
+        else if (formData.timeCommitment === "5plus") hours = 35;
+
+        const mathComfort = parseInt(formData.proficiency_Mathematics || "3");
+
+        const submitPayload = {
+            vark_answers: varkAnswersPayload,
+            topic: formData.interests[0] || formData.fieldOfStudy || "General Technology",
+            goal: formData.learningGoals.join(", "),
+            hours_per_week: hours,
+            math_comfort: Math.min(4, Math.max(1, mathComfort - 1)), // map 1-5 scale to 1-4 scale
+            style_preferences: [...formData.learningTypes, formData.learningStyle],
+            prior_knowledge: `Possesses skills: ${formData.skills.join(", ")}. Comfortable subjects: ${formData.comfortableSubjects.join(", ")}`,
+            career_target: formData.targetRoles,
+            language: formData.language || "en"
+        };
+
         try {
-            const userId = localStorage.getItem('user_id');
-            
-            if (userId) {
-                const onboardingData = {
-                    fullName: formData.fullName,
-                    contact: formData.contact,
-                    education: formData.education,
-                    fieldOfStudy: formData.fieldOfStudy,
-                    comfortableSubjects: formData.comfortableSubjects,
-                    skills: formData.skills,
-                    interests: formData.interests,
-                    learningGoals: formData.learningGoals,
-                    learningTypes: formData.learningTypes,
-                    videoFormat: formData.videoFormat,
-                    learningStyle: formData.learningStyle,
-                    instructorStyle: formData.instructorStyle,
-                    courseStructure: formData.courseStructure,
-                    theoryPracticeRatio: formData.theoryPracticeRatio,
-                    mathIntensity: formData.mathIntensity,
-                    learningEnvironment: formData.learningEnvironment,
-                    internetSituation: formData.internetSituation,
-                    collaborativeLearning: formData.collaborativeLearning,
-                    familiarWith: formData.familiarWith,
-                    certifications: formData.certifications,
-                    resumeUrl: formData.resume,
-                    targetRoles: formData.targetRoles,
-                    preferredLanguage: 'en',
-                    careerGoal: formData.interests?.[0] || formData.otherInterest || null
-                };
-                
-                const { apiService } = await import('@/lib/api');
-                
-                const quizResponse = await apiService.getOnboardingQuiz();
-                if (!quizResponse.success || !quizResponse.data) {
-                    throw new Error('Failed to load quiz');
-                }
-                
-                const varkAnswers = quizResponse.data.questions.map(q => ({
-                    question_id: q.id,
-                    option_id: q.options[0].id
-                }));
-                
-                const submitData = {
-                    vark_answers: varkAnswers,
-                    topic: formData.interests?.[0] || formData.otherInterest || 'general',
-                    goal: formData.learningGoals?.[0] || 'curiosity',
-                    hours_per_week: parseInt(formData.timeCommitment) || 5,
-                    math_comfort: parseInt(formData.mathIntensity) || 3,
-                    style_preferences: formData.learningTypes || [],
-                    prior_knowledge: formData.skills?.[0] || 'none',
-                    career_target: formData.targetRoles || undefined,
-                    language: 'en'
-                };
-                
-                const result = await apiService.submitOnboarding(submitData);
-                if (!result.success) {
-                    throw new Error(result.error?.message || 'Failed to submit onboarding');
-                }
-                
-                if (result.data?.job_id) {
-                    localStorage.setItem('onboarding_job_id', result.data.job_id);
-                    localStorage.setItem('onboarding_profile_id', result.data.profile_id);
-                }
+            const response = await apiService.submitOnboarding(submitPayload);
+            if (response.success && response.data) {
+                setJobId(response.data.job_id);
+                setPollingStatus("pending");
+            } else {
+                setIsSubmitting(false);
+                setPollingError(response.error?.message || "Failed to submit onboarding details.");
             }
-            
-            localStorage.setItem('onboarding_completed', 'true');
-            router.push("/student/dashboard");
-        } catch (error) {
-            console.error('Error saving onboarding data:', error);
-            router.push("/student/dashboard");
-        } finally {
-            setSaving(false);
+        } catch (err: any) {
+            setIsSubmitting(false);
+            setPollingError(err.message || "An error occurred during submission.");
         }
     };
 
-    const handleLogout = async () => {
-        authService.logout();
-        await signOut({ callbackUrl: "/" });
+    const fillDemoData = () => {
+        setFormData((prev: any) => ({
+            ...prev,
+            fullName: "Raj Sharma",
+            email: prev.email || "raj.sharma@example.com",
+            phone: "+919876543210",
+            education: "bachelor",
+            fieldOfStudy: "Computer Science",
+            comfortableSubjects: ["Programming in Python", "Data Structures", "Web Development"],
+            proficiency_Computer_basics: "4",
+            proficiency_Internet_navigation: "5",
+            proficiency_Mathematics: "4",
+            proficiency_English_communication: "3",
+            proficiency_Programming_fundamentals: "4",
+            skills: ["Python", "JavaScript", "HTML/CSS", "Problem solving"],
+            interests: ["Web Development", "AI/ML", "Data Science"],
+            learningGoals: ["Getting a job/internship", "Building projects"],
+            targetRoles: "Software Developer",
+            domainStack: ["frontendReact", "aiML"],
+            learningTypes: ["videos", "projects"],
+            pacePreference: "moderate",
+            learningStyle: "selfPaced",
+            timeCommitment: "2-5hrs",
+            duration: "2-6months",
+            budgetRange: "500-2000",
+            motivations: ["Certificates", "Skill advancement", "Career growth"],
+            language: "en"
+        }));
+
+        // Auto answer VARK questions if available
+        if (varkQuestions.length > 0) {
+            const autoAnswers: Record<number, string> = {};
+            varkQuestions.forEach(q => {
+                if (q.options?.length > 0) {
+                    autoAnswers[q.id] = q.options[0].id;
+                }
+            });
+            setVarkAnswers(autoAnswers);
+        }
+    };
+
+    const clearForm = () => {
+        setFormData((prev: any) => ({
+            fullName: prev.fullName || "",
+            email: prev.email || "",
+            phone: "",
+            education: "",
+            fieldOfStudy: "",
+            comfortableSubjects: [],
+            skills: [],
+            interests: [],
+            learningGoals: [],
+            learningTypes: [],
+            motivations: [],
+            domainStack: [],
+            language: "en"
+        }));
+        setVarkAnswers({});
+        setStep(0);
+        setErrors({});
+        setPollingError(null);
     };
 
     const progress = (step / (steps.length - 1)) * 100;
 
-    useEffect(() => {
-              document.title = `Onboarding Questionaire ✦ ${siteConfig.name}`;
-          }, []);
+    if (loadingProfile) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background p-4">
+                <div className="w-full max-w-4xl p-4 sm:p-6 md:p-8 bg-card rounded-lg shadow-sm border space-y-6">
+                    <div className="space-y-2 text-center">
+                        <Skeleton className="h-8 w-64 mx-auto" />
+                        <Skeleton className="h-4 w-96 mx-auto animate-pulse" />
+                    </div>
+                    <div className="flex justify-center gap-2 mt-4 mb-6">
+                        <Skeleton className="h-8 w-24" />
+                        <Skeleton className="h-8 w-24" />
+                        <Skeleton className="h-8 w-24" />
+                    </div>
+                    <div className="space-y-2">
+                        <div className="flex justify-between">
+                            <Skeleton className="h-4 w-12" />
+                            <Skeleton className="h-4 w-12" />
+                        </div>
+                        <Skeleton className="h-2 w-full" />
+                    </div>
+                    <div className="flex justify-between gap-2 border-b pb-4">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
+                            <div key={i} className="flex flex-col items-center space-y-2">
+                                <Skeleton className="h-10 w-10 rounded-full" />
+                                <Skeleton className="h-3 w-16" />
+                            </div>
+                        ))}
+                    </div>
+                    <Card>
+                        <CardHeader>
+                            <Skeleton className="h-6 w-48" />
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-24" />
+                                    <Skeleton className="h-10 w-full" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-24" />
+                                    <Skeleton className="h-10 w-full" />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-10 w-full" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        );
+    }
+
+    if (isSubmitting) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background p-4">
+                <Card className="w-full max-w-md border-2 border-violet-500/20 bg-card/85 backdrop-blur-md shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-violet-500 to-fuchsia-500 animate-pulse"></div>
+                    <CardContent className="flex flex-col items-center text-center p-8 space-y-6">
+                        <div className="w-16 h-16 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center relative">
+                            <Loader2 className="w-8 h-8 text-violet-600 dark:text-violet-400 animate-spin" />
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <h2 className="text-xl font-bold tracking-tight">AI Matching in Progress</h2>
+                            <p className="text-sm text-muted-foreground">
+                                Analyzing your skills, VARK learning preferences, and career targets to formulate your custom curriculums.
+                            </p>
+                        </div>
+
+                        <div className="w-full space-y-1">
+                            <div className="flex justify-between text-xs font-semibold text-muted-foreground">
+                                <span>Status:</span>
+                                <span className="capitalize text-violet-600 dark:text-violet-400 animate-pulse font-mono">{pollingStatus}...</span>
+                            </div>
+                            <Progress value={pollingStatus === "pending" ? 45 : pollingStatus === "processing" ? 75 : 90} className="h-2" />
+                        </div>
+
+                        {pollingError ? (
+                            <div className="p-3 w-full bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 text-xs rounded-lg space-y-2">
+                                <p>{pollingError}</p>
+                                <Button variant="outline" size="sm" onClick={() => setIsSubmitting(false)} className="w-full h-8 text-xs">
+                                    Edit Form & Retry
+                                </Button>
+                            </div>
+                        ) : (
+                            <p className="text-xs text-muted-foreground italic">
+                                This will take 5-10 seconds. Please do not close this window.
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4 sm:p-6 pt-24 sm:pt-28 pb-20 relative">
-            {/* Top Right Buttons */}
-            <div className="absolute top-4 right-4 flex flex-wrap items-center justify-end gap-2">
-                <Button
-                    variant="outline"
-                    onClick={handleLogout}
-                    className="flex items-center justify-center gap-2 text-sm sm:text-base"
-                >
-                    <LogOut size={16} />
-                    Logout
-                </Button>
-            </div>
-
-            
-
-
-
+        <div className="min-h-screen flex items-center justify-center bg-background p-4 ">
             <div className="w-full max-w-4xl p-4 sm:p-6 md:p-8 bg-card rounded-lg shadow-sm border overflow-x-hidden">
-
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-foreground text-center">
                     Welcome to Your Learning Journey
                 </h1>
-                <p className="text-muted-foreground text-center mb-6 sm:mb-8 text-sm sm:text-base">
+                <p className="text-muted-foreground text-center text-sm sm:text-base">
                     Help us personalize your experience by answering a few questions
                 </p>
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-4 mb-6">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={fillDemoData}
+                        className="flex items-center gap-1.5 text-xs border border-violet-200 dark:border-violet-850 hover:bg-violet-50 dark:hover:bg-violet-950/20"
+                    >
+                        <Wand2 size={14} className="text-violet-500" />
+                        <span className="truncate">Fill Demo Data</span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={clearForm}
+                        className="flex items-center gap-1.5 text-xs"
+                    >
+                        <RotateCcw size={14} />
+                        <span className="truncate">Clear</span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => router.push("/")}
+                        className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                    >
+                        <LogOut size={14} />
+                        <span className="truncate">Exit</span>
+                    </Button>
+                </div>
 
-                {/* Progress Bar */}
                 <div className="mb-8">
                     <div className="flex justify-between items-center mb-2">
                         <span className="text-sm font-medium text-muted-foreground">Progress</span>
@@ -250,7 +479,6 @@ export default function OnboardingForm() {
                     <Progress value={progress} className="h-2" />
                 </div>
 
-                {/* Step Indicators */}
                 <div className="flex justify-between mb-6 sm:mb-8 relative overflow-x-auto pb-2 -mx-1 scrollbar-thin">
                     {steps.map((stepItem, index) => {
                         const Icon = stepItem.icon;
@@ -280,8 +508,6 @@ export default function OnboardingForm() {
                     ></div>
                 </div>
 
-
-
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={step}
@@ -290,7 +516,6 @@ export default function OnboardingForm() {
                         exit={{ opacity: 0, x: -25 }}
                         transition={{ duration: 0.4 }}
                     >
-                        {/* Step 1: Personal Info */}
                         {step === 0 && (
                             <Card>
                                 <CardHeader className="px-4 sm:px-6">
@@ -305,6 +530,24 @@ export default function OnboardingForm() {
                                             Please fill in all required fields before continuing.
                                         </div>
                                     )}
+
+                                    {/* Optional profile photo */}
+                                    <div className="flex flex-col items-center pb-2">
+                                        <p className="text-sm font-medium text-muted-foreground mb-3">Profile Photo <span className="text-xs">(optional)</span></p>
+                                        <AvatarUpload
+                                            currentUrl={onboardingAvatarUrl}
+                                            initials={(formData.fullName || "ST").split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
+                                            onUploadComplete={(url, uuid) => {
+                                                setOnboardingAvatarUrl(url);
+                                                setOnboardingAvatarUuid(uuid);
+                                            }}
+                                            onRemove={() => {
+                                                setOnboardingAvatarUrl(null);
+                                                setOnboardingAvatarUuid(null);
+                                            }}
+                                            size={80}
+                                        />
+                                    </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-2">
                                             <Label htmlFor="fullName">Full Name <span className="text-destructive">*</span></Label>
@@ -318,16 +561,41 @@ export default function OnboardingForm() {
                                             {errors.fullName && <p className="text-sm text-destructive">{errors.fullName}</p>}
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="contact">Email or Mobile Number <span className="text-destructive">*</span></Label>
+                                            <Label htmlFor="phone">Phone Number <span className="text-destructive">*</span></Label>
                                             <Input
-                                                id="contact"
-                                                placeholder="email@example.com or +1234567890"
-                                                value={formData.contact || ""}
-                                                onChange={(e) => { handleChange("contact", e.target.value); setErrors((prev) => ({ ...prev, contact: "" })); }}
-                                                aria-invalid={!!errors.contact}
+                                                id="phone"
+                                                placeholder="e.g., +919876543210"
+                                                value={formData.phone || ""}
+                                                onChange={(e) => { handleChange("phone", e.target.value); setErrors((prev) => ({ ...prev, phone: "" })); }}
+                                                aria-invalid={!!errors.phone}
                                             />
-                                            {errors.contact && <p className="text-sm text-destructive">{errors.contact}</p>}
+                                            {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                                         </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <Label htmlFor="email" className="text-muted-foreground flex items-center gap-1.5">
+                                                Email Address
+                                            </Label>
+                                            <span className="text-[10px] sm:text-xs font-semibold text-violet-500 bg-violet-500/10 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                                <Lock size={10} />
+                                                Locked (Registered Email)
+                                            </span>
+                                        </div>
+                                        <div className="relative">
+                                            <Input
+                                                id="email"
+                                                value={formData.email || ""}
+                                                disabled
+                                                readOnly
+                                                className="bg-muted/50 border-muted text-muted-foreground cursor-not-allowed pr-10"
+                                            />
+                                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                                <Lock className="h-4 w-4 text-muted-foreground/60" aria-hidden="true" />
+                                            </div>
+                                        </div>
+                                        {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -367,7 +635,6 @@ export default function OnboardingForm() {
                             </Card>
                         )}
 
-                        {/* Step 2: Skills & Assessment */}
                         {step === 1 && (
                             <Card>
                                 <CardHeader>
@@ -404,7 +671,7 @@ export default function OnboardingForm() {
                                         <Label>Rate your proficiency in these foundational skills (1-5): <span className="text-destructive">*</span></Label>
                                         {errors.proficiency && <p className="text-sm text-destructive">{errors.proficiency}</p>}
                                         <div className="space-y-4">
-                                            {["Computer basics", "Internet navigation", "Mathematics", "English communication", "Programming fundamentals"].map((skill) => (
+                                            {PROFICIENCY_SKILLS.map((skill) => (
                                                 <div key={skill} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
                                                     <span className="font-medium text-sm sm:text-base">{skill}</span>
                                                     <RadioGroup
@@ -419,24 +686,6 @@ export default function OnboardingForm() {
                                                             </div>
                                                         ))}
                                                     </RadioGroup>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <Label>Are you familiar with (choose all that apply):</Label>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                            {["Online learning platforms", "Coding environments (IDEs)", "Project-based learning", "Version Control (Git)", "Cloud platforms", "Agile methodologies"].map((item) => (
-                                                <div key={item} className="flex items-center gap-2">
-                                                    <Checkbox
-                                                        id={item}
-                                                        checked={formData.familiarWith?.includes(item) || false}
-                                                        onCheckedChange={(checked) =>
-                                                            handleArrayChange("familiarWith", item, checked as boolean)
-                                                        }
-                                                    />
-                                                    <Label htmlFor={item} className="text-sm cursor-pointer">{item}</Label>
                                                 </div>
                                             ))}
                                         </div>
@@ -460,31 +709,10 @@ export default function OnboardingForm() {
                                             ))}
                                         </div>
                                     </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="certifications">Completed certifications or courses</Label>
-                                        <Textarea
-                                            id="certifications"
-                                            placeholder="List any certifications or courses you've completed"
-                                            value={formData.certifications || ""}
-                                            onChange={(e) => handleChange("certifications", e.target.value)}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="resume">Resume or LinkedIn profile URL (optional)</Label>
-                                        <Input
-                                            id="resume"
-                                            placeholder="https://linkedin.com/in/yourprofile or https://yourportfolio.com"
-                                            value={formData.resume || ""}
-                                            onChange={(e) => handleChange("resume", e.target.value)}
-                                        />
-                                    </div>
                                 </CardContent>
                             </Card>
                         )}
 
-                        {/* Step 3: Career Goals */}
                         {step === 2 && (
                             <Card>
                                 <CardHeader>
@@ -501,6 +729,7 @@ export default function OnboardingForm() {
                                     )}
                                     <div className="space-y-4">
                                         <Label>What are the main skills or subjects you wish to learn or improve? <span className="text-destructive">*</span></Label>
+                                        {errors.interests && <p className="text-sm text-destructive">{errors.interests}</p>}
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                             {["Web Development", "Data Science", "Mobile App Development", "Cloud Computing", "AI/ML", "Cybersecurity", "UI/UX Design", "Digital Marketing", "Project Management", "Data Analysis", "Software Engineering", "DevOps"].map((interest) => (
                                                 <div key={interest} className="flex items-center gap-2">
@@ -515,17 +744,11 @@ export default function OnboardingForm() {
                                                 </div>
                                             ))}
                                         </div>
-                                        <div className="mt-2">
-                                            <Input
-                                                placeholder="Other (please specify)"
-                                                value={formData.otherInterest || ""}
-                                                onChange={(e) => handleChange("otherInterest", e.target.value)}
-                                            />
-                                        </div>
                                     </div>
 
                                     <div className="space-y-4">
                                         <Label>What are your primary learning goals? <span className="text-destructive">*</span></Label>
+                                        {errors.learningGoals && <p className="text-sm text-destructive">{errors.learningGoals}</p>}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                             {["Getting a job/internship", "Cracking competitive exams", "Building projects", "Gaining practical knowledge", "Career advancement", "Personal interest"].map((goal) => (
                                                 <div key={goal} className="flex items-center gap-2">
@@ -540,22 +763,13 @@ export default function OnboardingForm() {
                                                 </div>
                                             ))}
                                         </div>
-                                        <div className="mt-2">
-                                            <Input
-                                                placeholder="Other goal (please specify)"
-                                                value={formData.otherGoal || ""}
-                                                onChange={(e) => handleChange("otherGoal", e.target.value)}
-                                            />
-                                        </div>
                                     </div>
 
-                                    {errors.interests && <p className="text-sm text-destructive">{errors.interests}</p>}
-                                    {errors.learningGoals && <p className="text-sm text-destructive">{errors.learningGoals}</p>}
                                     <div className="space-y-2">
-                                        <Label htmlFor="targetRoles">Which industries or roles are you interested in? <span className="text-destructive">*</span></Label>
-                                        <Textarea
+                                        <Label htmlFor="targetRoles">Which specific target career role are you interested in? <span className="text-destructive">*</span></Label>
+                                        <Input
                                             id="targetRoles"
-                                            placeholder="e.g., Software Development, Data Science, Networking, UI/UX Design, etc."
+                                            placeholder="e.g. Software Developer, Data Scientist, Graphic Designer"
                                             value={formData.targetRoles || ""}
                                             onChange={(e) => { handleChange("targetRoles", e.target.value); setErrors((prev) => ({ ...prev, targetRoles: "" })); }}
                                             aria-invalid={!!errors.targetRoles}
@@ -566,281 +780,67 @@ export default function OnboardingForm() {
                             </Card>
                         )}
 
-                        {/* Step 4: Learning Preferences */}
                         {step === 3 && (
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
                                         <Settings className="text-primary" size={24} />
-                                        Learning Preferences
+                                        VARK Learning Preferences Quiz
                                     </CardTitle>
+                                    <CardDescription>
+                                        This scientific assessment will match you to visual, auditory, reading/writing, or kinesthetic learning materials.
+                                    </CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
-                                    {Object.keys(errors).length > 0 && (
-                                        <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-                                            Please complete all required sections before continuing.
+                                    {errors.vark && (
+                                        <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
+                                            {errors.vark}
                                         </div>
                                     )}
-                                    <div className="space-y-4">
-                                        <Label>What type of learning best suits you? <span className="text-destructive">*</span></Label>
-                                        {errors.learningTypes && <p className="text-sm text-destructive">{errors.learningTypes}</p>}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {[
-                                                { id: "videos", label: "Videos", desc: "Visual and auditory learning" },
-                                                { id: "reading", label: "Reading articles", desc: "Text-based content" },
-                                                { id: "projects", label: "Hands-on projects", desc: "Learning by doing" },
-                                                { id: "quizzes", label: "Quizzes", desc: "Testing knowledge" },
-                                                { id: "notes", label: "Short notes", desc: "Concise summaries" },
-                                                { id: "interactive", label: "Interactive exercises", desc: "Engaging activities" },
-                                            ].map((type) => (
-                                                <div key={type.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                                                    <Checkbox
-                                                        id={type.id}
-                                                        checked={formData.learningTypes?.includes(type.id) || false}
-                                                        onCheckedChange={(checked) =>
-                                                            handleArrayChange("learningTypes", type.id, checked as boolean)
-                                                        }
-                                                    />
-                                                    <div>
-                                                        <Label htmlFor={type.id} className="font-medium cursor-pointer">{type.label}</Label>
-                                                        <p className="text-sm text-muted-foreground">{type.desc}</p>
-                                                    </div>
+
+                                    {varkQuestions.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center py-10 space-y-2">
+                                            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                                            <p className="text-sm text-muted-foreground">Loading quiz questions from server...</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-8">
+                                            {varkQuestions.map((q, idx) => (
+                                                <div key={q.id} className="space-y-3 p-4 border rounded-xl bg-muted/30">
+                                                    <h3 className="font-semibold text-sm sm:text-base text-foreground flex gap-2">
+                                                        <span className="text-primary font-mono">{idx + 1}.</span>
+                                                        <span>{q.text}</span>
+                                                    </h3>
+                                                    <RadioGroup
+                                                        value={varkAnswers[q.id] || ""}
+                                                        onValueChange={(val) => handleVarkAnswer(q.id, val)}
+                                                        className="flex flex-col gap-2 pt-1"
+                                                    >
+                                                        {q.options.map((opt) => (
+                                                            <div 
+                                                                key={opt.id} 
+                                                                className={`flex items-start gap-3 p-2.5 rounded-lg border transition-all cursor-pointer ${
+                                                                    varkAnswers[q.id] === opt.id 
+                                                                        ? "border-violet-500 bg-violet-50/20 dark:bg-violet-950/10 shadow-sm" 
+                                                                        : "hover:bg-muted/50 border-transparent"
+                                                                }`}
+                                                                onClick={() => handleVarkAnswer(q.id, opt.id)}
+                                                            >
+                                                                <RadioGroupItem value={opt.id} id={`opt-${opt.id}`} className="mt-1" />
+                                                                <Label htmlFor={`opt-${opt.id}`} className="text-sm cursor-pointer leading-normal pr-2">
+                                                                    {opt.label}
+                                                                </Label>
+                                                            </div>
+                                                        ))}
+                                                    </RadioGroup>
                                                 </div>
                                             ))}
                                         </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <Label>What video format would you prefer? <span className="text-destructive">*</span></Label>
-                                        {errors.videoFormat && <p className="text-sm text-destructive">{errors.videoFormat}</p>}
-                                        <RadioGroup
-                                            value={formData.videoFormat || ""}
-                                            onValueChange={(value) => handleChange("videoFormat", value)}
-                                            className="flex flex-col gap-4"
-                                        >
-                                            <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                                                <RadioGroupItem value="single" id="single" />
-                                                <Label htmlFor="single" className="cursor-pointer">
-                                                    <span className="font-medium">20 min long video</span>
-                                                    <p className="text-sm text-muted-foreground">Complete lesson in one sitting</p>
-                                                </Label>
-                                            </div>
-                                            <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                                                <RadioGroupItem value="chunks" id="chunks" />
-                                                <Label htmlFor="chunks" className="cursor-pointer">
-                                                    <span className="font-medium">4 chunks of 5min each with kinesthetics</span>
-                                                    <p className="text-sm text-muted-foreground">Bite-sized lessons with hands-on activities</p>
-                                                </Label>
-                                            </div>
-                                        </RadioGroup>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <Label>Do you prefer guided paths or self-paced learning? <span className="text-destructive">*</span></Label>
-                                        {errors.learningStyle && <p className="text-sm text-destructive">{errors.learningStyle}</p>}
-                                        <RadioGroup
-                                            value={formData.learningStyle || ""}
-                                            onValueChange={(value) => handleChange("learningStyle", value)}
-                                            className="flex flex-col gap-4"
-                                        >
-                                            <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                                                <RadioGroupItem value="guided" id="guided" />
-                                                <Label htmlFor="guided" className="cursor-pointer">
-                                                    <span className="font-medium">Guided paths with deadlines</span>
-                                                    <p className="text-sm text-muted-foreground">Structured learning with set timelines</p>
-                                                </Label>
-                                            </div>
-                                            <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                                                <RadioGroupItem value="selfPaced" id="selfPaced" />
-                                                <Label htmlFor="selfPaced" className="cursor-pointer">
-                                                    <span className="font-medium">Self-paced learning</span>
-                                                    <p className="text-sm text-muted-foreground">Learn at your own convenience</p>
-                                                </Label>
-                                            </div>
-                                            <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                                                <RadioGroupItem value="mixed" id="mixed" />
-                                                <Label htmlFor="mixed" className="cursor-pointer">
-                                                    <span className="font-medium">Mixed approach</span>
-                                                    <p className="text-sm text-muted-foreground">Some structure with flexibility</p>
-                                                </Label>
-                                            </div>
-                                        </RadioGroup>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <Label>Instructor style preference: <span className="text-destructive">*</span></Label>
-                                        {errors.instructorStyle && <p className="text-sm text-destructive">{errors.instructorStyle}</p>}
-                                        <RadioGroup
-                                            value={formData.instructorStyle || ""}
-                                            onValueChange={(value) => handleChange("instructorStyle", value)}
-                                            className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                                        >
-                                            {[
-                                                { id: "energetic", label: "Energetic and fast-paced" },
-                                                { id: "calm", label: "Calm and methodical" },
-                                                { id: "humorous", label: "Humorous and entertaining" },
-                                                { id: "strict", label: "Strict and formal" },
-                                                { id: "noPref", label: "No preference" },
-                                            ].map((option) => (
-                                                <div key={option.id} className="flex items-center gap-2">
-                                                    <RadioGroupItem value={option.id} id={option.id} />
-                                                    <Label htmlFor={option.id} className="cursor-pointer">{option.label}</Label>
-                                                </div>
-                                            ))}
-                                        </RadioGroup>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <Label>Course structure preference: <span className="text-destructive">*</span></Label>
-                                        {errors.courseStructure && <p className="text-sm text-destructive">{errors.courseStructure}</p>}
-                                        <RadioGroup
-                                            value={formData.courseStructure || ""}
-                                            onValueChange={(value) => handleChange("courseStructure", value)}
-                                            className="flex flex-col gap-4"
-                                        >
-                                            {[
-                                                { id: "structured", label: "Highly structured", desc: "Week-by-week modules" },
-                                                { id: "flexible", label: "Flexible", desc: "Self-paced, no deadlines" },
-                                                { id: "projectBased", label: "Project-based", desc: "Build as you learn" },
-                                                { id: "challengeBased", label: "Challenge-based", desc: "Solve problems" },
-                                            ].map((option) => (
-                                                <div key={option.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                                                    <RadioGroupItem value={option.id} id={option.id} />
-                                                    <div>
-                                                        <Label htmlFor={option.id} className="font-medium cursor-pointer">{option.label}</Label>
-                                                        <p className="text-sm text-muted-foreground">{option.desc}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </RadioGroup>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <Label>How much theory vs practice do you want? <span className="text-destructive">*</span></Label>
-                                        {errors.theoryPracticeRatio && <p className="text-sm text-destructive">{errors.theoryPracticeRatio}</p>}
-                                        <RadioGroup
-                                            value={formData.theoryPracticeRatio || ""}
-                                            onValueChange={(value) => handleChange("theoryPracticeRatio", value)}
-                                            className="flex flex-col gap-4"
-                                        >
-                                            {[
-                                                { id: "80practice", label: "80% practice, 20% theory", desc: "Learn by doing" },
-                                                { id: "60practice", label: "60% practice, 40% theory", desc: "Balanced approach" },
-                                                { id: "40practice", label: "40% practice, 60% theory", desc: "Understand deeply" },
-                                                { id: "20practice", label: "20% practice, 80% theory", desc: "Academic focus" },
-                                            ].map((option) => (
-                                                <div key={option.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                                                    <RadioGroupItem value={option.id} id={option.id} />
-                                                    <div>
-                                                        <Label htmlFor={option.id} className="font-medium cursor-pointer">{option.label}</Label>
-                                                        <p className="text-sm text-muted-foreground">{option.desc}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </RadioGroup>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <Label>For technical courses, math intensity preference: <span className="text-destructive">*</span></Label>
-                                        {errors.mathIntensity && <p className="text-sm text-destructive">{errors.mathIntensity}</p>}
-                                        <RadioGroup
-                                            value={formData.mathIntensity || ""}
-                                            onValueChange={(value) => handleChange("mathIntensity", value)}
-                                            className="flex flex-col gap-4"
-                                        >
-                                            {[
-                                                { id: "minimal", label: "Minimal math", desc: "Code-focused" },
-                                                { id: "light", label: "Light math", desc: "Where necessary only" },
-                                                { id: "moderate", label: "Moderate math", desc: "Comfortable with it" },
-                                                { id: "heavy", label: "Heavy math", desc: "Rigorous proofs and problems" },
-                                            ].map((option) => (
-                                                <div key={option.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                                                    <RadioGroupItem value={option.id} id={option.id} />
-                                                    <div>
-                                                        <Label htmlFor={option.id} className="font-medium cursor-pointer">{option.label}</Label>
-                                                        <p className="text-sm text-muted-foreground">{option.desc}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </RadioGroup>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <Label>Your typical learning environment: <span className="text-destructive">*</span></Label>
-                                        {errors.learningEnvironment && <p className="text-sm text-destructive">{errors.learningEnvironment}</p>}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            {[
-                                                "Quiet home office/room",
-                                                "Shared space (distractions present)",
-                                                "During commute (mobile/audio only)",
-                                                "Coffee shop/public spaces",
-                                                "Workplace (lunch breaks)",
-                                            ].map((env) => (
-                                                <div key={env} className="flex items-center gap-2">
-                                                    <Checkbox
-                                                        id={`env_${env.replace(/\s+/g, '_').replace(/[()/]/g, '')}`}
-                                                        checked={formData.learningEnvironment?.includes(env) || false}
-                                                        onCheckedChange={(checked) =>
-                                                            handleArrayChange("learningEnvironment", env, checked as boolean)
-                                                        }
-                                                    />
-                                                    <Label htmlFor={`env_${env.replace(/\s+/g, '_').replace(/[()/]/g, '')}`} className="cursor-pointer">{env}</Label>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <Label>Your internet situation: <span className="text-destructive">*</span></Label>
-                                        {errors.internetSituation && <p className="text-sm text-destructive">{errors.internetSituation}</p>}
-                                        <div className="grid grid-cols-1 gap-3">
-                                            {[
-                                                "High-speed broadband (stream 1080p easily)",
-                                                "Moderate (stream 720p, occasional buffering)",
-                                                "Limited/slow (prefer downloadable content)",
-                                                "Mobile data only (need low-bandwidth options)",
-                                            ].map((internet) => (
-                                                <div key={internet} className="flex items-center gap-2">
-                                                    <Checkbox
-                                                        id={`internet_${internet.replace(/\s+/g, '_').replace(/[()/]/g, '')}`}
-                                                        checked={formData.internetSituation?.includes(internet) || false}
-                                                        onCheckedChange={(checked) =>
-                                                            handleArrayChange("internetSituation", internet, checked as boolean)
-                                                        }
-                                                    />
-                                                    <Label htmlFor={`internet_${internet.replace(/\s+/g, '_').replace(/[()/]/g, '')}`} className="cursor-pointer">{internet}</Label>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <Label>Are you open to collaborative/group learning? <span className="text-destructive">*</span></Label>
-                                        {errors.collaborativeLearning && <p className="text-sm text-destructive">{errors.collaborativeLearning}</p>}
-                                        <RadioGroup
-                                            value={formData.collaborativeLearning || ""}
-                                            onValueChange={(value) => handleChange("collaborativeLearning", value)}
-                                            className="flex gap-6"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <RadioGroupItem value="yes" id="collabYes" />
-                                                <Label htmlFor="collabYes" className="cursor-pointer">Yes, I enjoy learning with others</Label>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <RadioGroupItem value="no" id="collabNo" />
-                                                <Label htmlFor="collabNo" className="cursor-pointer">No, I prefer learning alone</Label>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <RadioGroupItem value="sometimes" id="collabSometimes" />
-                                                <Label htmlFor="collabSometimes" className="cursor-pointer">Sometimes, for specific activities</Label>
-                                            </div>
-                                        </RadioGroup>
-                                    </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         )}
 
-                        {/* Step 5: Availability & Motivation */}
                         {step === 4 && (
                             <Card>
                                 <CardHeader>
@@ -864,12 +864,10 @@ export default function OnboardingForm() {
                                             className="grid grid-cols-1 md:grid-cols-2 gap-4"
                                         >
                                             {[
-                                                { id: "less1hr", label: "<1 hour/day", desc: "Light learning" },
-                                                { id: "1-2hrs", label: "1-2 hours/day", desc: "Regular commitment" },
-                                                { id: "2-5hrs", label: "2-5 hours/week", desc: "Moderate pace" },
-                                                { id: "weekends", label: "Weekends only", desc: "Focused weekend learning" },
-                                                { id: "flexible", label: "Flexible/No preference", desc: "Varies by week" },
-                                                { id: "intensive", label: "Full-time (5+ hrs/day)", desc: "Intensive learning" },
+                                                { id: "less1hr", label: "<1 hour/day (approx 5h/wk)", desc: "Light learning" },
+                                                { id: "1-2hrs", label: "1-2 hours/day (approx 10h/wk)", desc: "Regular commitment" },
+                                                { id: "2-5hrs", label: "2-5 hours/day (approx 20h/wk)", desc: "Moderate pace" },
+                                                { id: "5plus", label: "5+ hours/day (approx 35h/wk)", desc: "Intensive learning" },
                                             ].map((option) => (
                                                 <div key={option.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                                                     <RadioGroupItem value={option.id} id={option.id} />
@@ -883,23 +881,49 @@ export default function OnboardingForm() {
                                     </div>
 
                                     <div className="space-y-4">
-                                        <Label>What is your target completion timeline? <span className="text-destructive">*</span></Label>
-                                        {errors.timeline && <p className="text-sm text-destructive">{errors.timeline}</p>}
+                                        <Label>Preferred program duration: <span className="text-destructive">*</span></Label>
+                                        {errors.duration && <p className="text-sm text-destructive">{errors.duration}</p>}
                                         <RadioGroup
-                                            value={formData.timeline || ""}
-                                            onValueChange={(value) => handleChange("timeline", value)}
-                                            className="flex flex-wrap gap-4"
+                                            value={formData.duration || ""}
+                                            onValueChange={(value) => handleChange("duration", value)}
+                                            className="grid grid-cols-1 md:grid-cols-3 gap-4"
                                         >
                                             {[
-                                                { id: "1month", label: "<1 month" },
-                                                { id: "1-3months", label: "1-3 months" },
-                                                { id: "3-6months", label: "3-6 months" },
-                                                { id: "6+months", label: "6+ months" },
-                                                { id: "noTimeline", label: "No fixed timeline" },
+                                                { id: "less2months", label: "<2 months", desc: "Quick intensive" },
+                                                { id: "2-6months", label: "2-6 months", desc: "Standard pace" },
+                                                { id: "more6months", label: ">6 months", desc: "Extended learning" },
                                             ].map((option) => (
-                                                <div key={option.id} className="flex items-center gap-2">
+                                                <div key={option.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                                                     <RadioGroupItem value={option.id} id={option.id} />
-                                                    <Label htmlFor={option.id} className="cursor-pointer">{option.label}</Label>
+                                                    <div>
+                                                        <Label htmlFor={option.id} className="font-medium cursor-pointer">{option.label}</Label>
+                                                        <p className="text-sm text-muted-foreground">{option.desc}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </RadioGroup>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <Label>Budget range per month: <span className="text-destructive">*</span></Label>
+                                        {errors.budgetRange && <p className="text-sm text-destructive">{errors.budgetRange}</p>}
+                                        <RadioGroup
+                                            value={formData.budgetRange || ""}
+                                            onValueChange={(value) => handleChange("budgetRange", value)}
+                                            className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                        >
+                                            {[
+                                                { id: "free", label: "Free", desc: "No budget" },
+                                                { id: "under500", label: "Under ₹500", desc: "Budget-friendly" },
+                                                { id: "500-2000", label: "₹500-₹2000", desc: "Moderate" },
+                                                { id: "2000plus", label: "₹2000+", desc: "Premium" },
+                                            ].map((option) => (
+                                                <div key={option.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                                                    <RadioGroupItem value={option.id} id={option.id} />
+                                                    <div>
+                                                        <Label htmlFor={option.id} className="font-medium cursor-pointer">{option.label}</Label>
+                                                        <p className="text-sm text-muted-foreground">{option.desc}</p>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </RadioGroup>
@@ -912,12 +936,8 @@ export default function OnboardingForm() {
                                             {[
                                                 "Certificates",
                                                 "Skill advancement",
-                                                "Community recognition",
-                                                "Earning potential",
-                                                "Building things",
                                                 "Career growth",
                                                 "Personal satisfaction",
-                                                "Problem solving"
                                             ].map((motivation) => (
                                                 <div key={motivation} className="flex items-center gap-2">
                                                     <Checkbox
@@ -933,130 +953,51 @@ export default function OnboardingForm() {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-4">
-                                            <Label>Do you have stable internet access and a personal computer/laptop? <span className="text-destructive">*</span></Label>
-                                            {errors.hasResources && <p className="text-sm text-destructive">{errors.hasResources}</p>}
-                                            <RadioGroup
-                                                value={formData.hasResources || ""}
-                                                onValueChange={(value) => handleChange("hasResources", value)}
-                                                className="flex gap-4"
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <RadioGroupItem value="yes" id="resourcesYes" />
-                                                    <Label htmlFor="resourcesYes" className="cursor-pointer">Yes</Label>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <RadioGroupItem value="no" id="resourcesNo" />
-                                                    <Label htmlFor="resourcesNo" className="cursor-pointer">No</Label>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <RadioGroupItem value="limited" id="resourcesLimited" />
-                                                    <Label htmlFor="resourcesLimited" className="cursor-pointer">Limited access</Label>
-                                                </div>
-                                            </RadioGroup>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="accommodations">Accessibility needs or learning accommodations</Label>
-                                            <Input
-                                                id="accommodations"
-                                                placeholder="e.g., larger fonts, screen readers, etc."
-                                                value={formData.accommodations || ""}
-                                                onChange={(e) => handleChange("accommodations", e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
-
                                     <div className="space-y-4">
-                                        <Label>Do you suffer from any of these?</Label>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                            {["ADHD", "Dyslexia", "Autism"].map((condition) => (
-                                                <div key={condition} className="flex items-center gap-2">
+                                        <Label>Preferred learning format: <span className="text-destructive">*</span></Label>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {[
+                                                { id: "videos", label: "Videos", desc: "Visual and auditory learning" },
+                                                { id: "reading", label: "Reading articles", desc: "Text-based content" },
+                                                { id: "projects", label: "Hands-on projects", desc: "Learning by doing" },
+                                                { id: "quizzes", label: "Interactive quizzes", desc: "Testing knowledge" },
+                                            ].map((type) => (
+                                                <div key={type.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                                                     <Checkbox
-                                                        id={`condition_${condition}`}
-                                                        checked={formData.neurodivergentConditions?.includes(condition) || false}
+                                                        id={type.id}
+                                                        checked={formData.learningTypes?.includes(type.id) || false}
                                                         onCheckedChange={(checked) =>
-                                                            handleArrayChange("neurodivergentConditions", condition, checked as boolean)
+                                                            handleArrayChange("learningTypes", type.id, checked as boolean)
                                                         }
                                                     />
-                                                    <Label htmlFor={`condition_${condition}`} className="cursor-pointer">{condition}</Label>
+                                                    <div>
+                                                        <Label htmlFor={type.id} className="font-medium cursor-pointer">{type.label}</Label>
+                                                        <p className="text-sm text-muted-foreground">{type.desc}</p>
+                                                    </div>
                                                 </div>
                                             ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-4">
-                                            <Label>Do you want to receive regular reminders/motivational nudges? <span className="text-destructive">*</span></Label>
-                                            {errors.reminders && <p className="text-sm text-destructive">{errors.reminders}</p>}
-                                            <RadioGroup
-                                                value={formData.reminders || ""}
-                                                onValueChange={(value) => handleChange("reminders", value)}
-                                                className="flex gap-4"
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <RadioGroupItem value="yes" id="remindersYes" />
-                                                    <Label htmlFor="remindersYes" className="cursor-pointer">Yes</Label>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <RadioGroupItem value="no" id="remindersNo" />
-                                                    <Label htmlFor="remindersNo" className="cursor-pointer">No</Label>
-                                                </div>
-                                            </RadioGroup>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <Label>Are you interested in gamified elements? <span className="text-destructive">*</span></Label>
-                                            {errors.gamification && <p className="text-sm text-destructive">{errors.gamification}</p>}
-                                            <RadioGroup
-                                                value={formData.gamification || ""}
-                                                onValueChange={(value) => handleChange("gamification", value)}
-                                                className="flex gap-4"
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <RadioGroupItem value="yes" id="gamificationYes" />
-                                                    <Label htmlFor="gamificationYes" className="cursor-pointer">Yes</Label>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <RadioGroupItem value="no" id="gamificationNo" />
-                                                    <Label htmlFor="gamificationNo" className="cursor-pointer">No</Label>
-                                                </div>
-                                            </RadioGroup>
                                         </div>
                                     </div>
                                 </CardContent>
                             </Card>
                         )}
 
-                        {/* Step 6: Feedback */}
                         {step === 5 && (
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
                                         <Send className="text-primary" size={24} />
-                                        Final Feedback & Custom Requests
+                                        Additional Details & Custom Requests
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
                                     <div className="space-y-2">
-                                        <Label htmlFor="featureRequests">Are there any topics or features you want to see on the platform?</Label>
+                                        <Label htmlFor="featureRequests">Is there anything specific you want us to know about you?</Label>
                                         <Textarea
                                             id="featureRequests"
-                                            placeholder="Tell us what you'd like to see in our learning platform..."
+                                            placeholder="Share any special goals, learning challenges, background info, or specific needs..."
                                             value={formData.featureRequests || ""}
                                             onChange={(e) => handleChange("featureRequests", e.target.value)}
-                                            rows={4}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="additionalComments">Any additional comments or preferences?</Label>
-                                        <Textarea
-                                            id="additionalComments"
-                                            placeholder="Share any other thoughts or special requirements..."
-                                            value={formData.additionalComments || ""}
-                                            onChange={(e) => handleChange("additionalComments", e.target.value)}
                                             rows={4}
                                         />
                                     </div>
@@ -1067,8 +1008,10 @@ export default function OnboardingForm() {
                                             <div>
                                                 <h3 className="font-medium">Thank you for completing the questionnaire!</h3>
                                                 <p className="text-muted-foreground text-sm mt-1">
-                                                    Your responses will help us create a personalized learning path just for you.
-                                                    Click submit to get started on your learning journey.
+                                                    Your responses will be sent directly to our ML engines to classify your VARK scores and match you to tailored study tracks.
+                                                </p>
+                                                <p className="text-muted-foreground text-sm mt-1">
+                                                    Click submit to compile recommendations.
                                                 </p>
                                             </div>
                                         </div>
@@ -1079,7 +1022,6 @@ export default function OnboardingForm() {
                     </motion.div>
                 </AnimatePresence>
 
-                {/* Navigation */}
                 <div className={`flex flex-col-reverse sm:flex-row ${step > 0 ? 'justify-between' : 'justify-end'} mt-6 sm:mt-8 gap-3 sm:gap-4`}>
                     {step > 0 && (
                         <Button variant="outline" onClick={prevStep} className="flex items-center justify-center gap-2 w-full sm:w-auto">
@@ -1094,8 +1036,8 @@ export default function OnboardingForm() {
                             <ChevronRight size={20} />
                         </Button>
                     ) : (
-                        <Button onClick={handleSubmit} className="flex items-center justify-center gap-2 w-full sm:w-auto sm:ml-auto">
-                            Submit & Get Started
+                        <Button onClick={handleSubmit} className="flex items-center justify-center gap-2 w-full sm:w-auto sm:ml-auto bg-violet-600 hover:bg-violet-700 text-white font-bold">
+                            Submit & Begin Journey
                             <ChevronRight size={20} />
                         </Button>
                     )}

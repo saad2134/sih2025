@@ -2,7 +2,7 @@
 
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func
 from sqlalchemy.orm import selectinload
 from typing import Optional
 
@@ -24,16 +24,51 @@ class CourseService:
         page: int = 1,
         limit: int = 20,
     ) -> tuple[list[Course], int]:
+        # Clean topic and difficulty
+        if topic and topic.strip().lower() in ["all", ""]:
+            topic = None
+        if difficulty and difficulty.strip().lower() in ["all levels", "all", ""]:
+            difficulty = None
+
+        # Trigger dynamic course discovery on-the-fly if topic lacks seeded results
+        if topic:
+            check_stmt = select(func.count()).select_from(Course).where(
+                or_(
+                    Course.title.ilike(f"%{topic}%"),
+                    Course.description.ilike(f"%{topic}%")
+                )
+            )
+            count_res = await self.db.execute(check_stmt)
+            if count_res.scalar() < 3:
+                try:
+                    from app.services.course_discovery import CourseDiscoveryService
+                    discovery = CourseDiscoveryService(self.db)
+                    await discovery.discover_and_save_courses(topic)
+                except Exception:
+                    pass
+
         query = select(Course)
         
         if nsqf_only:
             query = query.where(Course.nsqf_level > 0)
-        if provider:
+        if provider and provider.strip().lower() not in ["all", ""]:
             query = query.where(Course.provider.ilike(f"%{provider}%"))
         if math_depth_max:
             query = query.where(Course.math_depth <= math_depth_max)
+        if difficulty:
+            query = query.where(Course.difficulty.ilike(difficulty))
+        if topic:
+            query = query.where(
+                or_(
+                    Course.title.ilike(f"%{topic}%"),
+                    Course.description.ilike(f"%{topic}%"),
+                    Course.nsqf_sector.ilike(f"%{topic}%")
+                )
+            )
         
-        count_result = await self.db.execute(select(func.count()).select_from(Course))
+        # Calculate correct filtered count
+        count_query = select(func.count()).select_from(query.subquery())
+        count_result = await self.db.execute(count_query)
         total = count_result.scalar()
         
         query = query.offset((page - 1) * limit).limit(limit)
@@ -49,24 +84,38 @@ class CourseService:
         return result.scalar_one_or_none()
 
     async def search_courses(self, q: str, limit: int = 20) -> list[dict]:
-        result = await self.db.execute(
-            select(Course)
-            .where(
-                or_(
-                    Course.title.ilike(f"%{q}%"),
-                    Course.description.ilike(f"%{q}%"),
-                    Course.provider.ilike(f"%{q}%"),
-                )
+        stmt = select(Course).where(
+            or_(
+                Course.title.ilike(f"%{q}%"),
+                Course.description.ilike(f"%{q}%"),
+                Course.provider.ilike(f"%{q}%"),
             )
-            .limit(limit)
         )
+        result = await self.db.execute(stmt)
         courses = result.scalars().all()
+
+        # Trigger dynamic course discovery on search if few results are found
+        if len(courses) < 3:
+            try:
+                from app.services.course_discovery import CourseDiscoveryService
+                discovery = CourseDiscoveryService(self.db)
+                await discovery.discover_and_save_courses(q)
+                
+                result = await self.db.execute(stmt)
+                courses = result.scalars().all()
+            except Exception:
+                pass
+
         return [
             {
                 "id": str(c.id),
                 "title": c.title,
                 "provider": c.provider,
+                "url": c.url,
+                "description": c.description,
+                "nsqf_level": c.nsqf_level,
+                "difficulty": c.difficulty,
                 "match_score": 0.8,
             }
-            for c in courses
+            for c in courses[:limit]
         ]

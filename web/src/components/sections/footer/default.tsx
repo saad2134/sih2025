@@ -1,19 +1,11 @@
 "use client";
 
 import { ReactNode, useState, useEffect } from "react";
-import { useTheme } from "next-themes";
 
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Moon, Sun, Twitter, Github, Mail, Phone } from "lucide-react";
+import { Twitter, Github, Mail, Phone } from "lucide-react";
 
 import AppUI from "../../logos/app_icon";
 
@@ -70,7 +62,7 @@ export default function FooterSection({
   showModeToggle = true,
   className,
 }: FooterProps) {
-  const { setTheme } = useTheme();
+
 
   const [status, setStatus] = useState<"operational" | "issues" | "degraded" | null>(null);
   const [loading, setLoading] = useState(true);
@@ -154,31 +146,8 @@ export default function FooterSection({
           ))}
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-8 pt-6 border-t gap-4">
+        <div className="mt-8 pt-6 border-t text-center">
           <p className="text-xs text-muted-foreground">{copyright}</p>
-
-          {showModeToggle && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="relative">
-                  <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                  <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                  <span className="sr-only">Toggle theme</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setTheme("light")}>
-                  Light
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")}>
-                  Dark
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("system")}>
-                  System
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
         </div>
       </div>
     </footer>

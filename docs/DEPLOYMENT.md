@@ -222,6 +222,53 @@ mno345         shiksha-redis            Up 3 minutes    0.0.0.0:6379->6379/tcp
 
 ---
 
+## Post-Deployment Setup & Data Seeding
+
+### 1. Database Migrations
+Before starting the backend services, make sure to execute all database migrations using Alembic:
+```bash
+cd backend
+python -m alembic upgrade head
+```
+
+### 2. Seeding Initial Courses Data
+ShikshaDisha requires initial course data to generate recommendations. A CSV of NSQF courses must be placed at `backend/data/nsqf_courses.csv` (can be copied from `backend_2-ai_engine_service/data/nsqf_courses.csv`) and seeded using:
+```bash
+cd backend
+# Create data folder and copy the CSV
+mkdir data
+cp ../backend_2-ai_engine_service/data/nsqf_courses.csv ./data/nsqf_courses.csv
+
+# Seed the database
+python -m scripts.seed_nsqf
+```
+
+---
+
+## External Integrations & Fallbacks
+
+For full production capabilities, configure the following keys in your environment (or `backend/.env` file). If left unset, the backend will gracefully run in **mock/sandbox mode**:
+
+| Variable | Target Integration | Mock Fallback Behavior |
+|----------|--------------------|------------------------|
+| `POLAR_API_KEY` | Polar.sh subscriptions | Returns a mock checkout success URL and bypasses Polar payment flow. |
+| `POLAR_WEBHOOK_SECRET` | Polar webhook signatures | Signature validation is bypassed during subscription state updates. |
+| `GEMINI_API_KEY` | Gemini AI Companion chatbot | AI Chat Companion operates in local mock mode utilizing user profile context. |
+| `GOOGLE_APPS_SCRIPT_URL`| Apps Script Feedback form | Form feedback inputs are logged to the console/server logs rather than posting outbound. |
+| `SERP_API_KEY` & `FIRECRAWL_API_KEY` | SerpAPI & Firecrawl scraping | Job skill extraction uses cached/preconfigured mappings in Redis. |
+
+---
+
+## Windows Local Development Tips
+
+1. **Celery Pool Configuration**: On Windows, the standard billiard multiprocess fork pool is buggy and throws `ValueError`. You must run Celery with the `solo` pool:
+   ```bash
+   python -m celery -A app.tasks.celery_app worker --loglevel=info --pool=solo
+   ```
+2. **Database Engine Pool Class**: To avoid `RuntimeError: Event loop is closed` when Celery runs database queries inside a temporary event loop, the database engine is configured to use `NullPool` (disabling pool reuse across different loops).
+
+---
+
 ## Troubleshooting
 
 ### View Logs

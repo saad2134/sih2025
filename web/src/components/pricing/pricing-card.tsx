@@ -3,8 +3,9 @@ import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Check, Sparkles, Zap, Users, TrendingUp, Shield, Award, Rocket, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
-const freemiumFeatures = [
+const freeFeatures = [
   'Access to 50+ free courses',
   'Basic progress tracking',
   'Community forum access',
@@ -38,14 +39,20 @@ interface PricingCardsProps {
 }
 
 export const PricingCards: React.FC<PricingCardsProps> = ({ className = "", compact = false }) => {
+  const [isAuth, setIsAuth] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsAuth(!!localStorage.getItem('auth_token'));
+  }, []);
+
   const plans = [
     {
-      name: "Freemium",
+      name: "Free",
       price: "Free",
       period: "",
       description: "Perfect for getting started",
       icon: Zap,
-      features: freemiumFeatures,
+      features: freeFeatures,
       notIncluded: [
         "AI-powered recommendations",
         "Advanced analytics",
@@ -53,7 +60,8 @@ export const PricingCards: React.FC<PricingCardsProps> = ({ className = "", comp
         "Unlimited certificates",
         "Resume builder access",
       ],
-      cta: "Get Started Free",
+      cta: "Get Started",
+      href: isAuth ? "/student/dashboard" : "/auth",
       popular: false,
     },
     {
@@ -67,7 +75,8 @@ export const PricingCards: React.FC<PricingCardsProps> = ({ className = "", comp
         "1-on-1 mentoring",
         "Job placement assistance",
       ],
-      cta: "Upgrade Now",
+      cta: "Choose Pro",
+      href: isAuth ? "/student/billing" : "/auth",
       popular: true,
     },
     {
@@ -78,7 +87,8 @@ export const PricingCards: React.FC<PricingCardsProps> = ({ className = "", comp
       icon: Rocket,
       features: premiumFeatures,
       notIncluded: [],
-      cta: "Go Premium",
+      cta: "Choose Premium",
+      href: isAuth ? "/student/billing" : "/auth",
       popular: false,
     },
   ];
@@ -126,9 +136,12 @@ export const PricingCards: React.FC<PricingCardsProps> = ({ className = "", comp
                   ))}
                 </ul>
 
-                <button className={`mt-auto w-full font-semibold py-2 rounded-lg transition-all duration-300 ${plan.popular ? 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 hover:scale-105 hover:shadow-xl hover:shadow-violet-500/40 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/60 border-0 ring-2 ring-violet-500/50' : 'bg-secondary hover:bg-secondary/80 border'}`}>
+                <Link
+                  href={plan.href}
+                  className={`mt-auto w-full font-semibold py-2 rounded-lg transition-all duration-300 text-center flex items-center justify-center ${plan.popular ? 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 hover:scale-105 hover:shadow-xl hover:shadow-violet-500/40 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/60 border-0 ring-2 ring-violet-500/50' : 'bg-secondary hover:bg-secondary/80 border text-foreground'}`}
+                >
                   {plan.cta}
-                </button>
+                </Link>
               </div>
             </div>
           );
@@ -211,7 +224,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
       )}
 
       {/* Pricing Cards */}
-      <div className="max-w-6xl mx-auto px-4 lg:px-6 pb-12 lg:pb-20">
+      <div className="max-w-6xl mx-auto px-8 md:px-4 lg:px-6 pb-12 lg:pb-20">
         <PricingCards />
 
         {showBottom && (
@@ -235,7 +248,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
 
       {showBottom && (
         <div className="pb-8">
-          <div className="max-w-6xl mx-auto px-4 lg:px-6 py-12 lg:py-16">
+          <div className="max-w-6xl mx-auto px-8 md:px-4 lg:px-6 py-12 lg:py-16">
             <h3 className="text-xl lg:text-2xl font-bold text-center mb-8 lg:mb-12">
               Why Upgrade to Premium?
             </h3>

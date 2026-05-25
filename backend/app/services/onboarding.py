@@ -11,7 +11,7 @@ from app.schemas.onboarding import (
     QuizResponse, QuizQuestion, QuizOption, VarkAnswer, OnboardingSubmit, LearnerProfile as LearnerProfileSchema, VarkScores
 )
 from app.ml.vark_scorer import VARKScorer
-from app.tasks.recommendations import compute_recommendations_task
+from app.config import settings
 
 
 VARK_QUIZ = [
@@ -66,6 +66,77 @@ VARK_QUIZ = [
 ]
 
 
+async def validate_and_clean_role(role: str) -> str:
+    if not role or not role.strip():
+        raise ValueError("Please enter a valid career role.")
+    
+    cleaned = role.strip()
+    role_lower = cleaned.lower()
+    
+    STANDARD_ROLES = {
+        "software engineer", "frontend developer", "backend developer", "fullstack developer",
+        "data scientist", "mlops engineer", "ai engineer", "data analyst", "cloud engineer",
+        "devops engineer", "cybersecurity specialist", "ui/ux designer", "product manager",
+        "mobile developer", "game developer", "database administrator", "systems administrator",
+        "network engineer", "security engineer", "qa engineer", "software test engineer",
+        "electrician", "plumber", "digital marketer", "graphic designer", "welder"
+    }
+    
+    if role_lower in STANDARD_ROLES:
+        return cleaned.title()
+        
+    if len(cleaned) < 3 or len(cleaned) > 50:
+        raise ValueError("Please enter a valid professional career role.")
+        
+    from app.config import settings
+    if settings.GEMINI_API_KEY:
+        try:
+            import google.generativeai as genai
+            import json
+            import asyncio
+            genai.configure(api_key=settings.GEMINI_API_KEY)
+            model = genai.GenerativeModel("gemini-2.5-flash")
+            
+            prompt = f"""
+            Determine if the following input string is a valid, recognized professional career role or occupation (e.g. Software Engineer, Doctor, Electrician, Plumber, MLops Engineer, etc.).
+            Input: "{cleaned}"
+            
+            Return a JSON object:
+            {{
+              "is_valid": true/false,
+              "corrected_name": "Standard Title capitalized if valid, or empty string if invalid"
+            }}
+            
+            Return ONLY raw JSON. No comments, no markdown formatting.
+            """
+            
+            response = await asyncio.to_thread(
+                model.generate_content,
+                prompt,
+                generation_config={"response_mime_type": "application/json"}
+            )
+            res_data = json.loads(response.text.strip())
+            if not res_data.get("is_valid"):
+                raise ValueError("Please enter a valid professional career role.")
+            
+            corrected = res_data.get("corrected_name", "").strip()
+            if corrected:
+                return corrected
+            return cleaned
+        except ValueError as e:
+            raise e
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Gemini role validation failed: {e}")
+            return cleaned
+            
+    import re
+    if re.match(r"^[a-zA-Z\s\-]+$", cleaned) and len(cleaned.split()) >= 1:
+        return cleaned
+        
+    raise ValueError("Please enter a valid professional career role.")
+
+
 class OnboardingService:
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -75,6 +146,9 @@ class OnboardingService:
         return QuizResponse(questions=VARK_QUIZ)
 
     async def submit_onboarding(self, user_id: str, data: OnboardingSubmit) -> tuple[str, str]:
+        if data.career_target:
+            data.career_target = await validate_and_clean_role(data.career_target)
+
         vark_scores = self.scorer.compute_scores(data.vark_answers)
         dominant = max(["V", "A", "R", "K"], key=lambda d: getattr(vark_scores, d.lower()))
         
@@ -110,7 +184,13 @@ class OnboardingService:
         self.db.add(job)
         await self.db.flush()
 
-        compute_recommendations_task.delay(str(job.id), str(profile.id))
+        if settings.ENVIRONMENT == "development":
+            import asyncio
+            from app.tasks.recommendations import compute_recommendations_async
+            asyncio.create_task(compute_recommendations_async(str(job.id), str(profile.id)))
+        else:
+            from app.tasks.recommendations import compute_recommendations_task
+            compute_recommendations_task.delay(str(job.id), str(profile.id))
 
         return str(job.id), str(profile.id)
 
@@ -159,6 +239,9 @@ class OnboardingService:
         )
 
     async def update_profile(self, user_id: str, data: dict) -> tuple[LearnerProfileSchema, str]:
+        if "career_target" in data and data["career_target"] is not None:
+            data["career_target"] = await validate_and_clean_role(data["career_target"])
+
         result = await self.db.execute(
             select(LearnerProfile).where(LearnerProfile.user_id == uuid.UUID(user_id))
         )
@@ -166,9 +249,25 @@ class OnboardingService:
         if not profile:
             raise ValueError("PROFILE_NOT_FOUND")
 
+        # Update full name if provided
+        if "full_name" in data and data["full_name"] is not None:
+            user_result = await self.db.execute(select(User).where(User.id == uuid.UUID(user_id)))
+            user = user_result.scalar_one_or_none()
+            if user:
+                user.full_name = data["full_name"]
+
         for key, value in data.items():
-            if hasattr(profile, key) and value is not None:
+            if hasattr(profile, key) and value is not None and key not in ["id", "user_id"]:
                 setattr(profile, key, value)
+
+        # Mark career map stale on profile update
+        from app.models.career_map import CareerMapSnapshot
+        cmap_result = await self.db.execute(
+            select(CareerMapSnapshot).where(CareerMapSnapshot.user_id == uuid.UUID(user_id))
+        )
+        cmap = cmap_result.scalar_one_or_none()
+        if cmap:
+            cmap.is_stale = True
 
         job = RecommendationJob(
             user_id=uuid.UUID(user_id),
@@ -178,6 +277,12 @@ class OnboardingService:
         self.db.add(job)
         await self.db.flush()
 
-        compute_recommendations_task.delay(str(job.id), str(profile.id))
+        if settings.ENVIRONMENT == "development":
+            import asyncio
+            from app.tasks.recommendations import compute_recommendations_async
+            asyncio.create_task(compute_recommendations_async(str(job.id), str(profile.id)))
+        else:
+            from app.tasks.recommendations import compute_recommendations_task
+            compute_recommendations_task.delay(str(job.id), str(profile.id))
 
         return await self.get_profile(user_id), str(job.id)

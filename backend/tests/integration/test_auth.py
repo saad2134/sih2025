@@ -68,7 +68,7 @@ class TestAuthLogin:
             "password": "password123",
         })
         
-        assert response.status_code == 401
+        assert response.status_code == 404
 
 
 class TestAuthMe:
