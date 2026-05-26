@@ -310,7 +310,6 @@ export default function OnboardingForm() {
     const fillDemoData = () => {
         setFormData((prev: any) => ({
             ...prev,
-            fullName: "Raj Sharma",
             email: prev.email || "raj.sharma@example.com",
             phone: "+919876543210",
             education: "bachelor",
