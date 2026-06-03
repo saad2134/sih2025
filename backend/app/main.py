@@ -15,6 +15,8 @@ from app.api import (
     onboarding_router,
     recommendations_router,
     courses_router,
+    adaptive_router,
+    player_router,
 )
 from app.db.session import engine, Base
 from app.db.redis import close_redis
@@ -98,6 +100,8 @@ app.include_router(auth_router, prefix="/api/v1")
 app.include_router(onboarding_router, prefix="/api/v1")
 app.include_router(recommendations_router, prefix="/api/v1")
 app.include_router(courses_router, prefix="/api/v1")
+app.include_router(adaptive_router, prefix="/api")
+app.include_router(player_router, prefix="/api")
 
 
 @app.get("/", tags=["Root"])

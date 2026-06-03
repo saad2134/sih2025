@@ -41,6 +41,10 @@ class User(Base):
     enrolments = relationship("Enrolment", back_populates="user")
     recommendation_jobs = relationship("RecommendationJob", back_populates="user")
     reviews = relationship("Review", back_populates="user")
+    engagement_profiles = relationship("UserEngagementProfile", back_populates="user")
+    learning_states = relationship("LearningState", back_populates="user")
+    interventions = relationship("Intervention", back_populates="user")
+    quiz_attempts = relationship("QuizAttempt", back_populates="user")
 
 
 class LearnerProfile(Base):
@@ -84,6 +88,12 @@ class Course(Base):
     description = Column(Text, nullable=True)
     provider = Column(Text, nullable=False)
     url = Column(Text, nullable=True)
+    embed_provider = Column(String(50), nullable=True)
+    embed_type = Column(String(20), default="redirect")
+    embed_id = Column(Text, nullable=True)
+    embed_url = Column(Text, nullable=True)
+    is_embeddable = Column(Boolean, default=False)
+    is_hosted = Column(Boolean, default=False)
     duration_hours = Column(Float, nullable=True)
     nsqf_level = Column(SmallInteger, nullable=True, index=True)
     nsqf_sector = Column(Text, nullable=True)
@@ -114,6 +124,10 @@ class Course(Base):
     enrolments = relationship("Enrolment", back_populates="course")
     reviews = relationship("Review", back_populates="course")
     recommendation_items = relationship("RecommendationItem", back_populates="course")
+    engagement_profiles = relationship("UserEngagementProfile", back_populates="course")
+    learning_states = relationship("LearningState", back_populates="course")
+    interventions = relationship("Intervention", back_populates="course")
+    quiz_questions = relationship("QuizQuestion", back_populates="course")
 
 
 class Enrolment(Base):
@@ -129,11 +143,22 @@ class Enrolment(Base):
     status = Column(String(20), default="active")
     progress_percent = Column(Float, default=0.0)
     completion_week = Column(SmallInteger, nullable=True)
+    current_lesson_id = Column(Text, nullable=True)
+    current_lesson_type = Column(String(20), nullable=True)
+    current_position = Column(Integer, default=0)
+    total_watch_time = Column(Integer, default=0)
+    last_watched_at = Column(DateTime(timezone=True), nullable=True)
     enrolled_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     completed_at = Column(DateTime(timezone=True), nullable=True)
 
     user = relationship("User", back_populates="enrolments")
     course = relationship("Course", back_populates="enrolments")
+    activities = relationship("CourseActivity", back_populates="enrolment")
+    engagement_profile = relationship(
+        "UserEngagementProfile",
+        back_populates="enrolment",
+        uselist=False,
+    )
 
 
 class RecommendationJob(Base):

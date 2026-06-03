@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "../styles/utils.css";
 
+html {
+  scrollbar-gutter: stable;
+}
+
 @import "tw-animate-css";
 
 @custom-variant dark (&:where(.dark, .dark *));
