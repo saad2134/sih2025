@@ -20,7 +20,11 @@ import {
     Trophy,
     BarChart3,
     Sparkles,
-    Clock
+    Clock,
+    Moon,
+    Sunrise,
+    Sun,
+    Sunset
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 
@@ -84,21 +88,84 @@ export default function Dashboard() {
         { name: "Communication", level: 70, target: 85 }
     ];
 
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Good morning";
+        if (hour < 17) return "Good afternoon";
+        return "Good evening";
+    };
+
+    const getGreetingConfig = () => {
+        const hour = new Date().getHours();
+        if (hour < 6) return { 
+            bg: "from-violet-900 to-indigo-900", 
+            icon: <Moon className="h-64 w-64 text-violet-300/50 animate-pulse" />,
+            accent: "text-violet-300"
+        };
+        if (hour < 12) return { 
+            bg: "from-violet-600 to-indigo-600", 
+            icon: <Sunrise className="h-64 w-64 text-violet-200/50 animate-bounce" />,
+            accent: "text-violet-200"
+        };
+        if (hour < 17) return { 
+            bg: "from-primary to-indigo-600", 
+            icon: <Sun className="h-64 w-64 text-white/30 animate-spin-slow" />,
+            accent: "text-violet-100"
+        };
+        if (hour < 20) return { 
+            bg: "from-indigo-600 to-violet-700", 
+            icon: <Sunset className="h-64 w-64 text-violet-300/50 animate-pulse" />,
+            accent: "text-violet-300"
+        };
+        return { 
+            bg: "from-violet-900 to-indigo-900", 
+            icon: <Moon className="h-64 w-64 text-violet-300/50 animate-pulse" />,
+            accent: "text-violet-300"
+        };
+    };
+
+    const greetingConfig = getGreetingConfig();
+
+    const getDateTime = () => {
+        const now = new Date();
+        return now.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+    };
+
     return (
         <div className="p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Career GPS</h1>
-                        <p className="text-sm sm:text-base text-muted-foreground">Your personalized learning journey</p>
-                    </div>
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
-                        <div className="text-left sm:text-right">
-                            <p className="font-medium text-foreground truncate">Welcome back, {userData.name}!</p>
-                            <p className="text-sm text-muted-foreground">{userData.careerGoal} Path</p>
+                <div className={`bg-gradient-to-r ${greetingConfig.bg} p-6 sm:p-8 rounded-2xl text-primary-foreground shadow-xl flex flex-col justify-between relative overflow-hidden mb-8 w-full`}>
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-2 mb-1">
+                                <p className="text-xs font-semibold text-primary-foreground/80 uppercase tracking-wider">{getGreeting()}</p>
+                                <span className="text-[10px] text-primary-foreground/60">•</span>
+                                <p className="text-[10px] text-primary-foreground/80">{getDateTime()}</p>
+                            </div>
+                            <h2 className="text-2xl font-extrabold tracking-tighter">{userData.name}</h2>
+                            <p className="text-primary-foreground/80 text-sm mt-1">Continue your {userData.careerGoal} journey</p>
+                        </div>
+                        
+                        <div className="absolute -right-4 -bottom-4 opacity-30 pointer-events-none">
+                            <motion.div
+                                animate={{ 
+                                    scale: [1, 1.1, 1],
+                                    rotate: [0, 5, -5, 0]
+                                }}
+                                transition={{ 
+                                    duration: 4, 
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }}
+                            >
+                                {greetingConfig.icon}
+                            </motion.div>
                         </div>
                     </div>
-                </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     <div className="lg:col-span-2 space-y-6">
@@ -294,7 +361,7 @@ export default function Dashboard() {
                                                 </div>
                                                 <div className="space-y-1">
                                                     <Progress value={skill.level} className="h-2" />
-                                                    <Progress value={skill.target} className="h-1 bg-muted" />
+                                                    
                                                 </div>
                                             </div>
                                         ))}

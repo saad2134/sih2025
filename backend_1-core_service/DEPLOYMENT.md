@@ -29,6 +29,24 @@ cd backend_1-core_service
 docker-compose up -d --build
 ```
 
+### Hot Reload Development
+
+#### Dev Profile (Auto-Reload)
+```bash
+docker-compose --profile dev up -d
+```
+
+#### Manual Restart
+Code changes are mounted via volumes. After code changes:
+
+```bash
+# Rebuild (for dependency changes)
+docker-compose up -d --build
+
+# Or just restart (for code-only changes)
+docker-compose restart
+```
+
 ### Run Standalone
 
 ```bash
@@ -40,6 +58,27 @@ docker run -d -p 8000:8000 \
   -e DATABASE_URL=postgresql://postgres:postgres@localhost:5432/shikshadisha \
   -e REDIS_URL=redis://localhost:6379/0 \
   shiksha-core
+```
+
+### Local Development (No Docker)
+
+Requires PostgreSQL 15+ and Redis 7+ running locally.
+
+```bash
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Linux/Mac
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables
+set DATABASE_URL=postgresql://postgres:postgres@localhost:5432/shikshadisha
+set REDIS_URL=redis://localhost:6379/0
+
+# Run with auto-reload
+uvicorn app.main:app --reload
 ```
 
 ---
