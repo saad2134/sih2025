@@ -1,4 +1,5 @@
-<h1 align="center">🎓 ShikshaDisha – AI-Powered NSQF-Integrated Learning Ecosystem</h1>
+<img align="center" width="1080" height="100" alt="caption" src="https://github.com/user-attachments/assets/ebf68a18-eced-4bd2-82ff-665a9bb3e4e9" />
+<h1 align="center">🎓 AI-Powered NSQF-Integrated Learning Ecosystem</h1>
 
 > <p align="center">🚨 <strong>"Design and development of an AI-powered learning path generator, Vocational Pathway Navigator with Dynamic Career Intelligence and NSQF-Integrated Learning Ecosystem"</strong></p>
 
