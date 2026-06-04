@@ -1,19 +1,23 @@
-from redis.asyncio import Redis
+"""Redis connection management."""
+
+import redis.asyncio as redis
+from typing import AsyncGenerator
+
 from app.config import settings
 
+redis_pool = redis.from_url(
+    settings.REDIS_URL,
+    encoding="utf-8",
+    decode_responses=True,
+)
 
-redis_pool: Redis = None
 
-
-async def get_redis() -> Redis:
-    global redis_pool
-    if redis_pool is None:
-        redis_pool = Redis.from_url(settings.REDIS_URL, decode_responses=True)
-    return redis_pool
+async def get_redis() -> AsyncGenerator[redis.Redis, None]:
+    try:
+        yield redis_pool
+    finally:
+        pass
 
 
 async def close_redis():
-    global redis_pool
-    if redis_pool:
-        await redis_pool.aclose()
-        redis_pool = None
+    await redis_pool.close()

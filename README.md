@@ -13,12 +13,11 @@
 
 </div>
 
-## 🔹 Context
+## 🔹 Hackathon Origins
 
-### 🏆 Prototype for AMD Slingshot Hackathon 2026
+ShikshaDisha originally started as a hackathon project for **SIH 2025 (Smart India Hackathon)** by the **DevBandits** team. It was also built for the **SUDHEE CBIT Hackathon 2026**. Over time, it has evolved into a robust, AI-powered career navigation and labor market matching platform.
 
-- **Theme:** 2. AI in Education & Skilling
-- **Category:** Software
+### 🏆 Built for SIH 2025 (Smart India Hackathon) as a Prototype
 
 
 ## 💡 Proposed Solution
@@ -111,7 +110,7 @@
 | Platform                                                       | Supported? |
 | --------------------------------------------------------------- | ----------- |
 | Web (any browser with JS functionality) + Fully Responsive       | ✅          |
-| [Android](frontend-android/) (non-natively through WebView)                | ✅          |
+| [Android](android/) (non-natively through WebView)                | ✅          |
 
 ## 🔧 Development
 
@@ -136,9 +135,29 @@ npm run dev
 
 ### Backend Services
 
+> Three microservices (`backend_1-core_service`, `backend_2-ai_engine_service`, `backend_3-ai_companion_service`) handle the split architecture for production. A monolithic `backend/` service is also available and consolidates all functionality into one.
+
+#### Option A: Monolithic Backend (Recommended for simplicity)
+
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Linux/Mac
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+Or with Docker:
+
+```bash
+docker compose up -d  # from project root — starts Postgres, Redis, backend, frontend
+```
+
+#### Option B: Split Microservices (Original)
+
 See [DEPLOYMENT_FULL.md](DEPLOYMENT_FULL.md) for complete deployment instructions.
 
-#### Option 1: Docker Compose (Recommended)
 **Production mode:**
 ```bash
 cd backend_1-core_service
@@ -159,11 +178,8 @@ cd ../backend_3-ai_companion_service
 docker-compose --profile dev up -d
 ```
 
-#### Option 2: Docker Run (Standalone)
+**Docker Run (Standalone)** — requires PostgreSQL, Redis already running locally:
 
-Requires PostgreSQL, Redis already running locally.
-
-**Core API (port 8000):**
 ```bash
 cd backend_1-core_service
 docker build -t shiksha-core .
@@ -173,7 +189,6 @@ docker run -d -p 8000:8000 --name shiksha-core \
   shiksha-core
 ```
 
-**AI Engine (port 9000):**
 ```bash
 cd backend_2-ai_engine_service
 docker build -t shiksha-ai-engine .
@@ -182,7 +197,6 @@ docker run -d -p 9000:9000 --name shiksha-ai-engine \
   shiksha-ai-engine
 ```
 
-**AI Companion (port 9001):**
 ```bash
 cd backend_3-ai_companion_service
 docker build -t shiksha-companion .
@@ -191,32 +205,12 @@ docker run -d -p 9001:9001 --name shiksha-companion \
   shiksha-companion
 ```
 
-#### Option 3: Local Development (No Docker)
+#### Option C: Local Development (No Docker)
 
 Requires PostgreSQL 15+ and Redis 7+ installed locally.
 
-**Core API (port 8000):**
 ```bash
 cd backend_1-core_service
-python -m venv venv
-venv\Scripts\activate  # Windows
-# source venv/bin/activate  # Linux/Mac
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-**AI Engine (port 9000):**
-```bash
-cd backend_2-ai_engine_service
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-**AI Companion (port 9001):**
-```bash
-cd backend_3-ai_companion_service
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
@@ -315,7 +309,7 @@ graph TB
 
 
 
-## 👥 Our AMD Slingshot Hackathon 2026 Team (DevBandits)
+## 👥 Our Team (DevBandits)
 
 <div align="center">
 
@@ -383,12 +377,12 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ---
 
 ## ✍️ Endnote
-<p align="center">Developed with 💖 for the AMD Slingshot Hackathon 2026, with heartfelt thanks for the opportunity to build and innovate.</p>
+<p align="center">Developed with 💖 for the SIH 2025 (Smart India Hackathon) and SUDHEE CBIT Hackathon 2026, with heartfelt thanks for the opportunity to build and innovate.</p>
 
 ---
 
 ## 🏷 Tags  
 
-`#WebApp` `#SmartEducation` `#AIinEducation` `#PersonalizedLearning` `#SkillPathways` `#CareerGuidance` `#NSQFIntegration` `#VocationalEducation` `#AIPathGenerator` `#DigitalLearning` `#AdaptiveLearning` `#GamifiedLearning` `#TokenEconomy` `#AIMatching` `#SkillNavigator` `#FutureSkills` `#EdTechIndia` `#SkillForecasting` `#CareerIntelligence` `#MultilingualAI` `#AMDSlingshot2026` 
+`#WebApp` `#SmartEducation` `#AIinEducation` `#PersonalizedLearning` `#SkillPathways` `#CareerGuidance` `#NSQFIntegration` `#VocationalEducation` `#AIPathGenerator` `#DigitalLearning` `#AdaptiveLearning` `#GamifiedLearning` `#TokenEconomy` `#AIMatching` `#SkillNavigator` `#FutureSkills` `#EdTechIndia` `#SkillForecasting` `#CareerIntelligence` `#MultilingualAI` `#SIH2025` 
 
 

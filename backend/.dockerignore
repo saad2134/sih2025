@@ -1,0 +1,17 @@
+.env
+.env.*
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+*.egg-info
+.venv
+venv
+venv_*
+node_modules
+.gitkeep
+*.md
+tests/
+.devcontainer/

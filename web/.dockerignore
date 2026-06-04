@@ -1,0 +1,11 @@
+.git
+.gitignore
+.env
+.env.*
+node_modules
+.gitkeep
+*.md
+tests/
+.devcontainer/
+.next
+.cache

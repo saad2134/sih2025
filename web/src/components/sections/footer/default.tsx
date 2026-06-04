@@ -1,0 +1,157 @@
+"use client";
+
+import { ReactNode, useState, useEffect } from "react";
+
+import { siteConfig } from "@/config/site";
+import { cn } from "@/lib/utils";
+
+import { Twitter, Github, Mail, Phone } from "lucide-react";
+
+import AppUI from "../../logos/app_icon";
+
+interface FooterLink {
+  text: string;
+  href: string;
+}
+
+interface FooterColumnProps {
+  title: string;
+  links: FooterLink[];
+}
+
+interface FooterProps {
+  logo?: ReactNode;
+  name?: string;
+  columns?: FooterColumnProps[];
+  copyright?: string;
+  policies?: FooterLink[];
+  showModeToggle?: boolean;
+  className?: string;
+}
+
+export default function FooterSection({
+  logo = <AppUI />,
+  name = `${siteConfig.name}`,
+  columns = [
+    {
+      title: "Platform",
+      links: [
+        { text: "Overview", href: "/overview" },
+        { text: "Our Team", href: "/team" },
+        { text: "Pricing", href: "/pricing" },
+        { text: "Plans & Updates", href: "/plans-n-updates" },
+      ],
+    },
+    {
+      title: "Resources",
+      links: [
+        { text: "Contact Us", href: "/contact" },
+        { text: "Help Center", href: "/help-center" },
+        { text: "Blog", href: "/blog" },
+      ],
+    },
+    {
+      title: "Legal",
+      links: [
+        { text: "Terms of Service", href: "/terms" },
+        { text: "Privacy Policy", href: "/privacy" },
+        { text: "Cookie Policy", href: "/cookies" },
+        { text: "Refunds Policy", href: "/refunds" },
+      ],
+    },
+  ],
+  copyright = `© ${Number.isFinite(new Date().getFullYear()) ? new Date().getFullYear() : 2025} ${siteConfig.name} ${siteConfig.version}. All rights reserved.`,
+  showModeToggle = true,
+  className,
+}: FooterProps) {
+
+
+  const [status, setStatus] = useState<"operational" | "issues" | "degraded" | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const res = await fetch('/api/status');
+        const json = await res.json();
+        setStatus(json.status);
+      } catch {
+        setStatus("issues");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkStatus();
+    const interval = setInterval(checkStatus, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const socialLinks = [
+    { icon: Twitter, href: siteConfig.links.twitter, label: "Twitter" },
+    { icon: Github, href: siteConfig.links.github, label: "GitHub" },
+    { icon: Mail, href: siteConfig.links.email, label: "Email" },
+    { icon: Phone, href: siteConfig.links.phone, label: "Phone" },
+  ].filter((link) => link.href);
+
+  return (
+    <footer className={cn("bg-background w-full border-t py-8", className)}>
+      <div className="max-w-container mx-auto px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+          <div className="flex flex-col gap-3 sm:col-span-2 lg:col-span-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {logo}
+              <span className="text-xl font-bold">{name}</span>
+              <a href="/status" className="inline-flex items-center rounded-md border border-foreground/30 px-2 py-0.5 text-xs font-semibold gap-2 bg-muted/50 text-foreground hover:bg-muted transition-colors cursor-pointer">
+                <span className={cn("w-2 h-2 rounded-full",
+                  loading ? "bg-muted-foreground" :
+                    status === "operational" ? "bg-green-500" :
+                      status === "issues" ? "bg-yellow-500" : "bg-red-500"
+                )} />
+                <span>{loading ? "Checking..." : status ? status.charAt(0).toUpperCase() + status.slice(1) : ""}</span>
+              </a>
+            </div>
+            <p className="text-sm text-muted-foreground">{siteConfig.description}</p>
+            {socialLinks.length > 0 && (
+              <div className="flex items-center gap-2 mt-1">
+                {socialLinks.map((link, index) => (
+                  <a
+                    key={index}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-foreground p-1.5 rounded-md hover:bg-muted transition-colors"
+                    aria-label={link.label}
+                  >
+                    <link.icon className="w-4 h-4" />
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {columns.map((column, index) => (
+            <div key={index}>
+              <h3 className="font-semibold mb-3">{column.title}</h3>
+              <div className="flex flex-col gap-2">
+                {column.links.map((link, linkIndex) => (
+                  <a
+                    key={linkIndex}
+                    href={link.href}
+                    className="text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    {link.text}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 pt-6 border-t text-center">
+          <p className="text-xs text-muted-foreground">{copyright}</p>
+        </div>
+      </div>
+    </footer>
+  );
+}
