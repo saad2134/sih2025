@@ -1,5 +1,10 @@
-<img align="center" width="1080" height="150" alt="caption" src="https://github.com/user-attachments/assets/46d4b679-cb4d-45c7-a630-a60defecfbfa" />
-<h1 align="center">🎓 AI-Powered NSQF-Integrated Learning Ecosystem</h1>
+
+
+<h1 align="center">
+  <a href="https://github.com/saad2134/shiksha-disha/">
+    <img width="1440" height="310" alt="🎓 AI-Powered NSQF-Integrated Learning Ecosystem" src="https://github.com/user-attachments/assets/4b6c3f0a-c9e0-46de-aa05-34711124a6eb" />
+ </a>
+</h1>
 
 > <p align="center">🚨 <strong>"Design and development of an AI-powered learning path generator, Vocational Pathway Navigator with Dynamic Career Intelligence and NSQF-Integrated Learning Ecosystem"</strong></p>
 
